@@ -16,3 +16,12 @@ serde_derive = "1.0.217"
 utoipa-actix-web = "0.1.2"
 utoipa = { version = "5.3.1", features = ["actix_extras", "chrono"] }
 utoipa-swagger-ui = { version = "9.0.0", features = ["actix-web"] }
+simple_logger = "5.0.0"
+log = "0.4.25"
+jsonwebtoken = "9.3.1"
+reqwest = { version = "0.12.12", features = ["json"] }
+actix-web-httpauth = "0.8.2"
+serde_json = "1.0.138"
+bcrypt = "0.17.0"
+strum_macros = "0.26.4"
+strum = "0.26.3"

@@ -1,6 +1,6 @@
 mod permission;
-pub use permission::Permission;
+pub use permission::*;
 mod role;
-pub use role::Role;
+pub use role::*;
 mod user;
-pub use user::User;
+pub use user::*;

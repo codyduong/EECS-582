@@ -11,6 +11,8 @@ pub struct User {
   pub created_at: chrono::NaiveDateTime,
   pub deleted: bool,
   pub deleted_at: Option<chrono::NaiveDateTime>,
+  pub password_hash: String,
+  pub username: String,
 }
 
 #[derive(Queryable, Selectable, Associations, Debug, Serialize, Deserialize)]

@@ -28,6 +28,8 @@ diesel::table! {
         created_at -> Timestamp,
         deleted -> Bool,
         deleted_at -> Nullable<Timestamp>,
+        password_hash -> Text,
+        username -> Text,
     }
 }
 

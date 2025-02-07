@@ -6,11 +6,13 @@ pub enum ServiceError {
   #[display("Internal Server Error")]
   InternalServerError,
 
+  #[display("Not Found")]
+  NotFound(Option<String>),
+
   #[display("BadRequest: {}", _0)]
   BadRequest(String),
 
-  #[display("JWKSFetchError")]
-  JWKSFetchError,
+  Unauthorized,
 }
 
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
@@ -20,8 +22,9 @@ impl ResponseError for ServiceError {
       ServiceError::InternalServerError => {
         HttpResponse::InternalServerError().json("Internal Server Error, Please try later")
       }
+      ServiceError::NotFound(msg) => HttpResponse::NotFound().json(msg.as_ref().map_or("Not Found", |s| s)),
       ServiceError::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
-      ServiceError::JWKSFetchError => HttpResponse::InternalServerError().json("Could not fetch JWKS"),
+      ServiceError::Unauthorized => HttpResponse::Forbidden().json("Not allowed"),
     }
   }
 }
