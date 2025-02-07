@@ -1,6 +1,5 @@
 use crate::errors::ServiceError;
 use crate::models::*;
-use crate::schema::users::username;
 use crate::schema::*;
 use actix_web::{post, web, HttpResponse};
 use bcrypt::verify;
@@ -21,9 +20,12 @@ pub async fn login_route(
 ) -> Result<HttpResponse, actix_web::Error> {
   let mut conn = db.get().unwrap();
   let user = users::table
-    .filter(username.eq(&credentials.username))
+    .filter(users::username.eq(&credentials.username))
     .first::<User>(&mut conn)
-    .map_err(|_| ServiceError::Unauthorized)?;
+    .map_err(|err| {
+      log::error!("Failed to find user: {}", err);
+      ServiceError::InternalServerError
+    })?;
 
   let perms: Vec<PermissionName> = users_to_roles::table
     .inner_join(roles::table.on(users_to_roles::role_id.eq(roles::id)))
@@ -39,11 +41,15 @@ pub async fn login_route(
       ServiceError::InternalServerError
     })?;
 
-  if verify(&credentials.password, &user.password_hash).unwrap_or(false) {
-    let token = super::create_jwt(user.id, perms).map_err(|_| ServiceError::InternalServerError)?;
-    Ok(HttpResponse::Ok().json(LoginResponse { token }))
-  } else {
-    Err(ServiceError::Unauthorized.into())
+  match verify(&credentials.password, &user.password_hash) {
+    Ok(_) => {
+      let token = super::create_jwt(user.id, perms).map_err(|_| ServiceError::InternalServerError)?;
+      Ok(HttpResponse::Ok().json(LoginResponse { token }))
+    }
+    Err(e) => {
+      log::error!("Failed to login: {}", e);
+      Err(ServiceError::Unauthorized.into())
+    }
   }
 }
 

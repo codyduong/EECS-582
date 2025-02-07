@@ -15,7 +15,7 @@ fn db_get_user_by_id(pool: web::Data<Pool>, user_id: i32) -> Result<User, diesel
 #[utoipa::path(
   context_path = super::V1_PATH,
   responses(
-    (status = OK, body = User)
+    (status = OK, body = UserResponse)
   ),
   params(
     ("id" = i32, Path, description = "User id")
@@ -35,7 +35,7 @@ pub(crate) async fn get_user_route(
   };
 
   match result {
-    Ok(Ok(res)) => Ok(HttpResponse::Ok().json(res)),
+    Ok(Ok(res)) => Ok(HttpResponse::Ok().json(Into::<UserResponse>::into(res))),
     Ok(Err(err)) => match err {
       diesel::result::Error::NotFound => {
         log::warn!("User not found {}", user_id);

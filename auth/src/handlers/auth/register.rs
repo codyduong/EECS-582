@@ -1,5 +1,7 @@
 use crate::errors::ServiceError;
+use crate::models::*;
 use crate::schema::*;
+use crate::seed::RESERVED_TEST_USERNAMES;
 use actix_web::{post, web, HttpResponse};
 use bcrypt::hash;
 use diesel::{insert_into, prelude::*};
@@ -17,6 +19,12 @@ pub(crate) async fn register_route(
   db: web::Data<crate::Pool>,
   new_user: web::Json<RegisterRequest>,
 ) -> Result<HttpResponse, ServiceError> {
+  // guard against registering reserved names
+  if RESERVED_TEST_USERNAMES.contains(&new_user.username.as_str()) {
+    // todo better error here
+    return Err(ServiceError::InternalServerError);
+  }
+
   let hashed = hash(&new_user.password, 10).map_err(|err| {
     log::error!("Failed to hash: {}", err);
     ServiceError::InternalServerError
@@ -45,12 +53,4 @@ struct RegisterRequest {
   pub username: String,
   pub email: String,
   pub password: String,
-}
-
-#[derive(Deserialize, Insertable)]
-#[diesel(table_name = crate::schema::users)]
-pub struct NewUser<'a> {
-  pub username: &'a str,
-  pub email: &'a str,
-  pub password_hash: &'a str,
 }

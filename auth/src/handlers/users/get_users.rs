@@ -16,7 +16,7 @@ fn db_get_all_users(pool: web::Data<Pool>) -> Result<Vec<User>, diesel::result::
 #[utoipa::path(
   context_path = super::V1_PATH,
   responses(
-    (status = OK, body = Vec<User>)
+    (status = OK, body = Vec<UserResponse>)
   ),
   security(
     ("http" = [])
@@ -27,7 +27,14 @@ pub(crate) async fn get_users_route(db: web::Data<Pool>) -> Result<HttpResponse,
   let result = web::block(move || db_get_all_users(db)).await;
 
   match result {
-    Ok(Ok(res)) => Ok(HttpResponse::Ok().json(res)),
+    Ok(Ok(res)) => Ok(
+      HttpResponse::Ok().json(
+        res
+          .into_iter()
+          .map(Into::<UserResponse>::into)
+          .collect::<Vec<UserResponse>>(),
+      ),
+    ),
     Ok(Err(err)) => {
       log::error!("{}", err);
       Ok(Err(ServiceError::InternalServerError)?)

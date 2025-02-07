@@ -20,6 +20,8 @@ async fn main() -> std::io::Result<()> {
   let manager = ConnectionManager::<PgConnection>::new(database_url);
   let pool: auth::Pool = r2d2::Pool::builder().build(manager).expect("Failed to create pool.");
 
+  auth::seed::run(pool.clone());
+
   #[derive(OpenApi)]
   #[openapi(
     modifiers(&SecurityAddon),
