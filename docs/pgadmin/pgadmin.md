@@ -38,7 +38,7 @@ Two ways to get here
 
 6. <div>You should see something like this. The hash should be the exact same 
    assuming the password is the default `abc123` . Double check that the 
-`auth.users_to_roles` and `auth.roles_to_permissions` tables were also set up
+   `auth.users_to_roles` and `auth.roles_to_permissions` tables were also set up
    correctly, to ensure that the test user has all the permissions to perform
    any action.</div>
 
