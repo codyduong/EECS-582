@@ -41,7 +41,7 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> Result<Product
     (status = OK, body = Product)
   ),
   params(
-    ("id" = String, Path, description = "Global Trade Item Number (gtin)")
+    ("gtin" = String, Path, description = "Global Trade Item Number (gtin)")
   ),
   security(
     ("http" = [])

@@ -4,12 +4,17 @@ use diesel::{
   r2d2::{self, ConnectionManager},
 };
 use diesel_migrations::MigrationHarness;
+use products::*;
 use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 use utoipa_swagger_ui::{SwaggerUi, Url};
-use products::*;
 
 // mod seed;
+
+#[cfg(debug_assertions)]
+const API_URL: &'static str = "127.0.0.1";
+#[cfg(not(debug_assertions))]
+const API_URL: &'static str = "0.0.0.0";
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -20,6 +25,16 @@ async fn main() -> std::io::Result<()> {
     .unwrap();
 
   let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+  let api_port = std::env::var("PORT").unwrap_or_else(|_| {
+    #[cfg(debug_assertions)]
+    {
+      log::debug!("Failed to find PORT in .env, falling back to: 8082");
+      return "8082".to_string();
+    }
+    #[allow(unreachable_code)]
+    "8082".to_string()
+  });
+
   let manager = ConnectionManager::<PgConnection>::new(database_url);
   let pool = r2d2::Pool::builder().build(manager).expect("Failed to create pool.");
 
@@ -56,6 +71,8 @@ async fn main() -> std::io::Result<()> {
     }
   }
 
+  let url = API_URL.to_owned() + ":" + &api_port;
+
   HttpServer::new(move || {
     App::new()
       .app_data(Data::new(pool.clone()))
@@ -64,7 +81,7 @@ async fn main() -> std::io::Result<()> {
         SwaggerUi::new("/swagger-ui/{_:.*}").urls(vec![(Url::new("api", "/api-docs/openapi.json"), ApiDoc::openapi())]),
       )
   })
-  .bind("127.0.0.1:8080")?
+  .bind(url)?
   .run()
   .await
 }

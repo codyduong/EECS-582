@@ -15,7 +15,11 @@ pub(super) fn run(pool: crate::Pool) {
     .execute(&mut conn);
 
   #[cfg(debug_assertions)]
-  {
+  let seed = true;
+  #[cfg(not(debug_assertions))]
+  let seed = std::env::var("SEED").is_ok();
+
+  if seed {
     log::debug!("Seeding development environment data");
 
     // ensure we either add the user entirely, or don't at all
@@ -23,7 +27,7 @@ pub(super) fn run(pool: crate::Pool) {
       let test_user = NewUser {
         username: TEST_USERNAME,
         email: "test@example.com",
-        password_hash: &bcrypt::hash(std::env::var("TEST_PASSWORD").expect("TEST_PASSWORD should be set"), 10).unwrap(),
+        password_hash: &bcrypt::hash(std::env::var("TEST_PASSWORD").unwrap_or("abc123".to_owned()), 10).unwrap(),
       };
 
       // if we are in dev seed with some data
