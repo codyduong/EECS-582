@@ -1,12 +1,15 @@
 use actix_web::{web::Data, App, HttpServer};
-use auth::handlers;
 use diesel::{
   prelude::*,
   r2d2::{self, ConnectionManager},
 };
+use diesel_migrations::MigrationHarness;
 use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 use utoipa_swagger_ui::{SwaggerUi, Url};
+use auth::*;
+
+mod seed;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -18,9 +21,12 @@ async fn main() -> std::io::Result<()> {
 
   let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
   let manager = ConnectionManager::<PgConnection>::new(database_url);
-  let pool: auth::Pool = r2d2::Pool::builder().build(manager).expect("Failed to create pool.");
+  let pool = r2d2::Pool::builder().build(manager).expect("Failed to create pool.");
 
-  auth::seed::run(pool.clone());
+  let mut conn = pool.get().unwrap();
+  conn.run_pending_migrations(MIGRATIONS).unwrap();
+
+  seed::run(pool.clone());
 
   #[derive(OpenApi)]
   #[openapi(

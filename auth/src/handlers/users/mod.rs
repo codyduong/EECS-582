@@ -2,9 +2,9 @@ use crate::models::PermissionName;
 use crate::validator::ValidatorBuilder;
 use actix_web::web;
 use actix_web::web::ServiceConfig;
+use actix_web_httpauth::middleware::HttpAuthentication;
 
 mod get_user;
-use actix_web_httpauth::middleware::HttpAuthentication;
 pub use get_user::*;
 mod get_users;
 pub use get_users::*;

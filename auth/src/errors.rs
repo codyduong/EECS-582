@@ -1,3 +1,7 @@
+// TODO this should be moved into a shared crate rather than in the auth crate.
+// It should probably be something like: grocerywise-web-errors, or something...
+// this is never going to get done. LOL!
+
 use actix_web::{error::ResponseError, HttpResponse};
 use derive_more::Display;
 

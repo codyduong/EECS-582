@@ -1,20 +1,14 @@
 use crate::errors::ServiceError;
 use crate::models::*;
 use crate::schema::*;
+use auth::TEST_USERNAME;
 use diesel::dsl::*;
 use diesel::query_dsl::methods::FilterDsl;
 use diesel::ExpressionMethods;
 use diesel::{insert_into, prelude::*};
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations/");
-const TEST_USERNAME: &str = "test";
-pub const RESERVED_TEST_USERNAMES: [&'static str; 2] = [TEST_USERNAME, "admin"];
-
-pub fn run(pool: crate::Pool) {
+pub(super) fn run(pool: crate::Pool) {
   let mut conn = pool.get().unwrap();
-
-  conn.run_pending_migrations(MIGRATIONS).unwrap();
 
   let _ = delete(users::table)
     .filter(users::username.eq(TEST_USERNAME))

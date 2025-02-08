@@ -1,4 +1,6 @@
 mod marketplace;
-pub use marketplace::Marketplace;
+pub use marketplace::*;
 mod physical_marketplace;
-pub use physical_marketplace::PhysicalMarketplace;
+pub use physical_marketplace::*;
+mod product;
+pub use product::*;

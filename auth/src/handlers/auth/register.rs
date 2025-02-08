@@ -1,7 +1,7 @@
 use crate::errors::ServiceError;
 use crate::models::*;
 use crate::schema::*;
-use crate::seed::RESERVED_TEST_USERNAMES;
+use crate::RESERVED_TEST_USERNAMES;
 use actix_web::{post, web, HttpResponse};
 use bcrypt::hash;
 use diesel::{insert_into, prelude::*};

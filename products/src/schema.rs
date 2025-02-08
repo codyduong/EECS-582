@@ -18,13 +18,14 @@ diesel::table! {
 }
 
 diesel::table! {
-    products (gtin, product_revision) {
+    products (gtin) {
         #[max_length = 14]
         gtin -> Bpchar,
-        product_revision -> Timestamp,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
         #[max_length = 255]
         sku -> Varchar,
-        productname -> Nullable<Text>,
+        productname -> Text,
         sellsinraw -> Bool,
     }
 }
@@ -34,12 +35,12 @@ diesel::table! {
         id -> Int8,
         #[max_length = 14]
         gtin -> Bpchar,
-        product_revision -> Timestamp,
+        created_at -> Timestamp,
         unit_id -> Int4,
         amount -> Numeric,
         is_primary_measure -> Bool,
         is_converted -> Nullable<Bool>,
-        raw_amount -> Numeric,
+        raw_amount -> Nullable<Numeric>,
     }
 }
 
@@ -52,6 +53,7 @@ diesel::table! {
 }
 
 diesel::joinable!(physical_marketplaces -> marketplaces (marketplace_id));
+diesel::joinable!(products_to_measures -> products (gtin));
 diesel::joinable!(products_to_measures -> units (unit_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
