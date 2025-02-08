@@ -7,7 +7,8 @@ use utoipa::ToSchema;
 #[diesel(table_name = crate::schema::products)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Product {
-  pub gtin: String,
+  #[schema(value_type = String, min_length = 8, max_length = 14)]
+  pub gtin: bigdecimal::BigDecimal,
   pub created_at: chrono::NaiveDateTime,
   pub updated_at: chrono::NaiveDateTime,
   pub sku: String,
@@ -21,8 +22,8 @@ pub struct Product {
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ProductToMeasure {
   pub id: i64,
-  #[schema(min_length = 8, max_length = 14)]
-  pub gtin: String,
+  #[schema(value_type = String, min_length = 8, max_length = 14)]
+  pub gtin: bigdecimal::BigDecimal,
   pub created_at: chrono::NaiveDateTime,
   pub unit_id: i32,
   #[schema(value_type = f64)]

@@ -19,8 +19,7 @@ diesel::table! {
 
 diesel::table! {
     products (gtin) {
-        #[max_length = 14]
-        gtin -> Bpchar,
+        gtin -> Numeric,
         created_at -> Timestamp,
         updated_at -> Timestamp,
         #[max_length = 255]
@@ -33,8 +32,7 @@ diesel::table! {
 diesel::table! {
     products_to_measures (id) {
         id -> Int8,
-        #[max_length = 14]
-        gtin -> Bpchar,
+        gtin -> Numeric,
         created_at -> Timestamp,
         unit_id -> Int4,
         amount -> Numeric,

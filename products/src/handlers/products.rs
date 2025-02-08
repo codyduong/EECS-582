@@ -30,8 +30,12 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   }
 }
 
-fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> Result<Product, diesel::result::Error> {
+fn db_get_product_by_gtin(
+  pool: web::Data<Pool>,
+  gtin: bigdecimal::BigDecimal,
+) -> Result<Product, diesel::result::Error> {
   let mut conn = pool.get().unwrap();
+
   products::table.find(gtin).get_result::<Product>(&mut conn)
 }
 
@@ -49,9 +53,16 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> Result<Product
 )]
 #[get("/{gtin}")]
 pub(crate) async fn get_product(
-  gtin: web::Path<String>,
+  gtin_str: web::Path<String>,
   db: web::Data<Pool>,
 ) -> Result<HttpResponse, actix_web::Error> {
+  let gtin = match gtin_str.parse::<bigdecimal::BigDecimal>() {
+    Ok(bd) => bd,
+    Err(e) => {
+      return Ok(HttpResponse::BadRequest().body(format!("Invalid GTIN format: {}", e)));
+    }
+  };
+
   let result = {
     let gtin = gtin.clone();
     web::block(move || db_get_product_by_gtin(db, gtin)).await
