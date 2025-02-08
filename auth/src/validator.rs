@@ -1,11 +1,7 @@
 use actix_web::dev::ServiceRequest;
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
-use std::{
-  env,
-  future::{ready, Future},
-  pin::Pin,
-};
+use std::{env, future::Future, pin::Pin};
 
 use crate::{errors::ServiceError, handlers::auth::Claims, models::PermissionName};
 
@@ -91,12 +87,7 @@ impl ValidatorBuilder {
   > {
     Box::new(move |req: ServiceRequest, credentials: BearerAuth| {
       let token = credentials.token().to_string();
-      let secret_key = match env::var("SECRET_KEY") {
-        Ok(key) => key,
-        Err(_) => {
-          return Box::pin(ready(Err((ServiceError::InternalServerError.into(), req))));
-        }
-      };
+      let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 
       let validator = self.clone();
       let fut = async move {

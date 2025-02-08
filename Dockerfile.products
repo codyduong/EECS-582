@@ -33,7 +33,7 @@ COPY --from=planner /products/recipe.json recipe.json
 
 # Build products
 COPY / /
-RUN cargo build --release --bin products
+RUN RUST_LOG=trace cargo build --release --bin products
 
 
 ### FINAL - We do not need the Rust toolchain to run the binary!

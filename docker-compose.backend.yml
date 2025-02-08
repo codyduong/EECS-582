@@ -11,8 +11,8 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/auth
       PORT: 8081
-      TEST_PASSWORD: ${TEST_PASSWORD}
       SECRET_KEY: ${JWT_SECRET}
+      TEST_PASSWORD: ${TEST_PASSWORD}
       SEED: 1
     restart: always
 
@@ -28,6 +28,7 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/products
       PORT: 8082
+      SECRET_KEY: ${JWT_SECRET}
     restart: always
 
   db:

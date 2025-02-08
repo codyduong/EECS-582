@@ -21,6 +21,7 @@ async fn main() -> std::io::Result<()> {
   dotenvy::dotenv().ok();
   simple_logger::SimpleLogger::new()
     .with_level(log::LevelFilter::Debug)
+    .env()
     .init()
     .unwrap();
 

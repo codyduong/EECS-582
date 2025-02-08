@@ -24,7 +24,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 
 # Build auth
 COPY / /
-RUN cargo build --release --bin auth
+RUN RUST_LOG=trace cargo build --release --bin auth
 
 
 ### FINAL - We do not need the Rust toolchain to run the binary!
