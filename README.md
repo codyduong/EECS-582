@@ -14,17 +14,19 @@ overengineered project monorepo
 
 ## Setting up
 
-This assumes at a minimum you have [ `docker` ](https://www.docker.com/). Install via your preferred method.
-
 ### Dependencies
 
 It is very possible to run this entirely with only docker as a dependency, but you may require other tools
 during development:
+* [docker](https://www.docker.com/)
 * [rust](https://www.rust-lang.org/tools/install)
+  - [diesel-cli](https://diesel.rs/guides/getting-started), Diesel is what we
+    use as our ORM on various backend services, you will need it to write SQL
+    migrations.
 * [postgresql](https://www.postgresql.org/download/)
   - Select install with pgAdmin 4 if you do not have a database management tool to view databases.
 
-For vscode users this repo also comes with [ `.vscode` ](./vscode) to indicate recommended extensions.
+For vscode users this repo also comes with [`.vscode`](./vscode) to indicate recommended extensions.
 
 <!--
 * [node.js](https://nodejs.org/en)
