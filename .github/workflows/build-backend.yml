@@ -76,12 +76,8 @@ jobs:
                   cache-from: type=local,src=/tmp/.buildx-cache
                   cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
-            - name: Build with docker-compose (optional)
-              run: |
-                  export DOCKER_BUILDKIT=1
-                  export BUILDKIT_INLINE_CACHE=1
-                  docker-compose -f docker-compose.auth.yml build --build-arg BUILDKIT_INLINE_CACHE=1
-                  docker-compose -f docker-compose.products.yml build --build-arg BUILDKIT_INLINE_CACHE=1
+            - name: Build with docker-compose
+              run: docker-compose -f docker-compose.backend.yml build
 
             - name: Save buildx cache
               uses: actions/cache@v4
