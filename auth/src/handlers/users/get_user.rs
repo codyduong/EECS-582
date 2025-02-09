@@ -30,7 +30,7 @@ pub(crate) async fn get_user_route(
   db: web::Data<Pool>,
 ) -> Result<HttpResponse, actix_web::Error> {
   let result = {
-    let user_id = user_id.clone();
+    let user_id = *user_id;
     web::block(move || db_get_user_by_id(db, user_id)).await
   };
 

@@ -18,6 +18,12 @@ pub struct ValidatorBuilder {
   required_scopes: Option<ScopeRequirement>,
 }
 
+impl Default for ValidatorBuilder {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl ValidatorBuilder {
   pub fn new() -> Self {
     ValidatorBuilder { required_scopes: None }
@@ -65,6 +71,7 @@ impl ValidatorBuilder {
     }
   }
 
+  #[allow(clippy::only_used_in_recursion)]
   fn check_requirement(&self, requirement: &ScopeRequirement, permissions: &Vec<PermissionName>) -> bool {
     match requirement {
       ScopeRequirement::Scope(scope) => permissions.contains(scope),
@@ -75,6 +82,7 @@ impl ValidatorBuilder {
   }
 
   // async closures, more like async close my brain into a mush -- @codyduong
+  #[allow(clippy::type_complexity)]
   pub fn build(
     self,
   ) -> Box<

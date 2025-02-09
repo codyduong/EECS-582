@@ -12,9 +12,9 @@ use utoipa_swagger_ui::{SwaggerUi, Url};
 // mod seed;
 
 #[cfg(debug_assertions)]
-const API_URL: &'static str = "127.0.0.1";
+const API_URL: &str = "127.0.0.1";
 #[cfg(not(debug_assertions))]
-const API_URL: &'static str = "0.0.0.0";
+const API_URL: &str = "0.0.0.0";
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
