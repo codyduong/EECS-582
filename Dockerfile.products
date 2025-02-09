@@ -6,13 +6,13 @@ FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
 FROM chef AS planner
 
 # Preprae for auth
-WORKDIR /auth
-COPY /auth .
+WORKDIR /backend/auth
+COPY /backend/auth .
 RUN cargo chef prepare --recipe-path recipe.json
 
 # Prepare for products/products
-WORKDIR /products
-COPY /products .
+WORKDIR /backend/products
+COPY /backend/products .
 RUN cargo chef prepare --recipe-path recipe.json
 
 
@@ -21,13 +21,13 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM chef AS builder
 
 # Cook auth
-WORKDIR /auth
-COPY --from=planner /auth/recipe.json recipe.json
+WORKDIR /backend/auth
+COPY --from=planner /backend/auth/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 
 # Cook products
-WORKDIR /products
-COPY --from=planner /products/recipe.json recipe.json
+WORKDIR /backend/products
+COPY --from=planner /backend/products/recipe.json recipe.json
 
 
 
@@ -44,6 +44,6 @@ RUN apt-get update && \
     apt-get install -y libpq5 && \
     rm -rf /var/lib/apt/lists/*  # Clean up apt cache
 
-WORKDIR /products
-COPY --from=builder /products/target/release/products /usr/local/bin
+WORKDIR /backend/products
+COPY --from=builder /backend/products/target/release/products /usr/local/bin
 ENTRYPOINT ["/usr/local/bin/products"]
