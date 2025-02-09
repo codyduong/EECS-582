@@ -1,4 +1,5 @@
 use actix_web::{web::Data, App, HttpServer};
+use auth::*;
 use diesel::{
   prelude::*,
   r2d2::{self, ConnectionManager},
@@ -7,7 +8,6 @@ use diesel_migrations::MigrationHarness;
 use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 use utoipa_swagger_ui::{SwaggerUi, Url};
-use auth::*;
 
 mod seed;
 
@@ -30,7 +30,7 @@ async fn main() -> std::io::Result<()> {
     #[cfg(debug_assertions)]
     {
       log::debug!("Failed to find PORT in .env, falling back to: 8082");
-      return "8082".to_string()
+      return "8082".to_string();
     }
     #[allow(unreachable_code)]
     "8082".to_string()
