@@ -1,0 +1,63 @@
+name: Rust Lint & Clippy Checks
+
+on:
+    push:
+        branches: [master]
+        paths:
+            - ".github/workflows/**"
+            - "**/*.rs"
+            - "**/rustfmt.toml"
+            - "**/clippy.toml"
+            - "**/build.rs"
+            - "**/Cargo.lock"
+            - "**/Cargo.toml"
+    pull_request:
+        branches: [master]
+        paths:
+            - ".github/workflows/**"
+            - "**/*.rs"
+            - "**/rustfmt.toml"
+            - "**/clippy.toml"
+            - "**/build.rs"
+            - "**/Cargo.lock"
+            - "**/Cargo.toml"
+
+jobs:
+    fmt-and-clippy:
+        name: Format and Clippy Checks
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                project: [auth, products]
+                rust: [stable]
+                os: [ubuntu-latest]
+        defaults:
+            run:
+                working-directory: ${{ matrix.project }}
+
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+            - name: Cache cargo registry, git trees and binaries
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.cargo/registry
+                      ~/.cargo/git
+                      ~/.cargo/bin
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+            - name: Rustfmt Check
+              run: cargo fmt --all --check
+
+            - name: Clippy Check
+              run: cargo clippy --all -- -D warnings
+
+            - name: Upload clippy output if errors
+              if: failure() && contains(matrix.rust, 'stable')
+              uses: actions/upload-artifact@v4
+              with:
+                  name: clippy-output-${{ matrix.project }}
+                  path: ${{ matrix.project }}/target/clippy-report.html
+                  retention-days: 1

@@ -2,9 +2,9 @@
 
 overengineered project monorepo
 
-* auth is a primarily REST server with a postgresql database
+* [auth](./auth) is a primarily REST server with a postgresql database
   + OpenAPI Spec: http://localhost:8081/swagger-ui/#/
-* products is a REST/~~gRPC~~ server with a postgresql database
+* [products](./products) is a REST/~~gRPC~~ server with a postgresql database
   + OpenAPI Spec: http://localhost:8082/swagger-ui/#/
 <!--
 * website is a Next.js server
@@ -22,6 +22,8 @@ during development:
 * [rust](https://www.rust-lang.org/tools/install)
 * [postgresql](https://www.postgresql.org/download/)
   - Select install with pgAdmin 4 if you do not have a database management tool to view databases.
+
+For vscode users this repo also comes with [ `.vscode` ](./vscode) to indicate recommended extensions.
 
 <!--
 * [node.js](https://nodejs.org/en)
