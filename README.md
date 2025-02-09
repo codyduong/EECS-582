@@ -2,10 +2,11 @@
 
 overengineered project monorepo
 
-* [auth](./auth) is a primarily REST server with a postgresql database
-  + OpenAPI Spec: http://localhost:8081/swagger-ui/#/
-* [products](./products) is a REST/~~gRPC~~ server with a postgresql database
-  + OpenAPI Spec: http://localhost:8082/swagger-ui/#/
+* [backend](./backend/)
+  * [auth](./backend/auth/) is a primarily REST server with a postgresql database
+    + OpenAPI Spec: http://localhost:8081/swagger-ui/#/
+  * [products](./backend/products/) is a REST/~~gRPC~~ server with a postgresql database
+    + OpenAPI Spec: http://localhost:8082/swagger-ui/#/
 <!--
 * website is a Next.js server
   + http://localhost:3000/
