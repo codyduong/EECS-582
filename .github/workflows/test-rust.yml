@@ -24,7 +24,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                project: [auth, products] # Add all your project directories here
+                project: [auth, products]
                 rust: [stable]
                 os: [ubuntu-latest]
         defaults:
