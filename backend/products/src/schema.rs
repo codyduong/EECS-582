@@ -23,7 +23,7 @@ diesel::table! {
         created_at -> Timestamp,
         updated_at -> Timestamp,
         #[max_length = 255]
-        sku -> Varchar,
+        sku -> Nullable<Varchar>,
         productname -> Text,
         sellsinraw -> Bool,
     }
@@ -45,7 +45,6 @@ diesel::table! {
 diesel::table! {
     units (id) {
         id -> Int4,
-        name -> Text,
         symbol -> Text,
     }
 }
@@ -55,9 +54,9 @@ diesel::joinable!(products_to_measures -> products (gtin));
 diesel::joinable!(products_to_measures -> units (unit_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-  marketplaces,
-  physical_marketplaces,
-  products,
-  products_to_measures,
-  units,
+    marketplaces,
+    physical_marketplaces,
+    products,
+    products_to_measures,
+    units,
 );

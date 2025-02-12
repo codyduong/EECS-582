@@ -5,18 +5,22 @@ use diesel::{
   serialize::{self, IsNull, Output, ToSql},
 };
 use serde::{Deserialize, Serialize};
+use utoipa::{schema, ToSchema};
 use std::io::Write;
-use strum_macros::{Display, EnumString};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, EnumString, Display, FromSqlRow, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, FromSqlRow, Clone, ToSchema)]
 pub enum PermissionName {
-  #[strum(serialize = "create:all")]
+  #[serde(rename = "create:all")]
+  #[schema(rename = "create:all")]
   CreateAll,
-  #[strum(serialize = "read:all")]
+  #[serde(rename = "read:all")]
+  #[schema(rename = "read:all")]
   ReadAll,
-  #[strum(serialize = "update:all")]
+  #[serde(rename = "update:all")]
+  #[schema(rename = "update:all")]
   UpdateAll,
-  #[strum(serialize = "delete:all")]
+  #[serde(rename = "delete:all")]
+  #[schema(rename = "delete:all")]
   DeleteAll,
 }
 
