@@ -45,5 +45,5 @@ pub struct ProductToMeasureExternal {
 pub struct ProductExternal {
   #[serde(flatten)]
   pub product: Product,
-  pub measures: Vec<ProductToMeasureExternal>
+  pub measures: Vec<ProductToMeasureExternal>,
 }

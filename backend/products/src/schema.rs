@@ -54,9 +54,9 @@ diesel::joinable!(products_to_measures -> products (gtin));
 diesel::joinable!(products_to_measures -> units (unit_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    marketplaces,
-    physical_marketplaces,
-    products,
-    products_to_measures,
-    units,
+  marketplaces,
+  physical_marketplaces,
+  products,
+  products_to_measures,
+  units,
 );

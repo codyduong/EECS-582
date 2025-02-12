@@ -5,8 +5,8 @@ use diesel::{
   serialize::{self, IsNull, Output, ToSql},
 };
 use serde::{Deserialize, Serialize};
-use utoipa::{schema, ToSchema};
 use std::io::Write;
+use utoipa::{schema, ToSchema};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, FromSqlRow, Clone, ToSchema)]
 pub enum PermissionName {
