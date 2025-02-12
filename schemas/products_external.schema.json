@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProductsExternal",
+  "type": "array",
+  "items": {
+    "$ref": "./product_external.schema.json"
+  }
+}
