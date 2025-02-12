@@ -24,7 +24,10 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                project: [backend/auth, backend/products]
+                project:
+                    - backend/auth
+                    - backend/products
+                    - tooling/schema-gen
                 rust: [stable]
                 os: [ubuntu-latest]
         defaults:

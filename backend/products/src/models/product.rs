@@ -1,8 +1,9 @@
 use diesel::prelude::*;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-#[derive(Queryable, Selectable, Debug, Deserialize, Serialize, ToSchema, PartialEq, Hash, Eq, Clone)]
+#[derive(Queryable, Selectable, Debug, Deserialize, Serialize, ToSchema, PartialEq, Hash, Eq, Clone, JsonSchema)]
 #[diesel(belongs_to(crate::models::Marketplace))]
 #[diesel(table_name = crate::schema::products)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -16,7 +17,7 @@ pub struct Product {
   pub sellsinraw: bool,
 }
 
-#[derive(Queryable, Selectable, Debug, Deserialize, Serialize, ToSchema, PartialEq, Hash, Clone)]
+#[derive(Queryable, Selectable, Debug, Deserialize, Serialize, ToSchema, PartialEq, Hash, Clone, JsonSchema)]
 #[diesel(belongs_to(crate::models::Marketplace))]
 #[diesel(table_name = crate::schema::products_to_measures)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -34,14 +35,14 @@ pub struct ProductToMeasure {
   pub raw_amount: Option<bigdecimal::BigDecimal>,
 }
 
-#[derive(Deserialize, Serialize, ToSchema, Clone)]
+#[derive(Deserialize, Serialize, ToSchema, Clone, JsonSchema)]
 pub struct ProductToMeasureExternal {
   #[serde(flatten)]
   pub product_to_measure: ProductToMeasure,
   pub unit: super::Unit,
 }
 
-#[derive(Deserialize, Serialize, ToSchema, Clone)]
+#[derive(Deserialize, Serialize, ToSchema, Clone, JsonSchema)]
 pub struct ProductExternal {
   #[serde(flatten)]
   pub product: Product,

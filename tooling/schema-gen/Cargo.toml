@@ -1,0 +1,12 @@
+[package]
+name = "validator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.5.29", features = ["derive"] }
+auth = { path = "../../backend/auth/" }
+products = { path = "../../backend/products/" }
+serde = "1.0.217"
+schemars = { version = "0.8.21", features = ["chrono", "bigdecimal04"] }
+serde_json = { version = "1.0.138", features = ["arbitrary_precision", "preserve_order"] }
