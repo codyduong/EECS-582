@@ -11,7 +11,6 @@
 * [packages](./packages/), contains any shared code libraries used within other tools
   + [auth-api-py](./packages/auth-api-py/),
     OpenAPI generated client library for `auth`
-
   + [products-api-py](./packages/products-api-py/), 
     OpenAPI generated generated client library for `products`
 
@@ -23,7 +22,7 @@
 
 * [tooling](./tooling/), contains any tooling/cli that is not a scraper
   + [grocerywise-ingestion-cli](./tooling/grocerywise-ingestion-cli/), 
-    Used to ingest 
+    Used to ingest scraped data into various DBs
 
 <!--
 * website is a Next.js server
