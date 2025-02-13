@@ -12,11 +12,11 @@ on:
     pull_request:
         branches: [master]
         paths:
-          - ".github/workflows/**"
-          - "**/*.py"
-          - "**/pyproject.toml"
-          - "**/ruff.toml"
-          - "**/.ruff.toml"
+            - ".github/workflows/**"
+            - "**/*.py"
+            - "**/pyproject.toml"
+            - "**/ruff.toml"
+            - "**/.ruff.toml"
 
 jobs:
     fmt-and-clippy:

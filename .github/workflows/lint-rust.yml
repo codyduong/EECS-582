@@ -31,7 +31,6 @@ jobs:
                 project:
                     - backend/auth
                     - backend/products
-                    - tooling/schema-gen
                 rust: [stable]
                 os: [ubuntu-latest]
         defaults:
