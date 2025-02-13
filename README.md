@@ -7,6 +7,11 @@ overengineered project monorepo
     + OpenAPI Spec: http://localhost:8081/swagger-ui/#/
   * [products](./backend/products/) is a REST/~~gRPC~~ server with a postgresql database
     + OpenAPI Spec: http://localhost:8082/swagger-ui/#/
+* [scrapers](./scrapers/)
+  * [scraper-py-dillions](./scrapers/scraper-py-dillions/)
+  * [scraper-py-sample](./scrapers/scraper-py-sample/)
+  * [scraper-py-target](./scrapers/scraper-py-target/)
+  * [scraper-py-walmart](./scrapers/scraper-py-walmart/)
 <!--
 * website is a Next.js server
   + http://localhost:3000/
@@ -25,8 +30,22 @@ during development:
     migrations.
 * [postgresql](https://www.postgresql.org/download/)
   - Select install with pgAdmin 4 if you do not have a database management tool to view databases.
+* [python](https://www.python.org/)
+  - Python tooling is generally managed by [`uv`](https://docs.astral.sh/uv/getting-started/installation/),
+    depending on your installation method you may not need to install python at all, and can just install
+    `uv` to manage your python version, packages, and projects.
 
 For vscode users this repo also comes with [`.vscode`](./vscode) to indicate recommended extensions.
+
+It also comes with an optional [`grocerywise.code-workspace`](./grocerywise.code-workspace) file to open all projects but in
+seperate workspaces. Read more here: [What is a VS Code Workspace?](https://code.visualstudio.com/docs/editor/workspaces/workspaces)
+* Useful in python development, where you may need seperate instances of the python intepreter.
+* Rust extension is configured for multi-project repos like this, and as such does not need code workspaces to work properly.
+
+```sh
+code grocerywise.code_workspaces  # Recommended use if you are working in .py projects/files
+code .                            # Otherwise don't open and use default vscode behavior
+```
 
 <!--
 * [node.js](https://nodejs.org/en)

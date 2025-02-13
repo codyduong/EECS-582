@@ -1,0 +1,11 @@
+{
+    "folders": [
+        { "path": "." }, 
+        { "path": "backend/auth" },
+        { "path": "backend/products" },
+        { "path": "scrapers/scraper-py-dillions" },
+        { "path": "scrapers/scraper-py-sample" },
+        { "path": "scrapers/scraper-py-target" },
+        { "path": "scrapers/scraper-py-walmart" },
+    ]
+}

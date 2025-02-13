@@ -1,9 +1,12 @@
 {
   "recommendations": [
+    // Rust tooling
     "rust-lang.rust-analyzer",
+    "tamasfe.even-better-toml",
+    
+    // Python tooling
     "ms-python.python",
     "ms-python.vscode-pylance",
     "charliermarsh.ruff",
-    "tamasfe.even-better-toml"
   ]
 }
