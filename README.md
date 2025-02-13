@@ -1,17 +1,30 @@
 # EECS-582
 
-overengineered project monorepo
-
 * [backend](./backend/)
-  * [auth](./backend/auth/) is a REST server with a postgresql database
-    + OpenAPI Spec: http://localhost:8081/swagger-ui/#/
-  * [products](./backend/products/) is a REST/~~gRPC~~ server with a postgresql database
-    + OpenAPI Spec: http://localhost:8082/swagger-ui/#/
+  + [auth](./backend/auth/) is a REST server with a postgresql database
+    - SwaggerUI: http://localhost:8081/swagger-ui/#/
+    - OpenAPI Spec: http://localhost:8081/api-docs/openapi.json
+  + [products](./backend/products/) is a REST/~~gRPC~~ server with a postgresql database
+    - SwaggerUI: http://localhost:8082/swagger-ui/#/
+    - OpenAPI Spec: http://localhost:8082/api-docs/openapi.json
+
+* [packages](./packages/), contains any shared code libraries used within other tools
+  + [auth-api-py](./packages/auth-api-py/),
+    OpenAPI generated client library for `auth`
+
+  + [products-api-py](./packages/products-api-py/), 
+    OpenAPI generated generated client library for `products`
+
 * [scrapers](./scrapers/)
-  * [scraper-py-dillions](./scrapers/scraper-py-dillions/)
-  * [scraper-py-sample](./scrapers/scraper-py-sample/)
-  * [scraper-py-target](./scrapers/scraper-py-target/)
-  * [scraper-py-walmart](./scrapers/scraper-py-walmart/)
+  + [scraper-py-dillions](./scrapers/scraper-py-dillions/)
+  + [scraper-py-sample](./scrapers/scraper-py-sample/)
+  + [scraper-py-target](./scrapers/scraper-py-target/)
+  + [scraper-py-walmart](./scrapers/scraper-py-walmart/)
+
+* [tooling](./tooling/), contains any tooling/cli that is not a scraper
+  + [grocerywise-ingestion-cli](./tooling/grocerywise-ingestion-cli/), 
+    Used to ingest 
+
 <!--
 * website is a Next.js server
   + http://localhost:3000/
@@ -25,15 +38,19 @@ It is very possible to run this entirely with only docker as a dependency, but y
 during development:
 * [docker](https://www.docker.com/)
 * [rust](https://www.rust-lang.org/tools/install)
-  - [diesel-cli](https://diesel.rs/guides/getting-started), Diesel is what we
+  + [diesel-cli](https://diesel.rs/guides/getting-started), Diesel is what we
     use as our ORM on various backend services, you will need it to write SQL
     migrations.
+
 * [postgresql](https://www.postgresql.org/download/)
-  - Select install with pgAdmin 4 if you do not have a database management tool to view databases.
+  + Select install with pgAdmin 4 if you do not have a database management tool to view databases.
 * [python](https://www.python.org/)
-  - Python is managed by [`uv`](https://docs.astral.sh/uv/getting-started/installation/),
+  + Python is managed by [`uv`](https://docs.astral.sh/uv/getting-started/installation/), 
     depending on your installation method you may not need to install python at all, and can just install
     `uv` to manage your python version, packages, and projects.
+
+* [OpenAPI generator cli](https://openapi-generator.tech/docs/installation), 
+  Used to generate client libraries based on our backend APIs that support OpenAPI spec
 
 For vscode users this repo also comes with [`.vscode`](./vscode) to indicate recommended extensions.
 
@@ -51,15 +68,19 @@ code .                            # Otherwise don't open and use default vscode 
 * [node.js](https://nodejs.org/en)
   + I recommend using a node version manager for your machine. 
     [ `n` ](https://github.com/tj/n), [ `nvm` ](https://github.com/nvm-sh/nvm), or [ `nvm-windows` ](https://github.com/coreybutler/nvm-windows) are good options.
+
 -->
 
 ### Setting up Environment
 
 * Copy [`.env-sample`](./.env-sample) to `.env`
-  ```sh
+  
+
+```sh
   cp .env-sample .env         # shell
   Copy-Item .env-sample .env  # powershell
   ```
+
 * Fill out env variables.
   + `POSTGRES_USER` and `POSTGRES_PASSWORD` can be whatever you want. Just keep it in mind for your connection string
     for your pgadmin4 or preferred database management tool.
@@ -95,6 +116,7 @@ docker-compose -f docker-compose.backend.yml up --build
 ```
 
 ### Removing DB
+
 If your database somehow entered a bad state, it is possible to delete all the data.
 
 ```sh
@@ -107,4 +129,5 @@ docker volume rm eecs-582_database
 ```
 
 ### Starting frontend
+
 TODO
