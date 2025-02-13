@@ -3,7 +3,7 @@
 This tutorial is assuming you are using [pgAdmin 4](https://www.pgadmin.org/download/)
 
 0. Assumes the backend microservices are running based on the tutorial in the 
-   [README.md](../../README.md)
+   [README.md](../../README.md#starting-backendmicroservices)
 
 1. Register the new server
 
@@ -20,26 +20,25 @@ Two ways to get here
    you want. Set `Connect now?` to `false` if your backend microservices are
    not running.
 
-![Set general](step2.png)
+   ![Set general](step2.png)
 
 3. Add the connection, recall the `POSTGRES_USER` and `POSTGRES_PASSWORD` you 
    set in `.env` and use those values instead. Note that we are using port 6001 
    instead of the default 5432 to avoid collisions with any locally running 
    postgres server. I'd recommend also checking `Save password?` to `true`.
 
-![Add connection](step3.png)
+   ![Add connection](step3.png)
 
 4. If all went well you should be able to see the `auth` and `products` (and 
    others).
 
 5. Query `auth.users` to ensure the test user seeded correctly.
 
-![Query](step5.png)
+   ![Query](step5.png)
 
-6. <div>You should see something like this. The hash should be the exact same 
-   assuming the password is the default `abc123` . Double check that the 
+6. <div>You should see something like this. Double check that the 
    `auth.users_to_roles` and `auth.roles_to_permissions` tables were also set up
    correctly, to ensure that the test user has all the permissions to perform
    any action.</div>
 
-![Result](step6.png)
+   ![Result](step6.png)

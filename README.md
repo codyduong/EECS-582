@@ -3,7 +3,7 @@
 overengineered project monorepo
 
 * [backend](./backend/)
-  * [auth](./backend/auth/) is a primarily REST server with a postgresql database
+  * [auth](./backend/auth/) is a REST server with a postgresql database
     + OpenAPI Spec: http://localhost:8081/swagger-ui/#/
   * [products](./backend/products/) is a REST/~~gRPC~~ server with a postgresql database
     + OpenAPI Spec: http://localhost:8082/swagger-ui/#/
@@ -31,7 +31,7 @@ during development:
 * [postgresql](https://www.postgresql.org/download/)
   - Select install with pgAdmin 4 if you do not have a database management tool to view databases.
 * [python](https://www.python.org/)
-  - Python tooling is generally managed by [`uv`](https://docs.astral.sh/uv/getting-started/installation/),
+  - Python is managed by [`uv`](https://docs.astral.sh/uv/getting-started/installation/),
     depending on your installation method you may not need to install python at all, and can just install
     `uv` to manage your python version, packages, and projects.
 
@@ -55,7 +55,11 @@ code .                            # Otherwise don't open and use default vscode 
 
 ### Setting up Environment
 
-* Copy [`.env-sample`](./env-sample) to [`.env`](./env) <div>`cp .env-sample .env`</div>
+* Copy [`.env-sample`](./.env-sample) to `.env`
+  ```sh
+  cp .env-sample .env         # shell
+  Copy-Item .env-sample .env  # powershell
+  ```
 * Fill out env variables.
   + `POSTGRES_USER` and `POSTGRES_PASSWORD` can be whatever you want. Just keep it in mind for your connection string
     for your pgadmin4 or preferred database management tool.
@@ -64,6 +68,9 @@ code .                            # Otherwise don't open and use default vscode 
     <!-- - [Connecting to DB with vscode extension](./docs/db-vscode.md) -->
 
   + `TEST_PASSWORD` is the password for the `test` user, by default it is `abc123`
+
+    - [Authorizing user and getting test data](./docs/authorization/authorization.md)
+
   + `JWT_SECRET` is any arbitrary length string used to encode our JWTs. Set it to anything.
 
 ## Starting Project
