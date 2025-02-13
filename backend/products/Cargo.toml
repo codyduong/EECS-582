@@ -26,4 +26,3 @@ bcrypt = "0.17.0"
 diesel_migrations = { version = "2.2.0", features = ["postgres"] }
 bigdecimal = { version = "0.4.7", features = ["serde", "serde-json"] }
 anyhow = "1.0.95"
-schemars = { version = "0.8.21", features = ["chrono", "bigdecimal04"] }

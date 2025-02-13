@@ -4,12 +4,11 @@ use diesel::{
   serialize::{self, IsNull, Output, ToSql},
   Queryable, Selectable,
 };
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::io::Write;
 use utoipa::ToSchema;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, FromSqlRow, Clone, ToSchema, Hash, Eq, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, FromSqlRow, Clone, ToSchema, Hash, Eq)]
 pub enum UnitSymbol {
   #[serde(rename = "fl oz")]
   #[schema(rename = "fl oz")]
@@ -49,7 +48,7 @@ impl FromSql<diesel::sql_types::Text, Pg> for UnitSymbol {
   }
 }
 
-#[derive(Queryable, Selectable, Debug, Deserialize, Serialize, ToSchema, PartialEq, Hash, Clone, JsonSchema)]
+#[derive(Queryable, Selectable, Debug, Deserialize, Serialize, ToSchema, PartialEq, Hash, Clone)]
 #[diesel(belongs_to(crate::models::Unit))]
 #[diesel(table_name = crate::schema::units)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -57,3 +56,5 @@ pub struct Unit {
   pub id: i32,
   pub symbol: UnitSymbol,
 }
+
+pub type UnitResponse = Unit;

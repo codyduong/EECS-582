@@ -23,4 +23,3 @@ serde_json = "1.0.138"
 bcrypt = "0.17.0"
 diesel_migrations = { version = "2.2.0", features = ["postgres"] }
 bigdecimal = { version = "0.4.7", features = ["serde", "serde-json"] }
-schemars = { version = "0.8.21", features = ["chrono", "bigdecimal04"] }

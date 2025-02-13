@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "ProductExternal",
+  "title": "ProductResponse",
   "type": "object",
   "required": [
     "created_at",
@@ -22,7 +22,7 @@
     "measures": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/ProductToMeasureExternal"
+        "$ref": "#/definitions/ProductToMeasureResponse"
       }
     },
     "productname": {
@@ -43,7 +43,7 @@
     }
   },
   "definitions": {
-    "ProductToMeasureExternal": {
+    "ProductToMeasureResponse": {
       "type": "object",
       "required": [
         "amount",

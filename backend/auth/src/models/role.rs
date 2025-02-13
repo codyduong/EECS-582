@@ -9,12 +9,4 @@ pub struct Role {
   pub name: String,
 }
 
-#[derive(Queryable, Selectable, Associations, Debug, Serialize, Deserialize)]
-#[diesel(belongs_to(crate::models::Permission))]
-#[diesel(belongs_to(Role))]
-#[diesel(table_name = crate::schema::roles_to_permissions)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
-pub struct RoleToPermission {
-  pub role_id: i32,
-  pub permission_id: i32,
-}
+pub type RoleResponse = Role;

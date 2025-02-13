@@ -10,3 +10,5 @@ pub struct PhysicalMarketplace {
   pub deleted: bool,
   pub created_at: chrono::NaiveDateTime,
 }
+
+pub type PhysicalMarketplaceResponse = PhysicalMarketplace;

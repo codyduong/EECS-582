@@ -34,7 +34,7 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   }
 }
 
-fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: bigdecimal::BigDecimal) -> anyhow::Result<ProductExternal> {
+fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: bigdecimal::BigDecimal) -> anyhow::Result<ProductResponse> {
   let mut conn = pool.get().unwrap();
 
   let result = products::table
@@ -52,7 +52,7 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: bigdecimal::BigDecimal) -
 #[utoipa::path(
   context_path = super::V1_PATH,
   responses(
-    (status = OK, body = ProductExternal)
+    (status = OK, body = ProductResponse)
   ),
   params(
     ("gtin" = String, Path, description = "Global Trade Item Number (gtin)")
@@ -79,7 +79,7 @@ pub(crate) async fn get_product(
   };
 
   match result {
-    Ok(Ok(res)) => Ok(HttpResponse::Ok().json(Into::<ProductExternal>::into(res))),
+    Ok(Ok(res)) => Ok(HttpResponse::Ok().json(Into::<ProductResponse>::into(res))),
     Ok(Err(err)) => match err.downcast_ref::<diesel::result::Error>() {
       Some(diesel::result::Error::NotFound) => {
         log::warn!("Product not found {}", gtin);
@@ -101,7 +101,7 @@ pub(crate) async fn get_product(
   }
 }
 
-fn db_get_all_products(pool: web::Data<Pool>) -> Result<Vec<ProductExternal>, diesel::result::Error> {
+fn db_get_all_products(pool: web::Data<Pool>) -> Result<Vec<ProductResponse>, diesel::result::Error> {
   let mut conn = pool.get().unwrap();
   // let items = products::table.load::<Product>(&mut conn)?;
 
@@ -116,7 +116,7 @@ fn db_get_all_products(pool: web::Data<Pool>) -> Result<Vec<ProductExternal>, di
 #[utoipa::path(
   context_path = super::V1_PATH,
   responses(
-    (status = OK, body = Vec<ProductExternal>)
+    (status = OK, body = Vec<ProductResponse>)
   ),
   security(
     ("http" = [])
@@ -139,7 +139,7 @@ pub(crate) async fn get_products(db: web::Data<Pool>) -> Result<HttpResponse, ac
   }
 }
 
-fn fold_products_and_measures(results: Vec<(Product, ProductToMeasure, Unit)>) -> Vec<ProductExternal> {
+fn fold_products_and_measures(results: Vec<(Product, ProductToMeasure, Unit)>) -> Vec<ProductResponse> {
   results
     .into_iter()
     .fold(
@@ -156,12 +156,12 @@ fn fold_products_and_measures(results: Vec<(Product, ProductToMeasure, Unit)>) -
     .map(|(product, conjoined)| {
       let measures = conjoined
         .into_iter()
-        .map(|(product_to_measure, unit)| ProductToMeasureExternal {
+        .map(|(product_to_measure, unit)| ProductToMeasureResponse {
           product_to_measure,
           unit,
         })
         .collect();
-      ProductExternal { product, measures }
+      ProductResponse { product, measures }
     })
     .collect()
 }

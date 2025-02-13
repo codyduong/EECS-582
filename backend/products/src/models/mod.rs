@@ -2,6 +2,8 @@ mod marketplace;
 pub use marketplace::*;
 mod physical_marketplace;
 pub use physical_marketplace::*;
+mod product_to_measure;
+pub use product_to_measure::*;
 mod product;
 pub use product::*;
 mod unit;
