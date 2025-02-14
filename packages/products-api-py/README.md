@@ -76,15 +76,15 @@ configuration = products_api.Configuration(
 # Enter a context with an instance of the API client
 with products_api.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = products_api.HandlersProductsApi(api_client)
-    gtin = 'gtin_example' # str | Global Trade Item Number (gtin)
+    api_instance = products_api.HandlersMarketplacesApi(api_client)
+    id = 56 # int | id
 
     try:
-        api_response = api_instance.get_product(gtin)
-        print("The response of HandlersProductsApi->get_product:\n")
+        api_response = api_instance.get_marketplace(id)
+        print("The response of HandlersMarketplacesApi->get_marketplace:\n")
         pprint(api_response)
     except ApiException as e:
-        print("Exception when calling HandlersProductsApi->get_product: %s\n" % e)
+        print("Exception when calling HandlersMarketplacesApi->get_marketplace: %s\n" % e)
 
 ```
 
@@ -94,6 +94,9 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*HandlersMarketplacesApi* | [**get_marketplace**](docs/HandlersMarketplacesApi.md#get_marketplace) | **GET** /api/v1/marketplaces/{id} | 
+*HandlersMarketplacesApi* | [**get_marketplaces**](docs/HandlersMarketplacesApi.md#get_marketplaces) | **GET** /api/v1/marketplaces | 
+*HandlersMarketplacesApi* | [**post_marketplace**](docs/HandlersMarketplacesApi.md#post_marketplace) | **POST** /api/v1/marketplaces/{id} | 
 *HandlersProductsApi* | [**get_product**](docs/HandlersProductsApi.md#get_product) | **GET** /api/v1/products/{gtin} | 
 *HandlersProductsApi* | [**get_products**](docs/HandlersProductsApi.md#get_products) | **GET** /api/v1/products | 
 *HandlersProductsApi* | [**post_products**](docs/HandlersProductsApi.md#post_products) | **POST** /api/v1/products | 
@@ -101,6 +104,8 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [Marketplace](docs/Marketplace.md)
+ - [NewMarketplace](docs/NewMarketplace.md)
  - [NewProduct](docs/NewProduct.md)
  - [NewProductPost](docs/NewProductPost.md)
  - [NewProductToMeasurePartial](docs/NewProductToMeasurePartial.md)

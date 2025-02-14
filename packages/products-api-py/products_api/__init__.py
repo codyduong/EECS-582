@@ -17,6 +17,7 @@
 __version__ = "1.0.0"
 
 # import apis into sdk package
+from products_api.api.handlers_marketplaces_api import HandlersMarketplacesApi
 from products_api.api.handlers_products_api import HandlersProductsApi
 
 # import ApiClient
@@ -31,6 +32,8 @@ from products_api.exceptions import ApiAttributeError
 from products_api.exceptions import ApiException
 
 # import models into sdk package
+from products_api.models.marketplace import Marketplace
+from products_api.models.new_marketplace import NewMarketplace
 from products_api.models.new_product import NewProduct
 from products_api.models.new_product_post import NewProductPost
 from products_api.models.new_product_to_measure_partial import NewProductToMeasurePartial
