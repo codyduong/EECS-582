@@ -85,19 +85,19 @@ impl ValidatorBuilder {
   #[allow(clippy::type_complexity)]
   pub fn build(
     self,
-  ) -> Box<
-    dyn Fn(
-        ServiceRequest,
-        BearerAuth,
-      ) -> Pin<Box<dyn Future<Output = Result<ServiceRequest, (actix_web::Error, ServiceRequest)>>>>
-      + Send
-      + Sync,
-  > {
-    Box::new(move |req: ServiceRequest, credentials: BearerAuth| {
+  ) -> impl Fn(
+    ServiceRequest,
+    BearerAuth,
+  ) -> Pin<Box<dyn Future<Output = Result<ServiceRequest, (actix_web::Error, ServiceRequest)>>>>
+       + Send
+       + Sync
+       + Clone {
+    move |req: ServiceRequest, credentials: BearerAuth| {
       let token = credentials.token().to_string();
       let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 
       let validator = self.clone();
+
       let fut = async move {
         match decode::<Claims>(
           &token,
@@ -116,7 +116,7 @@ impl ValidatorBuilder {
       };
 
       Box::pin(fut)
-    })
+    }
   }
 }
 

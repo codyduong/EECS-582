@@ -22,7 +22,7 @@ fn db_get_all_users(pool: web::Data<Pool>) -> Result<Vec<User>, diesel::result::
     ("http" = [])
   )
 )]
-#[get("/")]
+#[get("")]
 pub(crate) async fn get_users_route(db: web::Data<Pool>) -> Result<HttpResponse, actix_web::Error> {
   let result = web::block(move || db_get_all_users(db)).await;
 
