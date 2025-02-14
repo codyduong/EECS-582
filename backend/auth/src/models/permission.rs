@@ -1,3 +1,56 @@
+/*
+  Name: permissions.rs
+
+  Description:
+  This Rust module defines an enumeration (`PermissionName`) representing different permission 
+  levels, along with database integration using Diesel ORM. It also provides implementations for 
+  serialization, deserialization, and SQL conversion.
+
+  Programmer: Cody Duong
+  Date Created: 2/10/25
+
+  Revision History:
+  - 2/10/25 - Cody Duong - Initial implementation of `PermissionName` enum and Diesel integration.
+  - 2/114/25 - Harrison Wendt - Added new permissions for marketplace, price reports, and products.
+
+
+  Preconditions:
+  - Diesel ORM must be installed and properly configured.
+  - PostgreSQL must be used as the database.
+  - The `permissions` table must exist in the database.
+
+  Acceptable Inputs:
+  - Strings that match the predefined permission names.
+  - Queries executed through Diesel ORM.
+
+  Unacceptable Inputs:
+  - Unknown permission names, which will cause deserialization errors.
+
+  Postconditions:
+  - Permission names are correctly converted to and from SQL values.
+  - Data integrity is maintained in the database.
+
+  Return Values:
+  - Converts between Rust enums and database text values.
+  - Returns valid `PermissionName` instances or an error on failure.
+
+  Error and Exception Conditions:
+  - If an unknown permission name is encountered, deserialization will fail.
+  - Database errors may occur if the table structure is incorrect.
+
+  Side Effects:
+  - This module interacts with the database, potentially causing side effects 
+    if migrations are not properly handled.
+
+  Invariants:
+  - The permission names must remain unique and correctly mapped to SQL text values.
+
+  Known Faults:
+  - Adding new permissions requires updating `ToSql` and `FromSql` manually 
+    unless procedural macros are implemented.
+*/
+
+
 use diesel::{
   deserialize::{self, FromSql, FromSqlRow},
   pg::{Pg, PgValue},
@@ -23,7 +76,7 @@ pub enum PermissionName {
   #[schema(rename = "delete:all")]
   DeleteAll,
 
-   // New marketplace permissions
+   // New marketplace permissions (2/14/24, Harrison Wendt)
    #[serde(rename = "create:marketplace")]
    #[schema(rename = "create:marketplace")]
    CreateMarketplace,
@@ -37,7 +90,7 @@ pub enum PermissionName {
    #[schema(rename = "delete:marketplace")]
    DeleteMarketplace,
 
-   // New price report permissions
+   // New price report permissions (2/14/24, Harrison Wendt)
    #[serde(rename = "create:price_report")]
    #[schema(rename = "create:price_report")]
    CreatePriceReport,
@@ -51,7 +104,7 @@ pub enum PermissionName {
    #[schema(rename = "delete:price_report")]
    DeletePriceReport, 
 
-    // New price report permissions
+    // New price report permissions (2/14/24, Harrison Wendt)
     #[serde(rename = "create:product")]
     #[schema(rename = "create:product")]
     CreateProduct,
@@ -78,6 +131,9 @@ impl ToSql<diesel::sql_types::Text, Pg> for PermissionName {
       PermissionName::UpdateAll => out.write_all(b"update:all")?,
       PermissionName::DeleteAll => out.write_all(b"delete:all")?,
 
+
+      //updating function to include product, marketplace, and price_report
+      //2/14/24, Harrison Wendt
       PermissionName::CreateProduct => out.write_all(b"create:product")?,
       PermissionName::ReadProduct => out.write_all(b"read:product")?,
       PermissionName::UpdateProduct => out.write_all(b"update:product")?,
@@ -105,6 +161,8 @@ impl FromSql<diesel::sql_types::Text, Pg> for PermissionName {
       b"update:all" => Ok(PermissionName::UpdateAll),
       b"delete:all" => Ok(PermissionName::DeleteAll),
 
+      //updating function to include product, marketplace, and price_report
+      //2/14/24, Harrison Wendt
       b"create:product" => Ok(PermissionName::CreateProduct),
       b"read:product" => Ok(PermissionName::ReadProduct),
       b"update:product" => Ok(PermissionName::UpdateProduct),
