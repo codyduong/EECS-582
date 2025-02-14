@@ -87,15 +87,15 @@ impl ValidatorBuilder {
 
   /// Used to build a middleware function, this does not allow finer grain access control.
   /// Only use to block a whole scope.
-  /// 
+  ///
   /// # Examples
-  /// 
+  ///
   /// ```
   /// use actix_web::web::ServiceConfig;
   /// use actix_web_httpauth::middleware::HttpAuthentication;
   /// use crate::models::PermissionName;
   /// use crate::validator::ValidatorBuilder;
-  /// 
+  ///
   /// let read_user = HttpAuthentication::bearer(ValidatorBuilder::new().with_scope(PermissionName::ReadAll).build());
   ///   config.service(
   ///     web::scope(V1_PATH)
@@ -105,7 +105,7 @@ impl ValidatorBuilder {
   ///   );
   /// ```
   #[allow(clippy::type_complexity)]
-  #[deprecated(note="Don't register a middleware, use `validate` instead")]
+  #[deprecated(note = "Don't register a middleware, use `validate` instead")]
   pub fn build(
     self,
   ) -> impl Fn(
@@ -143,16 +143,16 @@ impl ValidatorBuilder {
 
   /// Validate a user with their JWT, returns either a successful claim, or
   /// an unauthorized error which can be quickly propogated.
-  /// 
+  ///
   /// # Examples
-  /// 
+  ///
   /// ```
   /// use actix_web::get;
   /// use actix_web::HttpResponse;
   /// use actix_web_httpauth::extractors::bearer::BearerAuth;
   /// use auth::validator::ValidatorBuilder;
   /// use auth::models::PermissionName;
-  /// 
+  ///
   /// #[get("")]
   /// pub(crate) async fn get_product(auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
   ///   let _claims = ValidatorBuilder::new()
@@ -183,9 +183,19 @@ impl ValidatorBuilder {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use std::sync::Once;
+
+  static INIT: Once = Once::new();
+
+  fn initialize() {
+    INIT.call_once(|| {
+      env::set_var("SECRET_KEY", "foobar");
+    });
+  }
 
   #[test]
   fn test_simple_scope() {
+    initialize();
     let builder = ValidatorBuilder::new().with_scope(PermissionName::ReadAll);
     assert!(builder.check_requirements(&vec![PermissionName::ReadAll]));
     assert!(!builder.check_requirements(&vec![PermissionName::CreateAll]));
@@ -193,6 +203,7 @@ mod tests {
 
   #[test]
   fn test_and_scope() {
+    initialize();
     let builder = ValidatorBuilder::new()
       .with_scope(PermissionName::ReadAll)
       .with_scope(PermissionName::CreateAll);
@@ -203,6 +214,7 @@ mod tests {
 
   #[test]
   fn test_or_scope() {
+    initialize();
     let builder = ValidatorBuilder::new().with_or(vec![
       ScopeRequirement::Scope(PermissionName::ReadAll),
       ScopeRequirement::Scope(PermissionName::CreateAll),
@@ -215,6 +227,7 @@ mod tests {
 
   #[test]
   fn test_not_scope() {
+    initialize();
     let builder = ValidatorBuilder::new().with_not(ScopeRequirement::Scope(PermissionName::UpdateAll));
 
     assert!(builder.check_requirements(&vec![PermissionName::ReadAll]));
@@ -223,6 +236,7 @@ mod tests {
 
   #[test]
   fn test_complex_scope() {
+    initialize();
     let builder = ValidatorBuilder::new()
       .with_scope(PermissionName::ReadAll)
       .with_or(vec![
