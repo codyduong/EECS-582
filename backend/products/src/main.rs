@@ -48,6 +48,9 @@ async fn main() -> std::io::Result<()> {
   #[openapi(
     modifiers(&SecurityAddon),
     paths(
+      handlers::marketplaces::get_marketplace,
+      handlers::marketplaces::get_marketplaces,
+      handlers::marketplaces::post_marketplace,
       handlers::products::get_product,
       handlers::products::get_products,
       handlers::products::post_products,
