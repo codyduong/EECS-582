@@ -1,6 +1,6 @@
 use actix_web::dev::ServiceRequest;
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
+use jsonwebtoken::{decode, Algorithm, DecodingKey, TokenData, Validation};
 use std::{env, future::Future, pin::Pin};
 
 use crate::{errors::ServiceError, handlers::auth::Claims, models::PermissionName};
@@ -16,6 +16,7 @@ pub enum ScopeRequirement {
 #[derive(Clone)]
 pub struct ValidatorBuilder {
   required_scopes: Option<ScopeRequirement>,
+  secret_key: String,
 }
 
 impl Default for ValidatorBuilder {
@@ -26,7 +27,10 @@ impl Default for ValidatorBuilder {
 
 impl ValidatorBuilder {
   pub fn new() -> Self {
-    ValidatorBuilder { required_scopes: None }
+    ValidatorBuilder {
+      required_scopes: None,
+      secret_key: env::var("SECRET_KEY").expect("SECRET_KEY must be set"),
+    }
   }
 
   pub fn with_scope(mut self, scope: PermissionName) -> Self {
@@ -81,8 +85,27 @@ impl ValidatorBuilder {
     }
   }
 
-  // async closures, more like async close my brain into a mush -- @codyduong
+  /// Used to build a middleware function, this does not allow finer grain access control.
+  /// Only use to block a whole scope.
+  /// 
+  /// # Examples
+  /// 
+  /// ```
+  /// use actix_web::web::ServiceConfig;
+  /// use actix_web_httpauth::middleware::HttpAuthentication;
+  /// use crate::models::PermissionName;
+  /// use crate::validator::ValidatorBuilder;
+  /// 
+  /// let read_user = HttpAuthentication::bearer(ValidatorBuilder::new().with_scope(PermissionName::ReadAll).build());
+  ///   config.service(
+  ///     web::scope(V1_PATH)
+  ///       .wrap(read_user)
+  ///       .service(get_user_route)
+  ///       .service(get_users_route),
+  ///   );
+  /// ```
   #[allow(clippy::type_complexity)]
+  #[deprecated(note="Don't register a middleware, use `validate` instead")]
   pub fn build(
     self,
   ) -> impl Fn(
@@ -94,14 +117,13 @@ impl ValidatorBuilder {
        + Clone {
     move |req: ServiceRequest, credentials: BearerAuth| {
       let token = credentials.token().to_string();
-      let secret_key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 
       let validator = self.clone();
 
       let fut = async move {
         match decode::<Claims>(
           &token,
-          &DecodingKey::from_secret(secret_key.as_ref()),
+          &DecodingKey::from_secret(validator.secret_key.as_ref()),
           &Validation::new(Algorithm::HS256),
         ) {
           Ok(token_data) => {
@@ -116,6 +138,44 @@ impl ValidatorBuilder {
       };
 
       Box::pin(fut)
+    }
+  }
+
+  /// Validate a user with their JWT, returns either a successful claim, or
+  /// an unauthorized error which can be quickly propogated.
+  /// 
+  /// # Examples
+  /// 
+  /// ```
+  /// use actix_web::get;
+  /// use actix_web::HttpResponse;
+  /// use actix_web_httpauth::extractors::bearer::BearerAuth;
+  /// use auth::validator::ValidatorBuilder;
+  /// use auth::models::PermissionName;
+  /// 
+  /// #[get("")]
+  /// pub(crate) async fn get_product(auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
+  ///   let _claims = ValidatorBuilder::new()
+  ///     .with_scope(PermissionName::ReadAll)
+  ///     .validate(auth)?;
+  /// }
+  /// ```
+  pub fn validate(self, credentials: BearerAuth) -> Result<TokenData<Claims>, actix_web::Error> {
+    let token = credentials.token().to_string();
+
+    match decode::<Claims>(
+      &token,
+      &DecodingKey::from_secret(self.secret_key.as_ref()),
+      &Validation::new(Algorithm::HS256),
+    ) {
+      Ok(token_data) => {
+        if self.check_requirements(&token_data.claims.permissions) {
+          Ok(token_data)
+        } else {
+          Err(ServiceError::Unauthorized.into())
+        }
+      }
+      Err(_) => Err(ServiceError::BadRequest("Invalid token".to_string()).into()),
     }
   }
 }

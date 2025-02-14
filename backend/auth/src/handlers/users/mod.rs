@@ -13,6 +13,7 @@ pub(crate) const V1_PATH: &str = "/api/v1/users";
 
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   |config: &mut ServiceConfig| {
+    #[allow(deprecated)]
     let read_user = HttpAuthentication::bearer(ValidatorBuilder::new().with_scope(PermissionName::ReadAll).build());
     config.service(
       web::scope(V1_PATH)
