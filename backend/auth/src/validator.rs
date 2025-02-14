@@ -174,7 +174,7 @@ impl ValidatorBuilder {
   ///   Ok(HttpResponse::Ok().json(false))
   /// }
   /// ```
-  pub fn validate(self, credentials: BearerAuth) -> Result<TokenData<Claims>, actix_web::Error> {
+  pub fn validate(self, credentials: &BearerAuth) -> Result<TokenData<Claims>, actix_web::Error> {
     let token = credentials.token().to_string();
 
     match decode::<Claims>(
