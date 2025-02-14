@@ -22,6 +22,50 @@ pub enum PermissionName {
   #[serde(rename = "delete:all")]
   #[schema(rename = "delete:all")]
   DeleteAll,
+
+   // New marketplace permissions
+   #[serde(rename = "create:marketplace")]
+   #[schema(rename = "create:marketplace")]
+   CreateMarketplace,
+   #[serde(rename = "read:marketplace")]
+   #[schema(rename = "read:marketplace")]
+   ReadMarketplace,
+   #[serde(rename = "update:marketplace")]
+   #[schema(rename = "update:marketplace")]
+   UpdateMarketplace,
+   #[serde(rename = "delete:marketplace")]
+   #[schema(rename = "delete:marketplace")]
+   DeleteMarketplace,
+
+   // New price report permissions
+   #[serde(rename = "create:price_report")]
+   #[schema(rename = "create:price_report")]
+   CreatePriceReport,
+   #[serde(rename = "read:price_report")]
+   #[schema(rename = "read:price_report")]
+   ReadPriceReport,
+   #[serde(rename = "update:price_report")]
+   #[schema(rename = "update:price_report")]
+   UpdatePriceReport,
+   #[serde(rename = "delete:price_report")]
+   #[schema(rename = "delete:price_report")]
+   DeletePriceReport, 
+
+    // New price report permissions
+    #[serde(rename = "create:product")]
+    #[schema(rename = "create:product")]
+    CreateProduct,
+    #[serde(rename = "read:product")]
+    #[schema(rename = "read:product")]
+    ReadProduct,
+    #[serde(rename = "update:product")]
+    #[schema(rename = "update:product")]
+    UpdateProduct,
+    #[serde(rename = "delete:product")]
+    #[schema(rename = "delete:product")]
+    DeleteProduct, 
+   
+   
 }
 
 // todo im sure we can write a proc macro to impl this based on strum?
@@ -33,6 +77,21 @@ impl ToSql<diesel::sql_types::Text, Pg> for PermissionName {
       PermissionName::ReadAll => out.write_all(b"read:all")?,
       PermissionName::UpdateAll => out.write_all(b"update:all")?,
       PermissionName::DeleteAll => out.write_all(b"delete:all")?,
+
+      PermissionName::CreateProduct => out.write_all(b"create:product")?,
+      PermissionName::ReadProduct => out.write_all(b"read:product")?,
+      PermissionName::UpdateProduct => out.write_all(b"update:product")?,
+      PermissionName::DeleteProduct => out.write_all(b"delete:product")?,
+
+      PermissionName::CreateMarketplace => out.write_all(b"create:marketplace")?,
+      PermissionName::ReadMarketplace => out.write_all(b"read:marketplace")?,
+      PermissionName::UpdateMarketplace => out.write_all(b"update:marketplace")?,
+      PermissionName::DeleteMarketplace => out.write_all(b"delete:marketplace")?,
+
+      PermissionName::CreatePriceReport => out.write_all(b"create:price_report")?,
+      PermissionName::ReadPriceReport => out.write_all(b"read:price_report")?,
+      PermissionName::UpdatePriceReport => out.write_all(b"update:price_report")?,
+      PermissionName::DeletePriceReport => out.write_all(b"delete:price_report")?,
     }
     Ok(IsNull::No)
   }
@@ -45,6 +104,21 @@ impl FromSql<diesel::sql_types::Text, Pg> for PermissionName {
       b"read:all" => Ok(PermissionName::ReadAll),
       b"update:all" => Ok(PermissionName::UpdateAll),
       b"delete:all" => Ok(PermissionName::DeleteAll),
+
+      b"create:product" => Ok(PermissionName::CreateProduct),
+      b"read:product" => Ok(PermissionName::ReadProduct),
+      b"update:product" => Ok(PermissionName::UpdateProduct),
+      b"delete:product" => Ok(PermissionName::DeleteProduct),
+
+      b"create:marketplace" => Ok(PermissionName::CreateMarketplace),
+      b"read:marketplace" => Ok(PermissionName::ReadMarketplace),
+      b"update:marketplace" => Ok(PermissionName::UpdateMarketplace),
+      b"delete:marketplace" => Ok(PermissionName::DeleteMarketplace),
+
+      b"create:price_report" => Ok(PermissionName::CreatePriceReport),
+      b"read:price_report" => Ok(PermissionName::ReadPriceReport),
+      b"update:price_report" => Ok(PermissionName::UpdatePriceReport),
+      b"delete:price_report" => Ok(PermissionName::DeletePriceReport),
       _ => Err("Unrecognized enum variant".into()),
     }
   }
