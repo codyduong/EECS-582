@@ -14,6 +14,8 @@
 
 
 # import models into model package
+from products_api.models.marketplace import Marketplace
+from products_api.models.new_marketplace import NewMarketplace
 from products_api.models.new_product import NewProduct
 from products_api.models.new_product_post import NewProductPost
 from products_api.models.new_product_to_measure_partial import NewProductToMeasurePartial
