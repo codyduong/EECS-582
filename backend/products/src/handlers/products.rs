@@ -34,7 +34,7 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
 }
 
 fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Result<ProductResponse> {
-  let mut conn = pool.get().unwrap();
+  let mut conn = pool.get()?;
 
   let result = products::table
     .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
@@ -49,7 +49,7 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Result
 }
 
 #[utoipa::path(
-  context_path = super::V1_PATH,
+  context_path = V1_PATH,
   responses(
     (status = OK, body = ProductResponse),
     (status = 401),
@@ -69,7 +69,7 @@ pub(crate) async fn get_product(
 ) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
     .with_scope(PermissionName::ReadAll)
-    .validate(auth)?;
+    .validate(&auth)?;
 
   let result = {
     let gtin = gtin.clone();
@@ -99,9 +99,8 @@ pub(crate) async fn get_product(
   }
 }
 
-fn db_get_all_products(pool: web::Data<Pool>) -> Result<Vec<ProductResponse>, diesel::result::Error> {
-  let mut conn = pool.get().unwrap();
-  // let items = products::table.load::<Product>(&mut conn)?;
+fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductResponse>> {
+  let mut conn = pool.get()?;
 
   let result = products::table
     .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
@@ -112,7 +111,7 @@ fn db_get_all_products(pool: web::Data<Pool>) -> Result<Vec<ProductResponse>, di
 }
 
 #[utoipa::path(
-  context_path = super::V1_PATH,
+  context_path = V1_PATH,
   responses(
     (status = OK, body = Vec<ProductResponse>),
     (status = 401),
@@ -125,7 +124,7 @@ fn db_get_all_products(pool: web::Data<Pool>) -> Result<Vec<ProductResponse>, di
 pub(crate) async fn get_products(db: web::Data<Pool>, auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
     .with_scope(PermissionName::ReadAll)
-    .validate(auth)?;
+    .validate(&auth)?;
 
   let result = web::block(move || db_get_all_products(db)).await;
 
@@ -169,36 +168,8 @@ fn fold_products_and_measures(results: Vec<(Product, ProductToMeasure, Unit)>) -
     .collect()
 }
 
-#[utoipa::path(
-  context_path = super::V1_PATH,
-  request_body(description = "A product or products",
-    content(
-      (NewProductPost),
-      (Vec<NewProductPost>),
-    ),
-  ),
-  responses(
-    (status = OK, body = bool),
-    (status = 401),
-    (status = 500),
-  ),
-  security(
-    ("http" = []),
-  )
-)]
-#[post("")]
-pub(crate) async fn post_products(
-  pool: web::Data<Pool>,
-  new_product_union: web::Json<NewProductPostUnion>,
-  auth: BearerAuth,
-) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::CreateAll)
-    .validate(auth)?;
-
-  let new_products: Vec<NewProductPost> = new_product_union.into_inner().into();
-
-  let mut conn = pool.get().unwrap();
+fn db_insert_products(new_products: Vec<NewProductPost>, pool: web::Data<Pool>) -> anyhow::Result<bool> {
+  let mut conn = pool.get()?;
 
   match conn.transaction(|conn| {
     let hashmap_unitsymbol_to_id =
@@ -247,10 +218,53 @@ pub(crate) async fn post_products(
   }) {
     Ok(_) => (),
     Err(err) => {
-      log::error!("Adding product(s) failed: {}", err);
-      return Ok(Err(ServiceError::InternalServerError)?);
+      return Err(anyhow!("Adding product(s) failed: {}", err));
     }
   }
 
-  Ok(HttpResponse::Ok().json(false))
+  Ok(true)
+}
+
+#[utoipa::path(
+  context_path = V1_PATH,
+  request_body(description = "A product or products",
+    content(
+      (NewProductPost),
+      (Vec<NewProductPost>),
+    ),
+  ),
+  responses(
+    (status = OK, body = bool),
+    (status = 401),
+    (status = 500),
+  ),
+  security(
+    ("http" = []),
+  )
+)]
+#[post("")]
+pub(crate) async fn post_products(
+  pool: web::Data<Pool>,
+  new_product_union: web::Json<NewProductPostUnion>,
+  auth: BearerAuth,
+) -> Result<HttpResponse, actix_web::Error> {
+  let _claims = ValidatorBuilder::new()
+    .with_scope(PermissionName::CreateAll)
+    .validate(&auth)?;
+
+  let new_products: Vec<NewProductPost> = new_product_union.into_inner().into();
+
+  let result = web::block(move || db_insert_products(new_products, pool)).await;
+
+  match result {
+    Ok(Ok(res)) => Ok(HttpResponse::Ok().json(res)),
+    Ok(Err(err)) => {
+      log::error!("{}", err);
+      Ok(Err(ServiceError::InternalServerError)?)
+    }
+    Err(err) => {
+      log::error!("{}", err);
+      Ok(Err(ServiceError::InternalServerError)?)
+    }
+  }
 }
