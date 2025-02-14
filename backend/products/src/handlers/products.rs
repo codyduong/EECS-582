@@ -232,12 +232,6 @@ pub(crate) async fn post_products(
 
     let new_products_reduced: Vec<NewProduct> = new_products.into_iter().map(|n| n.new_product).collect();
 
-    log::debug!("producsts: {:?}", new_products_reduced);
-
-    let query = insert_into(products::table).values(new_products_reduced.clone());
-
-    log::debug!("Diesel SQL: {:?}", diesel::debug_query::<diesel::pg::Pg, _>(&query));
-
     insert_into(products::table)
       .values(new_products_reduced)
       .execute(conn)?;
