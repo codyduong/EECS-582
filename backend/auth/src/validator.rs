@@ -169,7 +169,7 @@ impl ValidatorBuilder {
   /// pub(crate) async fn get_product(auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
   ///   let _claims = ValidatorBuilder::new()
   ///     .with_scope(PermissionName::ReadAll)
-  ///     .validate(auth)?;
+  ///     .validate(&auth)?;
   ///
   ///   Ok(HttpResponse::Ok().json(false))
   /// }

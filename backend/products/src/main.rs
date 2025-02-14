@@ -81,6 +81,7 @@ async fn main() -> std::io::Result<()> {
   HttpServer::new(move || {
     App::new()
       .app_data(Data::new(pool.clone()))
+      .configure(handlers::marketplaces::configure())
       .configure(handlers::products::configure())
       .service(
         SwaggerUi::new("/swagger-ui/{_:.*}").urls(vec![(Url::new("api", "/api-docs/openapi.json"), ApiDoc::openapi())]),
