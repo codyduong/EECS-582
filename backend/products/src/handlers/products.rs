@@ -6,7 +6,7 @@ use actix_web::post;
 use actix_web::web;
 use actix_web::web::ServiceConfig;
 use actix_web::HttpResponse;
-use actix_web_httpauth::middleware::HttpAuthentication;
+use actix_web_httpauth::extractors::bearer::BearerAuth;
 use anyhow::anyhow;
 use auth::errors::ServiceError;
 use auth::models::PermissionName;
@@ -24,20 +24,11 @@ pub(crate) const V1_PATH: &str = "/api/v1/products";
 
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   |config: &mut ServiceConfig| {
-    let read_products_auth =
-      HttpAuthentication::bearer(ValidatorBuilder::new().with_scope(PermissionName::ReadAll).build());
-
-    let create_products_auth =
-      HttpAuthentication::bearer(ValidatorBuilder::new().with_scope(PermissionName::CreateAll).build());
-
     config.service(
       web::scope(V1_PATH)
         .service(get_product)
-        .wrap(read_products_auth.clone())
         .service(get_products)
-        .wrap(read_products_auth.clone())
-        .service(post_products)
-        .wrap(create_products_auth),
+        .service(post_products),
     );
   }
 }
@@ -74,7 +65,12 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Result
 pub(crate) async fn get_product(
   gtin: web::Path<String>,
   db: web::Data<Pool>,
+  auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
+  let _claims = ValidatorBuilder::new()
+    .with_scope(PermissionName::ReadAll)
+    .validate(auth)?;
+
   let result = {
     let gtin = gtin.clone();
     web::block(move || db_get_product_by_gtin(db, gtin)).await
@@ -126,7 +122,11 @@ fn db_get_all_products(pool: web::Data<Pool>) -> Result<Vec<ProductResponse>, di
   )
 )]
 #[get("")]
-pub(crate) async fn get_products(db: web::Data<Pool>) -> Result<HttpResponse, actix_web::Error> {
+pub(crate) async fn get_products(db: web::Data<Pool>, auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
+  let _claims = ValidatorBuilder::new()
+    .with_scope(PermissionName::ReadAll)
+    .validate(auth)?;
+
   let result = web::block(move || db_get_all_products(db)).await;
 
   match result {
@@ -190,8 +190,11 @@ fn fold_products_and_measures(results: Vec<(Product, ProductToMeasure, Unit)>) -
 pub(crate) async fn post_products(
   pool: web::Data<Pool>,
   new_product_union: web::Json<NewProductPostUnion>,
+  auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  log::debug!("hit");
+  let _claims = ValidatorBuilder::new()
+    .with_scope(PermissionName::CreateAll)
+    .validate(auth)?;
 
   let new_products: Vec<NewProductPost> = new_product_union.into_inner().into();
 
