@@ -5,7 +5,7 @@ All URIs are relative to *http://localhost*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**get_user_route**](HandlersUsersApi.md#get_user_route) | **GET** /api/v1/users/{id} | 
-[**get_users_route**](HandlersUsersApi.md#get_users_route) | **GET** /api/v1/users/ | 
+[**get_users_route**](HandlersUsersApi.md#get_users_route) | **GET** /api/v1/users | 
 
 
 # **get_user_route**

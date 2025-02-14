@@ -88,7 +88,7 @@ Class | Method | HTTP request | Description
 *HandlersAuthApi* | [**login_route**](docs/HandlersAuthApi.md#login_route) | **POST** /api/v1/auth/login | 
 *HandlersAuthApi* | [**register_route**](docs/HandlersAuthApi.md#register_route) | **POST** /api/v1/auth/register | 
 *HandlersUsersApi* | [**get_user_route**](docs/HandlersUsersApi.md#get_user_route) | **GET** /api/v1/users/{id} | 
-*HandlersUsersApi* | [**get_users_route**](docs/HandlersUsersApi.md#get_users_route) | **GET** /api/v1/users/ | 
+*HandlersUsersApi* | [**get_users_route**](docs/HandlersUsersApi.md#get_users_route) | **GET** /api/v1/users | 
 
 
 ## Documentation For Models

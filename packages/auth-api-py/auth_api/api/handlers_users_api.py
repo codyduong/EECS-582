@@ -297,7 +297,7 @@ class HandlersUsersApi:
         }
 
         return self.api_client.call_api(
-            '/api/v1/users/', 'GET',
+            '/api/v1/users', 'GET',
             _path_params,
             _query_params,
             _header_params,
