@@ -50,6 +50,7 @@ async fn main() -> std::io::Result<()> {
     paths(
       handlers::products::get_product,
       handlers::products::get_products,
+      handlers::products::post_products,
     )
   )]
   struct ApiDoc;

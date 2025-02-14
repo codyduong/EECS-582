@@ -31,6 +31,11 @@ from products_api.exceptions import ApiAttributeError
 from products_api.exceptions import ApiException
 
 # import models into sdk package
+from products_api.models.new_product import NewProduct
+from products_api.models.new_product_post import NewProductPost
+from products_api.models.new_product_to_measure_partial import NewProductToMeasurePartial
+from products_api.models.new_product_to_measure_partial_union import NewProductToMeasurePartialUnion
+from products_api.models.new_product_to_measure_post import NewProductToMeasurePost
 from products_api.models.product import Product
 from products_api.models.product_response import ProductResponse
 from products_api.models.product_to_measure import ProductToMeasure

@@ -1,3 +1,4 @@
+use derive_more::Display;
 use diesel::{
   deserialize::{self, FromSql, FromSqlRow},
   pg::{Pg, PgValue},
@@ -8,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use utoipa::ToSchema;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, FromSqlRow, Clone, ToSchema, Hash, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, FromSqlRow, Clone, ToSchema, Hash, Eq, Display)]
 pub enum UnitSymbol {
   #[serde(rename = "fl oz")]
   #[schema(rename = "fl oz")]

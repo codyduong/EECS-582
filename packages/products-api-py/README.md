@@ -95,11 +95,17 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *HandlersProductsApi* | [**get_product**](docs/HandlersProductsApi.md#get_product) | **GET** /api/v1/products/{gtin} | 
-*HandlersProductsApi* | [**get_products**](docs/HandlersProductsApi.md#get_products) | **GET** /api/v1/products/ | 
+*HandlersProductsApi* | [**get_products**](docs/HandlersProductsApi.md#get_products) | **GET** /api/v1/products | 
+*HandlersProductsApi* | [**post_products**](docs/HandlersProductsApi.md#post_products) | **POST** /api/v1/products | 
 
 
 ## Documentation For Models
 
+ - [NewProduct](docs/NewProduct.md)
+ - [NewProductPost](docs/NewProductPost.md)
+ - [NewProductToMeasurePartial](docs/NewProductToMeasurePartial.md)
+ - [NewProductToMeasurePartialUnion](docs/NewProductToMeasurePartialUnion.md)
+ - [NewProductToMeasurePost](docs/NewProductToMeasurePost.md)
  - [Product](docs/Product.md)
  - [ProductResponse](docs/ProductResponse.md)
  - [ProductToMeasure](docs/ProductToMeasure.md)
