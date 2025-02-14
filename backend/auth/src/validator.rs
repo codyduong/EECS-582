@@ -91,18 +91,30 @@ impl ValidatorBuilder {
   /// # Examples
   ///
   /// ```
+  /// use auth::models::PermissionName;
+  /// use auth::validator::ValidatorBuilder;
+  /// use actix_web::get;
+  /// use actix_web::web;
+  /// use actix_web::HttpResponse;
   /// use actix_web::web::ServiceConfig;
   /// use actix_web_httpauth::middleware::HttpAuthentication;
-  /// use crate::models::PermissionName;
-  /// use crate::validator::ValidatorBuilder;
   ///
-  /// let read_user = HttpAuthentication::bearer(ValidatorBuilder::new().with_scope(PermissionName::ReadAll).build());
-  ///   config.service(
-  ///     web::scope(V1_PATH)
-  ///       .wrap(read_user)
-  ///       .service(get_user_route)
-  ///       .service(get_users_route),
-  ///   );
+  /// pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
+  ///   |config: &mut ServiceConfig| {
+  ///     #[allow(deprecated)]
+  ///     let read_user = HttpAuthentication::bearer(ValidatorBuilder::new().with_scope(PermissionName::ReadAll).build());
+  ///     config.service(
+  ///       web::scope("/foobar")
+  ///         .wrap(read_user)
+  ///         .service(get_users)
+  ///     );
+  ///   }
+  /// }
+  ///
+  /// #[get("/{id}")]
+  /// pub async fn get_users() -> Result<HttpResponse, actix_web::Error> {
+  ///   Ok(HttpResponse::Ok().json(false))
+  /// }
   /// ```
   #[allow(clippy::type_complexity)]
   #[deprecated(note = "Don't register a middleware, use `validate` instead")]
@@ -150,14 +162,16 @@ impl ValidatorBuilder {
   /// use actix_web::get;
   /// use actix_web::HttpResponse;
   /// use actix_web_httpauth::extractors::bearer::BearerAuth;
-  /// use auth::validator::ValidatorBuilder;
   /// use auth::models::PermissionName;
+  /// use auth::validator::ValidatorBuilder;
   ///
   /// #[get("")]
   /// pub(crate) async fn get_product(auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
   ///   let _claims = ValidatorBuilder::new()
   ///     .with_scope(PermissionName::ReadAll)
   ///     .validate(auth)?;
+  ///
+  ///   Ok(HttpResponse::Ok().json(false))
   /// }
   /// ```
   pub fn validate(self, credentials: BearerAuth) -> Result<TokenData<Claims>, actix_web::Error> {
