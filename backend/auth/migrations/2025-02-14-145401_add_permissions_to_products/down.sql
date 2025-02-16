@@ -7,7 +7,10 @@
   Programmer: Harrison Wendt
   Date Created: 2/14/25
 
-  
+  Revision History:
+  - 2/14/25 - Harrison Wendt - Initial implementation of updated permissions.
+  - 2/16/25 - Cody Duong - Remove unnecessary table drop.
+
   Preconditions:
   - The `permissions` table must exist before running this script.
 
@@ -18,7 +21,7 @@
   - Running this script on a database where the `permissions` table does not exist.
 
   Postconditions:
-  - The `permissions` table will be removed from the database.
+  - Some values will be removed from the `permissions` table.
 
   Return Values:
   - No return values; this script modifies the database schema.
@@ -31,13 +34,11 @@
   - This script permanently deletes the `permissions` table and all associated data.
 
   Invariants:
-  - If the `permissions` table does not exist, this script should be avoided.
+  - N/A
 
   Known Faults:
   - Running this script in a production environment without backups may lead to data loss.
 */
-
-DROP TABLE IF EXISTS permissions;
 
 DELETE FROM permissions WHERE name IN (
     'create:product', 'read:product', 'update:product', 'delete:product',
