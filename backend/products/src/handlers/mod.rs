@@ -12,7 +12,7 @@
   - 2025-02-09 - Cody Duong - fix failing ci with allow amibigious_glob_reexports
   - 2025-02-16 - Cody Duong - add comments
 
-  Postconditions: 
+  Postconditions:
   - Every file under the parent directory `./handlers` should be exported
     glob style here
 */

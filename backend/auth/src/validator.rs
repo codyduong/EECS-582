@@ -16,7 +16,6 @@
   - 2025-02-16 - Cody Duong - add comments
 */
 
-
 use actix_web::dev::ServiceRequest;
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, TokenData, Validation};
