@@ -1,5 +1,4 @@
 from playwright.sync_api import sync_playwright
-import time
 
 
 def scrape_target_products(
