@@ -13,12 +13,12 @@
   - 2025-02-07 - Cody Duong - dom't expose password hash as part of public interface
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-12 - Cody Duong - abstract seperation of concerns better
-  - 2025-02-12 - Cody Duong - add comments
+  - 2025-02-16 - Cody Duong - add comments
 
   Preconditions:
   - Diesel ORM must be installed and properly configured.
   - PostgreSQL must be used as the database.
-  - The `users_to_roles` table must exist in the database.
+  - The `users` table must exist in the database.
 */
 
 use diesel::prelude::*;
