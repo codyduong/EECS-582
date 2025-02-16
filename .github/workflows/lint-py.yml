@@ -26,6 +26,7 @@ jobs:
             matrix:
                 project:
                     - scrapers/scraper-py-sample
+                    - scrapers/scraper-py-target
                 rust: [stable]
                 os: [ubuntu-latest]
         defaults:

@@ -19,6 +19,15 @@ deactivate
 uv run targetscraper.py
 ```
 
+## Formatting
+
+This project uses [ruff](https://github.com/astral-sh/ruff) for code-style/formatting. 
+You can run it through the terminal or VSCode command palette
+
+```sh
+uv run ruff format
+```
+
 ## Demo
 
 ![demo](./docs/demo1.gif)
