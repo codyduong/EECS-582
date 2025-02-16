@@ -1,3 +1,26 @@
+/*
+  Name: error.rs
+
+  Description:
+  custom error types
+
+  Programmer: Cody Duong
+  Date Created: 2025-02-05
+  Revision History:
+  - 2025-02-12 - Cody Duong - PoC of diesel backend w/ openapi/swaggerui
+  - 2025-02-09 - Cody Duong - move file
+  - 2025-02-12 - Cody Duong - add comments
+
+  Preconditions: N/A
+  Acceptable Inputs: N/A
+  Unacceptable Inputs: N/A
+  Postconditions: N/A
+  Return Values: N/A
+  Error and Exception Conditions: N/A
+  Side Effects: N/A
+  Invariants: N/A
+*/
+
 // TODO this should be moved into a shared crate rather than in the auth crate.
 // It should probably be something like: grocerywise-web-errors, or something...
 // this is never going to get done. LOL!

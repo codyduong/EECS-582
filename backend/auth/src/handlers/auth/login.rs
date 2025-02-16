@@ -1,3 +1,18 @@
+/*
+  Name: mod.rs
+
+  Description:
+  The endpoint handler for `/api/v1/login`
+
+  Programmer: Cody Duong
+  Date Created: 2025-02-07
+  Revision History:
+  - 2025-02-07 - Cody Duong - add authentication endpoints
+  - 2025-02-09 - Cody Duong - move file
+  - 2025-02-16 - Cody Duong - add comments
+*/
+
+
 use crate::errors::ServiceError;
 use crate::models::*;
 use crate::schema::*;

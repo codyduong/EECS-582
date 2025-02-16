@@ -1,3 +1,25 @@
+/*
+  Name: seed.rs
+
+  Description:
+  This file seeds database with test data, only in development environments
+
+  Programmer: Cody Duong
+  Date Created: 2025-02-07
+  Revision History:
+  - 2025-02-07 - Cody Duong - add seed.rs
+  - 2025-02-09 - Cody Duong - move file
+  - 2025-02-16 - Cody Duong - add comments
+
+  Preconditions:
+  - Diesel ORM must be installed and properly configured.
+  - PostgreSQL must be used as the database.
+  - The `permissions` table must exist in the database.
+
+  Side Effects:
+  - This script modifies the local database.
+*/
+
 use crate::errors::ServiceError;
 use crate::models::*;
 use crate::schema::*;

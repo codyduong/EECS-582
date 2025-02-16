@@ -1,3 +1,22 @@
+/*
+  Name: validator.rs
+
+  Description:
+  This file exposes a convenient way to check JWT claims with complex role-access
+  based control (RBAC) support.
+
+  Programmer: Cody Duong
+  Date Created: 2025-02-07
+  Revision History:
+  - 2025-02-07 - Cody Duong - add authentication
+  - 2025-02-09 - Cody Duong - move file
+  - 2025-02-09 - Cody Duong - fix issues with `build` by creating `validate`
+                              deprecate the `build`, but still allow usage in
+                              less complex RBAC needs
+  - 2025-02-16 - Cody Duong - add comments
+*/
+
+
 use actix_web::dev::ServiceRequest;
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, TokenData, Validation};

@@ -1,3 +1,20 @@
+/*
+  Name: mod.rs
+
+  Description:
+  Exports select modules to rest of crate as public interface. This also
+  is a common endpoint to configure the actix-web interface from, with the
+  configures function. This file also contains some utility functions revolving
+  around jsonwebtokens JWTs.
+
+  Programmer: Cody Duong
+  Date Created: 2025-02-07
+  Revision History:
+  - 2025-02-07 - Cody Duong - add authentication endpoints
+  - 2025-02-09 - Cody Duong - move file
+  - 2025-02-16 - Cody Duong - add comments
+*/
+
 use crate::models::PermissionName;
 use actix_web::web::{self, ServiceConfig};
 use chrono::{Duration, Utc};
