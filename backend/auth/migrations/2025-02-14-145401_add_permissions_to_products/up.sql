@@ -8,7 +8,11 @@
   Programmer: Harrison Wendt
   Date Created: 2/14/25
 
-    Preconditions:
+  Revision History:
+  - 2/14/25 - Harrison Wendt - Initial implementation of updated permissions.
+  - 2/16/25 - Cody Duong - Make migration script idempotent.
+
+  Preconditions:
   - A PostgreSQL database must exist and be connected.
 
   Acceptable Inputs:
@@ -25,22 +29,29 @@
   - No return values; this script modifies the database schema.
 
   Error and Exception Conditions:
-  - Attempting to create a table that already exists without handling conflicts 
-    will result in an error.
   - Database connection issues may prevent execution.
 
   Side Effects:
   - This script modifies the database schema, which may affect dependent queries.
 
   Invariants:
-  - Each permission name must be unique.
+  - N/A
 
   Known Faults:
   - If executed multiple times without proper migration tracking, it may fail due to duplicate tables.
 */
 
-INSERT INTO permissions (name) VALUES
-    ('create:product'), ('read:product'), ('update:product'), ('delete:product'),
-    ('create:marketplace'), ('read:marketplace'), ('update:marketplace'), ('delete:marketplace'),
-    ('create:price_report'), ('read:price_report'), ('update:price_report'), ('delete:price_report');
+INSERT INTO permissions (name)
+SELECT name
+FROM (
+    VALUES
+        ('create:product'), ('read:product'), ('update:product'), ('delete:product'),
+        ('create:marketplace'), ('read:marketplace'), ('update:marketplace'), ('delete:marketplace'),
+        ('create:price_report'), ('read:price_report'), ('update:price_report'), ('delete:price_report')
+) AS new_permissions(name)
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM permissions
+    WHERE permissions.name = new_permissions.name
+);
 

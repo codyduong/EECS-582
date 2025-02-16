@@ -2,8 +2,8 @@
   Name: permissions.rs
 
   Description:
-  This Rust module defines an enumeration (`PermissionName`) representing different permission 
-  levels, along with database integration using Diesel ORM. It also provides implementations for 
+  This Rust module defines an enumeration (`PermissionName`) representing different permission
+  levels, along with database integration using Diesel ORM. It also provides implementations for
   serialization, deserialization, and SQL conversion.
 
   Programmer: Cody Duong
@@ -11,8 +11,7 @@
 
   Revision History:
   - 2/10/25 - Cody Duong - Initial implementation of `PermissionName` enum and Diesel integration.
-  - 2/114/25 - Harrison Wendt - Added new permissions for marketplace, price reports, and products.
-
+  - 2/14/25 - Harrison Wendt - Added new permissions for marketplace, price reports, and products.
 
   Preconditions:
   - Diesel ORM must be installed and properly configured.
@@ -39,17 +38,16 @@
   - Database errors may occur if the table structure is incorrect.
 
   Side Effects:
-  - This module interacts with the database, potentially causing side effects 
+  - This module interacts with the database, potentially causing side effects
     if migrations are not properly handled.
 
   Invariants:
   - The permission names must remain unique and correctly mapped to SQL text values.
 
   Known Faults:
-  - Adding new permissions requires updating `ToSql` and `FromSql` manually 
+  - Adding new permissions requires updating `ToSql` and `FromSql` manually
     unless procedural macros are implemented.
 */
-
 
 use diesel::{
   deserialize::{self, FromSql, FromSqlRow},
@@ -76,49 +74,44 @@ pub enum PermissionName {
   #[schema(rename = "delete:all")]
   DeleteAll,
 
-   // New marketplace permissions (2/14/24, Harrison Wendt)
-   #[serde(rename = "create:marketplace")]
-   #[schema(rename = "create:marketplace")]
-   CreateMarketplace,
-   #[serde(rename = "read:marketplace")]
-   #[schema(rename = "read:marketplace")]
-   ReadMarketplace,
-   #[serde(rename = "update:marketplace")]
-   #[schema(rename = "update:marketplace")]
-   UpdateMarketplace,
-   #[serde(rename = "delete:marketplace")]
-   #[schema(rename = "delete:marketplace")]
-   DeleteMarketplace,
+  #[serde(rename = "create:marketplace")]
+  #[schema(rename = "create:marketplace")]
+  CreateMarketplace,
+  #[serde(rename = "read:marketplace")]
+  #[schema(rename = "read:marketplace")]
+  ReadMarketplace,
+  #[serde(rename = "update:marketplace")]
+  #[schema(rename = "update:marketplace")]
+  UpdateMarketplace,
+  #[serde(rename = "delete:marketplace")]
+  #[schema(rename = "delete:marketplace")]
+  DeleteMarketplace,
 
-   // New price report permissions (2/14/24, Harrison Wendt)
-   #[serde(rename = "create:price_report")]
-   #[schema(rename = "create:price_report")]
-   CreatePriceReport,
-   #[serde(rename = "read:price_report")]
-   #[schema(rename = "read:price_report")]
-   ReadPriceReport,
-   #[serde(rename = "update:price_report")]
-   #[schema(rename = "update:price_report")]
-   UpdatePriceReport,
-   #[serde(rename = "delete:price_report")]
-   #[schema(rename = "delete:price_report")]
-   DeletePriceReport, 
+  #[serde(rename = "create:price_report")]
+  #[schema(rename = "create:price_report")]
+  CreatePriceReport,
+  #[serde(rename = "read:price_report")]
+  #[schema(rename = "read:price_report")]
+  ReadPriceReport,
+  #[serde(rename = "update:price_report")]
+  #[schema(rename = "update:price_report")]
+  UpdatePriceReport,
+  #[serde(rename = "delete:price_report")]
+  #[schema(rename = "delete:price_report")]
+  DeletePriceReport,
 
-    // New price report permissions (2/14/24, Harrison Wendt)
-    #[serde(rename = "create:product")]
-    #[schema(rename = "create:product")]
-    CreateProduct,
-    #[serde(rename = "read:product")]
-    #[schema(rename = "read:product")]
-    ReadProduct,
-    #[serde(rename = "update:product")]
-    #[schema(rename = "update:product")]
-    UpdateProduct,
-    #[serde(rename = "delete:product")]
-    #[schema(rename = "delete:product")]
-    DeleteProduct, 
-   
-   
+  #[serde(rename = "create:product")]
+  #[schema(rename = "create:product")]
+  CreateProduct,
+  #[serde(rename = "read:product")]
+  #[schema(rename = "read:product")]
+  ReadProduct,
+  #[serde(rename = "update:product")]
+  #[schema(rename = "update:product")]
+  UpdateProduct,
+  #[serde(rename = "delete:product")]
+  #[schema(rename = "delete:product")]
+  DeleteProduct,
 }
 
 // todo im sure we can write a proc macro to impl this based on strum?
@@ -131,9 +124,6 @@ impl ToSql<diesel::sql_types::Text, Pg> for PermissionName {
       PermissionName::UpdateAll => out.write_all(b"update:all")?,
       PermissionName::DeleteAll => out.write_all(b"delete:all")?,
 
-
-      //updating function to include product, marketplace, and price_report
-      //2/14/24, Harrison Wendt
       PermissionName::CreateProduct => out.write_all(b"create:product")?,
       PermissionName::ReadProduct => out.write_all(b"read:product")?,
       PermissionName::UpdateProduct => out.write_all(b"update:product")?,
@@ -161,8 +151,6 @@ impl FromSql<diesel::sql_types::Text, Pg> for PermissionName {
       b"update:all" => Ok(PermissionName::UpdateAll),
       b"delete:all" => Ok(PermissionName::DeleteAll),
 
-      //updating function to include product, marketplace, and price_report
-      //2/14/24, Harrison Wendt
       b"create:product" => Ok(PermissionName::CreateProduct),
       b"read:product" => Ok(PermissionName::ReadProduct),
       b"update:product" => Ok(PermissionName::UpdateProduct),
