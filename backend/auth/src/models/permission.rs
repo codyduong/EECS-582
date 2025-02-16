@@ -1,3 +1,25 @@
+/*
+  Name: permissions.rs
+
+  Description:
+  This Rust module defines an enumeration (`PermissionName`) representing different permission
+  levels, along with database integration using Diesel ORM. It also provides implementations for
+  serialization, deserialization, and SQL conversion.
+
+  Programmer: Cody Duong
+
+  Date Created: 2/10/25
+
+  Revision History:
+  - 2/10/25 - Cody Duong - Initial implementation of `PermissionName` enum and Diesel integration.
+  - 2/14/25 - Harrison Wendt - Added new permissions for marketplace, price reports, and products.
+
+  Preconditions:
+  - Diesel ORM must be installed and properly configured.
+  - PostgreSQL must be used as the database.
+  - The `permissions` table must exist in the database.
+*/
+
 use diesel::{
   deserialize::{self, FromSql, FromSqlRow},
   pg::{Pg, PgValue},
