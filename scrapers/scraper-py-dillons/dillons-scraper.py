@@ -1,12 +1,17 @@
 import requests
 import json
 import time
+import os
+from dotenv import load_dotenv
 
 # --------------------------------------------------
 # Kroger Developer Credentials
 # --------------------------------------------------
+
+# Load environment variables from .env
+load_dotenv()
 CLIENT_ID = "grocerywise-24326124303424486d71346d664548627957596f68623757642e4230656f614a6a424357474d7752417551314d797242694b4a74514f696d5a4c366d1253636185741314204"
-CLIENT_SECRET = "LrShuNpEplhS9lJSUbON3qbXJEIlfrHKy21cuWku"
+CLIENT_SECRET = os.getenv("KROGER_CLIENT_SECRET")
 
 # For CERTIFICATION environment:
 BASE_URL = "https://api-ce.kroger.com"
