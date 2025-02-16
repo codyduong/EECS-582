@@ -18,3 +18,7 @@ deactivate
 ```sh
 uv run targetscraper.py
 ```
+
+## Demo
+
+![demo](./docs/demo1.gif)
