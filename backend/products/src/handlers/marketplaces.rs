@@ -1,3 +1,16 @@
+/*
+  Name: marketplace.rs
+
+  Description:
+  The endpoint handler for `/api/v1/marketplace/XXX`
+
+  Programmer: Cody Duong
+  Date Created: 2025-02-07
+  Revision History:
+  - 2025-02-14 - Cody Duong - add marketplace GET/POST
+  - 2025-02-16 - Cody Duong - add comments
+*/
+
 use crate::models::*;
 use crate::schema::*;
 use crate::Pool;

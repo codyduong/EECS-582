@@ -1,3 +1,22 @@
+/*
+  Name: unit.rs
+
+  Description:
+  Structural typing of database schema into Rust, leveraging Diesel proc-macros
+  and generated types to ensure schemas are always matching
+
+  Programmer: Cody Duong
+  Date Created: 2025-02-05
+  Revision History:
+  - 2025-02-14 - Cody Duong - add products POSTs/GETs merged with units
+  - 2025-02-16 - Cody Duong - add comments
+
+  Preconditions:
+  - Diesel ORM must be installed and properly configured.
+  - PostgreSQL must be used as the database.
+  - The `units` table must exist in the database.
+*/
+
 use derive_more::Display;
 use diesel::{
   deserialize::{self, FromSql, FromSqlRow},

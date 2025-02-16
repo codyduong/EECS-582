@@ -1,3 +1,20 @@
+/*
+  Name: main.rs
+
+  Description:
+  The primary entry file for running the products microservice
+
+  Programmer: Cody Duong
+  Date Created: 2025-02-05
+  Revision History:
+  - 2025-02-05 - Cody Duong - PoC of diesel backend w/ openapi/swaggerui
+  - 2025-02-07 - Cody Duong - add authentication endpoints
+  - 2025-02-09 - Cody Duong - move files
+  - 2025-02-14 - Cody Duong - add product POST
+  - 2025-02-14 - Cody Duong - add marketplace GET/POST
+  - 2025-02-16 - Cody Duong - add comments
+*/
+
 use actix_web::{web::Data, App, HttpServer};
 use diesel::{
   prelude::*,
