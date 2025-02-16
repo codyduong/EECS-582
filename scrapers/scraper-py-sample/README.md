@@ -2,20 +2,14 @@
 
 This scraper sample uses [`uv`](https://github.com/astral-sh/uv) as the python package/project manager.
 
-```sh
-uv python install 3.12                    # use latest python
-uv install                                # install dependencies in this project
-uv run main.py "./sample_products.json"   # run the scraper
-uv run main.py --help                     # view scraper help command
-```
-
 ## Development
 
 If you are using vscode with sensible python extensions then you can have type annotations, python
 IDE support for your specific venv by first in your teminal running:
 
 ```sh
-uv venv
+uv python install 3.12                # use latest python
+uv sync
 .venv\Scripts\activate
 uv pip install .
 deactivate                            # optional, if you want to stay in the env
@@ -29,6 +23,13 @@ Then in vscode:
 `.\scrapers\scraper-py-sample\.venv\python`
 
 ![development_setup](./docs/development-setup1.gif)
+
+## Running
+
+```sh
+uv run main.py "./sample_products.json"   # run the scraper
+uv run main.py --help                     # view scraper help command
+```
 
 ## Formatting
 
