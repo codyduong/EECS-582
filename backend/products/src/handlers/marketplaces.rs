@@ -132,7 +132,7 @@ fn db_insert_marketplace(pool: web::Data<Pool>, new_marketplace: NewMarketplace)
     ("http" = []),
   ),
 )]
-#[post("/{id}")]
+#[post("")]
 pub(crate) async fn post_marketplace(
   pool: web::Data<Pool>,
   new_marketplace: web::Json<NewMarketplace>,
