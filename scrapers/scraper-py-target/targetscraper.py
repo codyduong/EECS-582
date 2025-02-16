@@ -1,34 +1,40 @@
 from playwright.sync_api import sync_playwright
 import time
 
-def scrape_target_products(url="https://www.target.com/c/chips-snacks-grocery/potato-chips/-/N-5xsy7Z1140d", output_file="target_products.txt"): #example is chips from target
+
+def scrape_target_products(
+    url="https://www.target.com/c/chips-snacks-grocery/potato-chips/-/N-5xsy7Z1140d",
+    output_file="target_products.txt",
+):  # example is chips from target
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
         context = browser.new_context()
         page = context.new_page()
-        
+
         # Navigate to the target URL
         page.goto(url)
-        
+
         # Wait for initial load
 
-        page.wait_for_load_state('networkidle')
+        page.wait_for_load_state("networkidle")
         page.wait_for_timeout(5000)
-        
+
         # Scroll multiple times to load more products
         scroll_increment = 1000
-        prev_count = 0 
+        prev_count = 0
         max_attempts = 20
         for _ in range(max_attempts):  # Increased scroll count
             page.evaluate(f"window.scrollBy(0, {scroll_increment})")
             page.wait_for_timeout(2000)  # Wait between scrolls
-            current_count = page.evaluate('document.querySelectorAll(\'[data-test="@web/site-top-of-funnel/ProductCardWrapper"]\').length')
+            current_count = page.evaluate(
+                "document.querySelectorAll('[data-test=\"@web/site-top-of-funnel/ProductCardWrapper\"]').length"
+            )
             if current_count == prev_count:
                 break
             prev_count = current_count
-        
+
         # Extract products using the correct selector
-        items = page.evaluate('''() => {
+        items = page.evaluate("""() => {
             const products = [];
             const productCards = document.querySelectorAll('[data-test="@web/site-top-of-funnel/ProductCardWrapper"]');
             
@@ -68,10 +74,10 @@ def scrape_target_products(url="https://www.target.com/c/chips-snacks-grocery/po
                 }
             }
             return products;
-        }''')
-        
+        }""")
+
         # Write items to text file
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write("Target Potato Chips Products\n")
             f.write("=" * 50 + "\n\n")
             if not items:
@@ -84,9 +90,10 @@ def scrape_target_products(url="https://www.target.com/c/chips-snacks-grocery/po
                 f.write("-" * 50 + "\n")
                 # Also print to console for monitoring
                 print(f"Product found: {item['name']} - {item['price']}")
-        
+
         print(f"\nTotal products found: {len(items)}")
         browser.close()
+
 
 if __name__ == "__main__":
     scrape_target_products(output_file="potato_chips.txt")
