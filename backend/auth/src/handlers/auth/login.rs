@@ -12,7 +12,6 @@
   - 2025-02-16 - Cody Duong - add comments
 */
 
-
 use crate::errors::ServiceError;
 use crate::models::*;
 use crate::schema::*;

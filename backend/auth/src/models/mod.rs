@@ -13,7 +13,7 @@
   - 2025-02-12 - Cody Duong - abstract seperation of concerns better
   - 2025-02-16 - Cody Duong - add comments
 
-  Postconditions: 
+  Postconditions:
   - Every file under the parent directory `./models` should be exported
     glob style here
 */

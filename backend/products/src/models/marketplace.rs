@@ -20,7 +20,6 @@
   - The `marketplaces` table must exist in the database.
 */
 
-
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
