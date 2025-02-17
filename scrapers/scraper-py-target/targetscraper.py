@@ -1,12 +1,18 @@
-from playwright.sync_api import sync_playwright
+"""
+targetscraper.py
 
+A webscraper used for target.com
+currently using an website to scrape potato chips from target
+"""
+from playwright.sync_api import sync_playwright # Importing playwright to help webscrape, playwright is an open-source automation library for webscraping
 
+#a function that is able goes to url, specfically target here, and scrape data from website, this example uses targets potato chip section and produces an output txt
 def scrape_target_products(
     url="https://www.target.com/c/chips-snacks-grocery/potato-chips/-/N-5xsy7Z1140d",
-    output_file="target_products.txt",
-):  # example is chips from target
+    output_file="target_products.txt",):  
+
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
+        browser = p.chromium.launch(headless=False) # opens a chromium browser 
         context = browser.new_context()
         page = context.new_page()
 
@@ -14,7 +20,6 @@ def scrape_target_products(
         page.goto(url)
 
         # Wait for initial load
-
         page.wait_for_load_state("networkidle")
         page.wait_for_timeout(5000)
 
@@ -25,14 +30,12 @@ def scrape_target_products(
         for _ in range(max_attempts):  # Increased scroll count
             page.evaluate(f"window.scrollBy(0, {scroll_increment})")
             page.wait_for_timeout(2000)  # Wait between scrolls
-            current_count = page.evaluate(
-                "document.querySelectorAll('[data-test=\"@web/site-top-of-funnel/ProductCardWrapper\"]').length"
-            )
+            current_count = page.evaluate("document.querySelectorAll('[data-test=\"@web/site-top-of-funnel/ProductCardWrapper\"]').length") #finds the entities that are "data-test" with attributes of "ProductCardWrapper"
             if current_count == prev_count:
                 break
             prev_count = current_count
 
-        # Extract products using the correct selector
+        # This extracts product data information from the located ProductCardWrapper from current count and will extra, name, price, size, and URL using JavaScript code
         items = page.evaluate("""() => {
             const products = [];
             const productCards = document.querySelectorAll('[data-test="@web/site-top-of-funnel/ProductCardWrapper"]');
@@ -93,6 +96,6 @@ def scrape_target_products(
         print(f"\nTotal products found: {len(items)}")
         browser.close()
 
-
+# Runs program
 if __name__ == "__main__":
-    scrape_target_products(output_file="potato_chips.txt")
+    scrape_target_products(output_file="target_products.txt")
