@@ -95,7 +95,7 @@ wheels = [
 ]
 
 [[package]]
-name = "scraper-py-sample"
+name = "scraper-py-walmart"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
