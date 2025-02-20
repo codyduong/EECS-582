@@ -8,6 +8,9 @@
     - SwaggerUI: http://localhost:8082/swagger-ui/#/
     - OpenAPI Spec: http://localhost:8082/api-docs/openapi.json
 
+* [frontend](./frontend/)
+  + [web](./frontend/web) is a Next.js website using [Tailwind CSS](https://tailwindcss.com/) + [Mantine](https://mantine.dev/)
+
 * [packages](./packages/), contains any shared code libraries used within other tools
   + [auth-api-py](./packages/auth-api-py/),
     OpenAPI generated client library for `auth`
@@ -23,11 +26,6 @@
 * [tooling](./tooling/), contains any tooling/cli that is not a scraper
   + [grocerywise-ingestion-cli](./tooling/grocerywise-ingestion-cli/), 
     Used to ingest scraped data into various DBs
-
-<!--
-* website is a Next.js server
-  + http://localhost:3000/
--->
 
 ## Setting up
 
@@ -129,4 +127,11 @@ docker volume rm eecs-582_database
 
 ### Starting frontend
 
-TODO
+If you want to develop, you probably want these instructions:
+- [Go to the primary docs for frontend/web](./frontend/web/README.md)
+
+Alternatively, a docker-compose has been made for previewing production builds.
+
+```sh
+docker-compose -f docker-compose.frontend.yml up
+```

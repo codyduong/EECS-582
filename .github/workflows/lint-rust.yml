@@ -4,7 +4,7 @@ on:
     push:
         branches: [master]
         paths:
-            - ".github/workflows/**"
+            - ".github/workflows/lint-rust.yml"
             - "**/*.rs"
             - "**/rustfmt.toml"
             - "**/clippy.toml"
@@ -14,7 +14,7 @@ on:
     pull_request:
         branches: [master]
         paths:
-            - ".github/workflows/**"
+            - ".github/workflows/lint-rust.yml"
             - "**/*.rs"
             - "**/rustfmt.toml"
             - "**/clippy.toml"

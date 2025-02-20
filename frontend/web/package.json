@@ -1,0 +1,40 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "lint:changed": "node scripts/lint.mjs"
+  },
+  "dependencies": {
+    "@mantine/core": "^7.17.0",
+    "@mantine/form": "^7.17.0",
+    "@mantine/hooks": "^7.17.0",
+    "@mantine/modals": "^7.17.0",
+    "@mantine/notifications": "^7.17.0",
+    "next": "15.1.7",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@ianvs/prettier-plugin-sort-imports": "4.4.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-mantine": "4.0.3",
+    "eslint-config-next": "15.1.7",
+    "eslint-config-prettier": "10.0.1",
+    "postcss": "^8.5.3",
+    "postcss-preset-mantine": "^1.17.0",
+    "postcss-simple-vars": "^7.0.1",
+    "prettier": "3.5.1",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}

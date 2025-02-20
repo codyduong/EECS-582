@@ -4,7 +4,7 @@ on:
     push:
         branches: [master]
         paths:
-            - ".github/workflows/**"
+            - ".github/workflows/build-backend.yml"
             - "docker-compose.yml"
             - ".dockerignore"
             - "Dockerfile*"
@@ -18,7 +18,7 @@ on:
     pull_request:
         branches: [master]
         paths:
-            - ".github/workflows/**"
+            - ".github/workflows/build-backend.yml"
             - "docker-compose.yml"
             - ".dockerignore"
             - "Dockerfile*"
