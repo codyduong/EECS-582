@@ -29,9 +29,21 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
+    - run: git fetch origin master:master
+    - run: git checkout ${{ github.event.pull_request.head.sha }}
+
+    # https://stackoverflow.com/a/74887073
+    - name: Setup LAST_COMMIT_SHA
+      if: ${{ github.event_name == 'pull_request' }}
+      shell: bash
+      run: |
+        echo "WORKING_DIR=$(pwd)" >> ${GITHUB_ENV}
+        echo "LAST_COMMIT_SHA=${{ github.event.pull_request.head.sha }}" >> ${GITHUB_ENV}
+
     - name: Use Bun.js ${{ matrix.bun }}
       uses: oven-sh/setup-bun@v2
       with:
         bun-version: ${{ matrix.bun }}
+
     - run: bun install --frozen-lockfile
     - run: bun lint:changed

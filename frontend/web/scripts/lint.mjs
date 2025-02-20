@@ -8,11 +8,17 @@ import { execSync } from "child_process";
 import chalk from "chalk";
 import path from "path";
 
+const DEFAULT_RELATIVE_WORKSPACE = "frontend/web";
+
 try {
+  const workspace = process.env.GITHUB_WORKSPACE;
+  const relativeWorkspace = workspace
+    ? path.relative(workspace, process.cwd())
+    : DEFAULT_RELATIVE_WORKSPACE;
   const isCI = process.env.CI === "true";
   const isPR = process.env.GITHUB_EVENT_NAME === "pull_request";
-  const baseBranch = process.env.GITHUB_BASE_REF;
-  const currentSHA = process.env.GITHUB_SHA;
+  const currentSHA = process.env.LAST_COMMIT_SHA;
+  const baseBranch = execSync(`git merge-base master HEAD`).toString().trim();
 
   let diffCommand;
 
@@ -21,6 +27,11 @@ try {
       console.log(
         "Detected PR in GitHub Actions: Checking changes from base branch...",
       );
+      if (!baseBranch) {
+        throw Error(
+          `Failed to find common ancestor base branch between master and ${currentSHA}`,
+        );
+      }
       diffCommand = `git diff --name-only ${baseBranch}...${currentSHA} --diff-filter=ACMRTUXB`;
     } else {
       console.log(
@@ -32,14 +43,14 @@ try {
     console.log(
       "Detected local environment: Checking staged, unstaged, and untracked files...",
     );
-    diffCommand = `git diff --name-only --diff-filter=ACMRTUXB && git ls-files --others --exclude-standard`;
+    diffCommand = `git diff --name-only ${baseBranch}...HEAD --diff-filter=ACMRTUXB && git ls-files --others --exclude-standard`;
   }
 
   console.log(chalk.gray(`$ ${diffCommand}`));
   let changedFiles = execSync(diffCommand, { encoding: "utf-8" })
     .split("\n")
     .filter((file) => /\.(ts|tsx?)$/.test(file))
-    .map((file) => path.relative(process.cwd(), file))
+    .map((file) => path.relative(relativeWorkspace, file))
     .join(" ");
 
   if (changedFiles.trim() === "") {
