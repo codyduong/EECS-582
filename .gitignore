@@ -13,3 +13,6 @@
 **/__pycache__
 **/*.egg-info
 **/.ruff_cache
+
+# Node files
+**/node_modules

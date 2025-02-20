@@ -4,7 +4,7 @@ on:
     push:
         branches: [master]
         paths:
-            - ".github/workflows/**"
+            - ".github/workflows/test-rust.yml"
             - "**/*.rs"
             - "**/build.rs"
             - "**/Cargo.lock"
@@ -12,7 +12,7 @@ on:
     pull_request:
         branches: [master]
         paths:
-            - ".github/workflows/**"
+            - ".github/workflows/test-rust.yml"
             - "**/*.rs"
             - "**/build.rs"
             - "**/Cargo.lock"

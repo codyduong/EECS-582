@@ -1,11 +1,28 @@
 {
     "folders": [
-        { "path": "." }, 
+        { "path": "." },
         { "path": "backend/auth" },
         { "path": "backend/products" },
-        { "path": "scrapers/scraper-py-dillions" },
+        { "path": "scrapers/scraper-py-dillons" },
         { "path": "scrapers/scraper-py-sample" },
         { "path": "scrapers/scraper-py-target" },
         { "path": "scrapers/scraper-py-walmart" },
-    ]
+        { "path": "frontend/web" },
+    ],
+    "extensions": {
+        "recommendations": [
+            // Rust tooling
+            "rust-lang.rust-analyzer",
+            "tamasfe.even-better-toml",
+
+            // Python tooling
+            "ms-python.python",
+            "ms-python.vscode-pylance",
+            "charliermarsh.ruff",
+
+            // Frontend tooling
+            "bradlc.vscode-tailwindcss",
+            "dbaeumer.vscode-eslint",
+        ],
+    },
 }

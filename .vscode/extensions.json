@@ -8,5 +8,9 @@
     "ms-python.python",
     "ms-python.vscode-pylance",
     "charliermarsh.ruff",
+
+    // Frontend tooling
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
   ]
 }
