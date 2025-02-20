@@ -29,6 +29,7 @@
     "eslint-config-mantine": "4.0.3",
     "eslint-config-next": "15.1.7",
     "eslint-config-prettier": "10.0.1",
+    "eslint-plugin-prettier": "5.2.3",
     "postcss": "^8.5.3",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
