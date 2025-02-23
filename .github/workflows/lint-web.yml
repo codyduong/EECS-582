@@ -5,7 +5,7 @@ on:
   push:
     branches: [ master ]
     paths:
-      - '.github/workflows/frontend.web.yml'
+      - '.github/workflows/lint-web.yml'
       - 'frontend/web/**.ts'
       - 'frontend/web/**.tsx'
       - 'frontend/web/**.js'
@@ -29,14 +29,14 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - run: git fetch origin master:master
-    - run: git checkout ${{ github.event.pull_request.head.sha }}
 
     # https://stackoverflow.com/a/74887073
     - name: Setup LAST_COMMIT_SHA
       if: ${{ github.event_name == 'pull_request' }}
       shell: bash
       run: |
+        git fetch origin master:master
+        git checkout ${{ github.event.pull_request.head.sha }}
         echo "WORKING_DIR=$(pwd)" >> ${GITHUB_ENV}
         echo "LAST_COMMIT_SHA=${{ github.event.pull_request.head.sha }}" >> ${GITHUB_ENV}
 
