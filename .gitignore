@@ -3,6 +3,7 @@
 
 # Generally avoid in git
 **/*.env
+**/*.DS_Store
 
 # Build files
 **/target
