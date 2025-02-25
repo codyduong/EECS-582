@@ -25,8 +25,10 @@ jobs:
         strategy:
             matrix:
                 project:
+                    - scrapers/scraper-py-dillons
                     - scrapers/scraper-py-sample
                     - scrapers/scraper-py-target
+                    - scrapers/scraper-py-walmart
                 rust: [stable]
                 os: [ubuntu-latest]
         defaults:
