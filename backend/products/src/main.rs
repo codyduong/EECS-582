@@ -15,6 +15,7 @@
   - 2025-02-16 - Cody Duong - add comments
 */
 
+use actix_cors::Cors;
 use actix_web::{web::Data, App, HttpServer};
 use diesel::{
   prelude::*,
@@ -30,8 +31,12 @@ use utoipa_swagger_ui::{SwaggerUi, Url};
 
 #[cfg(debug_assertions)]
 const API_URL: &str = "127.0.0.1";
+#[cfg(debug_assertions)]
+const ALLOWED_ORIGINS: [&str; 1] = ["http://localhost:3000"];
 #[cfg(not(debug_assertions))]
 const API_URL: &str = "0.0.0.0";
+#[cfg(not(debug_assertions))]
+const ALLOWED_ORIGINS: [&str; 1] = ["http://localhost:3000"];
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -96,7 +101,14 @@ async fn main() -> std::io::Result<()> {
   let url = API_URL.to_owned() + ":" + &api_port;
 
   HttpServer::new(move || {
+    let cors = Cors::default()
+      .allowed_origin_fn(|origin, _req_head| ALLOWED_ORIGINS.iter().any(|&i| i == origin))
+      .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+      .allowed_headers(vec!["Content-Type", "Authorization"])
+      .max_age(3600);
+
     App::new()
+      .wrap(cors)
       .app_data(Data::new(pool.clone()))
       .configure(handlers::marketplaces::configure())
       .configure(handlers::products::configure())
