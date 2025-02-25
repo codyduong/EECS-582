@@ -1,13 +1,12 @@
 "use client";
 
 /*
- *  Page at "/login"
+ *  Page at "/register"
  *
- *  Authors: @codyduong
+ *  Authors: @hvwendt
  *  Date Created: 2025-02-19
  *  Revision History:
- *  - 2025-02-05 - @codyduong - initial creation of website
- *  - 2025-02-25 - @hvwendt - create login page
+ *  - 2025-02-25 - @hvwendt - create register page
  */
 
 import "@mantine/core/styles.css";
@@ -15,7 +14,6 @@ import { useState } from "react";
 import {
   TextInput,
   PasswordInput,
-  Checkbox,
   Button,
   Paper,
   Title,
@@ -27,7 +25,7 @@ import bcrypt from "bcryptjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -36,12 +34,14 @@ export default function LoginPage() {
     initialValues: {
       email: "",
       password: "",
-      rememberMe: false,
+      confirmPassword: "",
     },
     validate: {
       email: (value) => (/^\S+@\S+$/.test(value) ? null : "Invalid email"),
       password: (value) =>
         value.length < 6 ? "Password should be at least 6 characters" : null,
+      confirmPassword: (value, values) =>
+        value !== values.password ? "Passwords did not match" : null,
     },
   });
 
@@ -53,38 +53,34 @@ export default function LoginPage() {
       // Hash password before sending
       const hashedPassword = await bcrypt.hash(values.password, 10);
 
-      const response = await fetch("http://localhost:8081/api/v1/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "http://localhost:8081/api/v1/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: values.email,
+            password: hashedPassword,
+          }),
         },
-        body: JSON.stringify({
-          email: values.email,
-          password: hashedPassword,
-          rememberMe: values.rememberMe,
-        }),
-      });
+      );
 
       const data = await response.json();
 
-      console.log(data);
-
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        throw new Error(data.message || "Registration failed");
       }
 
-      // Handle successful login
-      if (data.token) {
-        // Store the token in localStorage or a secure cookie
-        localStorage.setItem("authToken", data.token);
-        // Redirect to dashboard or home page
-        router.push("/dashboard");
-      }
+      // Handle successful registration
+      // Redirect to login page with success message
+      router.push("/login?registered=true");
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to login. Please check your credentials.",
+          : "Failed to register. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -94,7 +90,7 @@ export default function LoginPage() {
   return (
     <Container size={420} my={40}>
       <Title ta="center" className="font-bold">
-        Welcome back!
+        Create an account
       </Title>
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
@@ -114,23 +110,25 @@ export default function LoginPage() {
             {...form.getInputProps("password")}
           />
 
-          <Checkbox
-            label="Remember me"
+          <PasswordInput
+            label="Confirm Password"
+            placeholder="Confirm your password"
+            required
             mt="md"
-            {...form.getInputProps("rememberMe", { type: "checkbox" })}
+            {...form.getInputProps("confirmPassword")}
           />
 
           {error && <div className="mt-4 text-sm text-red-500">{error}</div>}
 
           <Button fullWidth mt="xl" type="submit" loading={loading}>
-            Sign in
+            Register
           </Button>
         </form>
 
         <Text ta="center" mt="md">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-blue-500 hover:text-blue-600">
-            Register
+          Already have an account?{" "}
+          <Link href="/login" className="text-blue-500 hover:text-blue-600">
+            Login
           </Link>
         </Text>
       </Paper>
