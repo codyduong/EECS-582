@@ -13,6 +13,7 @@
   - 2025-02-07 - Cody Duong - add authentication endpoints
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-02-25 - @codyduong - add comment about concerns regarding JWT lifetimes
 */
 
 use crate::models::PermissionName;
@@ -31,6 +32,8 @@ pub(crate) const V1_PATH: &str = "/api/v1/auth";
 // IN PROD when you change claims it can invalidate old valid JWTs, todo
 // we need to update handling of failed claims...? would be better devUX
 // fuck the users though LOL! -- @codyduong
+
+// todo @codyduong: don't make claims live forever... LMAO! implement JWT expiry
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
   pub sub: i32,   // subject: user id
