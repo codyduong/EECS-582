@@ -11,7 +11,7 @@
   - 2025-02-07 - Cody Duong - add authentication endpoints
   - 2025-02-09 - Cody Duong - reorganize imports
   - 2025-02-16 - Cody Duong - add comments
-  - 2025-02-25 - @codyduong - add CORs
+  - 2025-02-25 - @codyduong - add CORS
 */
 
 use actix_cors::Cors;

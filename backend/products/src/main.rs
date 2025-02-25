@@ -13,6 +13,7 @@
   - 2025-02-14 - Cody Duong - add product POST
   - 2025-02-14 - Cody Duong - add marketplace GET/POST
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-02-25 - @codyduong - add CORS
 */
 
 use actix_cors::Cors;
