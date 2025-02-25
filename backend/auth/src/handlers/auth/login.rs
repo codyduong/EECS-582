@@ -10,6 +10,7 @@
   - 2025-02-07 - Cody Duong - add authentication endpoints
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-02-25 - @codyduong - support logging in w/ email as well as username
 */
 
 use crate::errors::ServiceError;
@@ -33,13 +34,31 @@ pub async fn login_route(
   credentials: web::Json<LoginRequest>,
 ) -> Result<HttpResponse, actix_web::Error> {
   let mut conn = db.get().unwrap();
-  let user = users::table
-    .filter(users::username.eq(&credentials.username))
-    .first::<User>(&mut conn)
-    .map_err(|err| {
-      log::error!("Failed to find user: {}", err);
-      ServiceError::InternalServerError
-    })?;
+
+  let user = match &credentials.email {
+    Some(email) => users::table
+      .filter(users::email.eq(&email))
+      .first::<User>(&mut conn)
+      .map_err(|err| {
+        log::error!("Failed to find user: {}", err);
+        ServiceError::InternalServerError
+      })?,
+    None => match &credentials.username {
+      Some(username) => users::table
+        .filter(users::username.eq(&username))
+        .first::<User>(&mut conn)
+        .map_err(|err| {
+          log::error!("Failed to find user: {}", err);
+          ServiceError::InternalServerError
+        })?,
+      None => {
+        log::error!("Missing required field: `email` or `password`");
+        Err(ServiceError::BadRequest(
+          "Missing required field: `email` or `password`".to_string(),
+        ))?
+      }
+    },
+  };
 
   let perms: Vec<PermissionName> = users_to_roles::table
     .inner_join(roles::table.on(users_to_roles::role_id.eq(roles::id)))
@@ -68,8 +87,10 @@ pub async fn login_route(
 }
 
 #[derive(Deserialize, ToSchema)]
+#[schema(description = "Login request. Either `email` or `username` must be provided.")]
 pub struct LoginRequest {
-  username: String,
+  email: Option<String>,
+  username: Option<String>,
   password: String,
 }
 

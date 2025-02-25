@@ -76,9 +76,14 @@ export default function LoginPage() {
       // Handle successful login
       if (data.token) {
         // Store the token in localStorage or a secure cookie
+
+        // todo @codyduong, MOVE THIS into a context handler, and resolve issues
+        // with localStorage... probably prefer something like react-cookie,
+        // or the nextjs equivalent... CSRF is not really a concern since our
+        // APIs are guarded with CORs
         localStorage.setItem("authToken", data.token);
         // Redirect to dashboard or home page
-        router.push("/dashboard");
+        router.push("/");
       }
     } catch (err) {
       setError(
