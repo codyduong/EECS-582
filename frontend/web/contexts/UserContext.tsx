@@ -7,7 +7,7 @@
  *  Authors: @codyduong
  *  Date Created: 2025-02-25
  *  Revision History:
- *  - 2025-02-05 - @codyduong - initial creation, improve authentication flow
+ *  - 2025-02-25 - @codyduong - initial creation, improve authentication flow
  */
 
 import { getClaim, Permission } from "@/lib/jwt_utils";

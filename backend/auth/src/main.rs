@@ -99,16 +99,9 @@ async fn main() -> std::io::Result<()> {
 
   HttpServer::new(move || {
     let cors = Cors::default()
-      .allowed_origin_fn(|origin, _req_head| 
-        ALLOWED_ORIGINS.iter().any(|&i| i == origin)
-      )
+      .allowed_origin_fn(|origin, _req_head| ALLOWED_ORIGINS.iter().any(|&i| i == origin))
       .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-      .allowed_headers(vec![
-        "Content-Type",
-        "Authorization",
-        "b3",
-        "traceparent", 
-      ])
+      .allowed_headers(vec!["Content-Type", "Authorization", "b3", "traceparent"])
       .supports_credentials()
       .max_age(3600);
 
@@ -117,7 +110,7 @@ async fn main() -> std::io::Result<()> {
       .wrap(cors)
       .app_data(Data::new(pool.clone()))
       .configure(handlers::auth::configure())
-      // .configure(handlers::users::configure())
+      .configure(handlers::users::configure())
       .service(
         SwaggerUi::new("/swagger-ui/{_:.*}").urls(vec![(Url::new("api", "/api-docs/openapi.json"), ApiDoc::openapi())]),
       )
