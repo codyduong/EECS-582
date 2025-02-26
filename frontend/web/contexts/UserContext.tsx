@@ -31,7 +31,7 @@ const AuthResponseSchema = Schema.Struct({
 
 type User = {
   readonly id: number;
-  readonly username: string;
+  readonly username: string | null;
   readonly email: string;
   readonly permissions: ReadonlyArray<Permission>;
 };

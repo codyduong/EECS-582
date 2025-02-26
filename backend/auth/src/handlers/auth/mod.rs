@@ -15,7 +15,8 @@
   - 2025-02-16 - Cody Duong - add comments
   - 2025-02-25 - @codyduong - add comment about concerns regarding JWT lifetimes
   - 2025-02-25 - @codyduong - add more key/values to claims
-  - 2025-02-26 - @codyduong - lift `get_permissions` utility function from `login.rs` to here.
+  - 2025-02-26 - @codyduong - lift `get_permissions` utility function from `login.rs` to here
+                              make username nullable
 */
 
 use crate::models::*;
@@ -47,7 +48,7 @@ pub struct Claims {
   pub exp: usize, // expiration time
   pub permissions: Vec<PermissionName>,
   pub email: String,
-  pub username: String,
+  pub username: Option<String>,
 }
 
 #[builder]
@@ -55,7 +56,7 @@ pub(crate) fn create_jwt(
   user_id: i32,
   permissions: Vec<PermissionName>,
   email: String,
-  username: String,
+  #[builder(required)] username: Option<String>,
 ) -> Result<String, jsonwebtoken::errors::Error> {
   let secret_key = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 

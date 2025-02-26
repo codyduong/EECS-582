@@ -15,7 +15,7 @@ import { PermissionValidator } from "@/lib/permissions";
 
 export default function ProfilePage() {
   return (
-    <ProtectedPage validator={new PermissionValidator().with("read:all")}>
+    <ProtectedPage validator={new PermissionValidator()}>
       <div>yippee you are logged in</div>
     </ProtectedPage>
   );
