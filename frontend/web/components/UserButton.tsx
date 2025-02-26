@@ -8,15 +8,15 @@
  *  - Clickable icon that links to the /profile route
  *  - Accessible label for screen readers
  *  - Consistent styling with the rest of the application using Mantine components
- *  
+ *
  *  Authors: @ehnuJ
  *  Date Created: 2025-02-26
  *  Revision History:
- *  
-*/
-import { ActionIcon } from "@mantine/core"
-import { IconUser } from "@tabler/icons-react"
-import Link from "next/link"
+ *
+ */
+import { ActionIcon } from "@mantine/core";
+import { IconUser } from "@tabler/icons-react";
+import Link from "next/link";
 
 export function UserButton() {
   return (
@@ -25,5 +25,5 @@ export function UserButton() {
         <IconUser size="1.5rem" />
       </ActionIcon>
     </Link>
-  )
+  );
 }

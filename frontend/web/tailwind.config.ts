@@ -11,19 +11,18 @@
  *
  * The configuration ensures that Tailwind utilities can be used alongside
  * Mantine components without style conflicts.
- * 
+ *
  * Authors: @codyduong @ehnuJ
  * Date Created: 2025-02-20
- * Revision History: 
+ * Revision History:
  *  -2025-02-26 - @ehnuJ - updated Tailwind setup
  */
 
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
-const config: Config = {
+const config = {
   darkMode: "class",
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "*.{js,ts,jsx,tsx,mdx}",
@@ -31,10 +30,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
+        background: "hsl(var(--foreground))",
         foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -72,7 +68,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-}
+  plugins: [
+    /* require("tailwindcss-animate") */
+  ],
+} as const satisfies Config;
 
-export default config
+export default config;
