@@ -11,6 +11,7 @@
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-16 - Cody Duong - add comments
   - 2025-02-26 - @codyduong - use web blocking, return user token on successful registration
+                              make username nullable
 */
 
 use crate::errors::ServiceError;
@@ -36,7 +37,11 @@ pub(crate) async fn register_route(
   new_user: web::Json<RegisterRequest>,
 ) -> Result<HttpResponse, actix_web::Error> {
   // guard against registering reserved names
-  if RESERVED_TEST_USERNAMES.contains(&new_user.username.as_str()) {
+  if new_user
+    .username
+    .as_ref()
+    .is_some_and(|n| RESERVED_TEST_USERNAMES.contains(&n.as_str()))
+  {
     // todo better error here
     return Err(ServiceError::InternalServerError)?;
   }
@@ -51,7 +56,7 @@ pub(crate) async fn register_route(
     let new_user = new_user.clone();
     web::block(move || {
       let user = NewUser {
-        username: &new_user.username,
+        username: new_user.username.as_deref(),
         email: &new_user.email,
         password_hash: &hashed,
       };
@@ -92,7 +97,7 @@ pub(crate) async fn register_route(
 
 #[derive(Deserialize, ToSchema, Clone)]
 struct RegisterRequest {
-  pub username: String,
+  pub username: Option<String>,
   pub email: String,
   pub password: String,
 }

@@ -1,5 +1,3 @@
-"use client";
-
 import { useUser } from "@/contexts/UserContext";
 import { PermissionValidator } from "@/lib/permissions";
 import { useRouter } from "next/navigation";
