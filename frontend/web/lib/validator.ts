@@ -39,17 +39,45 @@ type Requirements<T extends string | number> = (
   | GenericValidator<T>
 )[];
 
+// used for jsdoc
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { PermissionValidator } from "./permissions";
+
+/**
+ * @classdesc This class should rarely be used by itself, instead consider making
+ * a specialized subclass. See {@linkcode PermissionValidator}
+ */
 export class GenericValidator<T extends string | number> {
-  public requiredScopes: NormalizedGroup<T> | null = null;
+  private requiredScopes: NormalizedGroup<T> | null = null;
 
   static new<T extends string | number>(): GenericValidator<T> {
     return new GenericValidator<T>();
   }
 
+  /**
+   * Same as {@linkcode and GenericValidator.and}
+   *
+   * @param requirements - The value(s) or group(s) to add.
+   * @returns {GenericValidator} A new GenericValidator instance with the added OR requirements.
+   * @example
+   * const validator = GenericValidator.new<Permission>()
+   *   .with("read")
+   *   .and("write", { type: ScopeGroupType.Not, value: "guest" });
+   */
   with(...scopes: Requirements<T>): GenericValidator<T> {
     return this.and(...scopes);
   }
 
+  /**
+   * Adds one or more values or groups to the validator, combining them with a logical AND.
+   *
+   * @param requirements - The value(s) or group(s) to add.
+   * @returns {GenericValidator} A new GenericValidator instance with the added OR requirements.
+   * @example
+   * const validator = GenericValidator.new<Permission>()
+   *   .with("read")
+   *   .and("write", { type: ScopeGroupType.Not, value: "guest" });
+   */
   and(...requirements: Requirements<T>): GenericValidator<T> {
     const normalizedRequirements = requirements.map((req) =>
       this.normalizeScope(req),
@@ -69,6 +97,16 @@ export class GenericValidator<T extends string | number> {
     return newValidator;
   }
 
+  /**
+   * Adds one or more values or groups to the validator, combining them with a logical OR.
+   *
+   * @param requirements - The value(s) or group(s) to add.
+   * @returns {GenericValidator} A new GenericValidator instance with the added OR requirements.
+   * @example
+   * const validator = GenericValidator.new<Permission>()
+   *   .with("read")
+   *   .or("admin", { type: ScopeGroupType.And, values: ["edit", "publish"] });
+   */
   or(...requirements: Requirements<T>): GenericValidator<T> {
     const normalizedRequirements = requirements.map((req) =>
       this.normalizeScope(req),
@@ -85,6 +123,17 @@ export class GenericValidator<T extends string | number> {
     return newValidator;
   }
 
+  /**
+   * Adds one or more permissions or scope groups to the validator, negating them with a logical NOT.
+   *
+   * Multiple values are assumed to be a NOT(AND(...values)).
+   * @param requirements - The values to negate.
+   * @returns {GenericValidator} A new GenericValidator instance with the added NOT requirements.
+   * @example
+   * const validator = GenericValidator.new<Permission>()
+   *   .with("read")
+   *   .not("guest", { type: ScopeGroupType.Or, values: ["temp", "restricted"] });
+   */
   not(...requirements: Requirements<T>): GenericValidator<T> {
     const normalizedRequirements = requirements.map((req) =>
       this.normalizeScope(req),
@@ -110,18 +159,35 @@ export class GenericValidator<T extends string | number> {
     return newValidator;
   }
 
-  private normalizeScope(scope: Requirements<T>[number]): NormalizedGroup<T> {
-    if (typeof scope === "string" || typeof scope === "number") {
-      return { type: GroupType.Scope, values: scope };
+  /**
+   * Normalizes a group into a Group into a NormalizedGroup.
+   * @param group - The group to normalize.
+   * @returns {ScopeGroup} The normalized ScopeGroup.
+   * @throws {TypeError} If the group type is invalid.
+   */
+  private normalizeScope(group: Requirements<T>[number]): NormalizedGroup<T> {
+    // Look, I'm not going to explain this, since any Typescript IDE illustrates
+    // dataflow narrowing. I don't really enjoy the imperiative control flow
+    // as much as the next person, but just use your IDE. Besides this functionality
+    // is robustly tested. No amount of comments would save implicit control flow
+    // from being terrible, so tests were made instead.
+
+    // todo: probably should genericize this into a typeguard, or extractor
+    // monad, which will probably serve our purposes of specializing this class better...
+    // ,w/e never happening -@codyduong feb26,2025
+    if (typeof group === "string" || typeof group === "number") {
+      return { type: GroupType.Scope, values: group };
     }
-    if (scope instanceof GenericValidator) {
-      return scope.requiredScopes || { type: GroupType.Scope, values: "" as T };
+
+    if (group instanceof GenericValidator) {
+      return group.requiredScopes || { type: GroupType.Scope, values: "" as T };
     }
-    if (typeof scope === "object" && "type" in scope && "values" in scope) {
-      const values = scope.values;
+
+    if (typeof group === "object" && "type" in group && "values" in group) {
+      const values = group.values;
       if (values instanceof GenericValidator) {
         return {
-          type: scope.type,
+          type: group.type,
           values: values.requiredScopes || {
             type: GroupType.Scope,
             values: "" as T,
@@ -131,14 +197,14 @@ export class GenericValidator<T extends string | number> {
 
       if (typeof values === "string" || typeof values === "number") {
         return {
-          type: scope.type,
+          type: group.type,
           values: values,
         };
       }
 
       if (Array.isArray(values)) {
         return {
-          type: scope.type,
+          type: group.type,
           // @ts-expect-error: No. -@codyduong
           values: values.map((v) =>
             typeof v === "string" || typeof values === "number"
@@ -149,97 +215,119 @@ export class GenericValidator<T extends string | number> {
       }
 
       return {
-        type: scope.type,
+        type: group.type,
         values: this.normalizeScope(values),
       };
     }
-    if (Array.isArray(scope)) {
+
+    if (Array.isArray(group)) {
       return {
         type: GroupType.And,
-        values: scope.map((s) => this.normalizeScope(s)),
+        values: group.map((s) => this.normalizeScope(s)),
       };
     }
 
-    throw new TypeError(`Invalid scope type ${scope}`);
+    throw new TypeError(`Invalid group type ${group}`);
   }
 
-  // i wonder if this op is expensive on prohibitively complex sets... w/e wont-fix -@codyduong
-  validate(...permissions: (T | T[] | ReadonlyArray<T>)[]): boolean {
+  /**
+   * Validates the provided values against the schema.
+   * Accepts variadic arguments: a single value, an array of values (mutable or readonly),
+   * or multiple value arguments.
+   * @param {...(T | T[] | ReadonlyArray<T>)[]} values - The values to validate.
+   * @returns {boolean} True if the values satisfy the requirements, false otherwise.
+   * @example
+   * const validator = GenericValidator.new<Permission>()
+   *   .with("read", ["write", "execute"])
+   *   .and("delete")
+   *   .not("guest");
+   *
+   * const hasAccess = validator.validate("read", "write", "execute", "delete");
+   */
+  validate(...values: (T | T[] | ReadonlyArray<T>)[]): boolean {
+    // i wonder if this op is expensive on prohibitively complex sets... w/e wont-fix -@codyduong
+
     if (!this.requiredScopes) return true; // No requirements, always valid
 
     // @ts-expect-error: Yeah, it could be, but it's not. I think... -@codyduong
-    const flattenedPermissions: T[] = permissions.flat();
+    const flattenedValues: T[] = values.flat();
 
-    return this._validate(this.requiredScopes, flattenedPermissions);
+    return this._validate(this.requiredScopes, flattenedValues);
   }
 
-  private _validate(group: NormalizedGroup<T>, permissions: T[]): boolean {
-    switch (group.type) {
+  /**
+   * Recursively validates a Schema against the provided values.
+   * @param schema - The NormalizedGroup to validate.
+   * @param values - The values to validate against.
+   * @returns {boolean} True if the values satisfy the Schema, false otherwise.
+   */
+  private _validate(schema: NormalizedGroup<T>, values: T[]): boolean {
+    switch (schema.type) {
       case GroupType.Scope:
-        return permissions.includes(group.values as T);
+        return values.includes(schema.values as T);
 
       case GroupType.And:
-        if (Array.isArray(group.values)) {
-          return group.values.every((r) => {
+        if (Array.isArray(schema.values)) {
+          return schema.values.every((r) => {
             if (typeof r === "string" || typeof r === "number") {
-              return permissions.includes(r);
+              return values.includes(r);
             } else {
-              return this._validate(r, permissions);
+              return this._validate(r, values);
             }
           });
         } else {
           if (
-            typeof group.values === "string" ||
-            typeof group.values === "number"
+            typeof schema.values === "string" ||
+            typeof schema.values === "number"
           ) {
-            return permissions.includes(group.values);
+            return values.includes(schema.values);
           } else {
-            return this._validate(group.values, permissions);
+            return this._validate(schema.values, values);
           }
         }
 
       case GroupType.Or:
-        if (Array.isArray(group.values)) {
-          return group.values.some((r) => {
+        if (Array.isArray(schema.values)) {
+          return schema.values.some((r) => {
             if (typeof r === "string" || typeof r === "number") {
-              return permissions.includes(r);
+              return values.includes(r);
             } else {
-              return this._validate(r, permissions);
+              return this._validate(r, values);
             }
           });
         } else {
           if (
-            typeof group.values === "string" ||
-            typeof group.values === "number"
+            typeof schema.values === "string" ||
+            typeof schema.values === "number"
           ) {
-            return permissions.includes(group.values);
+            return values.includes(schema.values);
           } else {
-            return this._validate(group.values, permissions);
+            return this._validate(schema.values, values);
           }
         }
 
       case GroupType.Not:
-        if (Array.isArray(group.values)) {
-          return group.values.every((r) => {
+        if (Array.isArray(schema.values)) {
+          return schema.values.every((r) => {
             if (typeof r === "string" || typeof r === "number") {
-              return !permissions.includes(r);
+              return !values.includes(r);
             } else {
-              return !this._validate(r, permissions);
+              return !this._validate(r, values);
             }
           });
         } else {
           if (
-            typeof group.values === "string" ||
-            typeof group.values === "number"
+            typeof schema.values === "string" ||
+            typeof schema.values === "number"
           ) {
-            return !permissions.includes(group.values);
+            return !values.includes(schema.values);
           } else {
-            return !this._validate(group.values, permissions);
+            return !this._validate(schema.values, values);
           }
         }
 
       default:
-        throw new Error(`Unknown scope group type: ${group} ${group.type}`);
+        throw new Error(`Unknown scope group type: ${schema} ${schema.type}`);
     }
   }
 }

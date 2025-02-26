@@ -1,4 +1,4 @@
-name: Python Ruff Checks
+name: Python Ruff
 
 on:
     push:
@@ -19,8 +19,7 @@ on:
             - "**/.ruff.toml"
 
 jobs:
-    fmt-and-clippy:
-        name: Ruff Checks
+    ruff:
         runs-on: ubuntu-latest
         strategy:
             matrix:
