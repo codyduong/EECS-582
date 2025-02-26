@@ -15,12 +15,17 @@
   - 2025-02-16 - Cody Duong - add comments
   - 2025-02-25 - @codyduong - add comment about concerns regarding JWT lifetimes
   - 2025-02-25 - @codyduong - add more key/values to claims
+  - 2025-02-26 - @codyduong - lift `get_permissions` utility function from `login.rs` to here.
 */
 
-use crate::models::PermissionName;
+use crate::models::*;
+use crate::schema::*;
 use actix_web::web::{self, ServiceConfig};
 use bon::builder;
 use chrono::{Duration, Utc};
+use diesel::prelude::*;
+use diesel::r2d2::ConnectionManager;
+use diesel::r2d2::PooledConnection;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
@@ -101,6 +106,21 @@ pub fn decode_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
 //     Err(_) => Err((actix_web::error::ErrorUnauthorized("Invalid token"), req)),
 //   }
 // }
+
+pub fn get_permissions(
+  conn: &mut PooledConnection<ConnectionManager<PgConnection>>,
+  id: i32,
+) -> Result<Vec<PermissionName>, diesel::result::Error> {
+  users_to_roles::table
+    .inner_join(roles::table.on(users_to_roles::role_id.eq(roles::id)))
+    .inner_join(roles_to_permissions::table.on(roles::id.eq(roles_to_permissions::role_id)))
+    .inner_join(permissions::table.on(roles_to_permissions::permission_id.eq(permissions::id)))
+    .filter(users_to_roles::user_id.eq(id))
+    .filter(users_to_roles::active.eq(true))
+    .select(permissions::name)
+    .distinct()
+    .load::<PermissionName>(conn)
+}
 
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   |config: &mut ServiceConfig| {

@@ -2,6 +2,7 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
 import prettierConfig from "eslint-config-prettier";
+import reactHooks from "eslint-plugin-react-hooks";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,7 +18,11 @@ const eslintConfig = [
     "plugin:prettier/recommended",
   ),
   {
+    plugins: {
+      "react-hooks": reactHooks,
+    },
     rules: {
+      ...reactHooks.configs.recommended.rules,
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
@@ -33,6 +38,11 @@ const eslintConfig = [
     },
   },
   prettierConfig,
+  {
+    rules: {
+      "prettier/prettier": "warn",
+    },
+  },
 ];
 
 export default eslintConfig;

@@ -10,9 +10,11 @@
   - 2025-02-07 - Cody Duong - add authentication endpoints
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-02-26 - @codyduong - use web blocking, return user token on successful registration
 */
 
 use crate::errors::ServiceError;
+use crate::handlers::auth::LoginResponse;
 use crate::models::*;
 use crate::schema::*;
 use crate::RESERVED_TEST_USERNAMES;
@@ -25,44 +27,70 @@ use utoipa::ToSchema;
 #[utoipa::path(
   context_path = super::V1_PATH,
   responses(
-    (status = CREATED)
+    (status = CREATED, body = LoginResponse)
   ),
 )]
 #[post("/register")]
 pub(crate) async fn register_route(
   db: web::Data<crate::Pool>,
   new_user: web::Json<RegisterRequest>,
-) -> Result<HttpResponse, ServiceError> {
+) -> Result<HttpResponse, actix_web::Error> {
   // guard against registering reserved names
   if RESERVED_TEST_USERNAMES.contains(&new_user.username.as_str()) {
     // todo better error here
-    return Err(ServiceError::InternalServerError);
+    return Err(ServiceError::InternalServerError)?;
   }
 
   let hashed = hash(&new_user.password, 10).map_err(|err| {
     log::error!("Failed to hash: {}", err);
     ServiceError::InternalServerError
   })?;
-  let user = NewUser {
-    username: &new_user.username,
-    email: &new_user.email,
-    password_hash: &hashed,
+  let new_user = new_user.into_inner();
+
+  let res = {
+    let new_user = new_user.clone();
+    web::block(move || {
+      let user = NewUser {
+        username: &new_user.username,
+        email: &new_user.email,
+        password_hash: &hashed,
+      };
+
+      let mut conn = db.get().unwrap();
+
+      conn.transaction(|conn| {
+        insert_into(users::table).values(&user).execute(conn)?;
+
+        let user = users::table
+          .filter(users::email.eq(&new_user.email))
+          .first::<User>(conn)?;
+
+        let perms = super::get_permissions(conn, user.id)?;
+
+        let token = super::create_jwt()
+          .user_id(user.id)
+          .permissions(perms)
+          .email(user.email)
+          .username(user.username)
+          .call()
+          .map_err(|_| diesel::result::Error::RollbackTransaction)?;
+
+        diesel::result::QueryResult::Ok(token)
+      })
+    })
+    .await?
   };
 
-  let mut conn = db.get().unwrap();
-
-  insert_into(users::table)
-    .values(&user)
-    .execute(&mut conn)
-    .map_err(|err| {
-      log::error!("Failed to inset user: {}", err);
-      ServiceError::InternalServerError
-    })?;
-
-  Ok(HttpResponse::Created().finish())
+  match res {
+    Ok(token) => Ok(HttpResponse::Created().json(LoginResponse { token })),
+    Err(e) => {
+      log::error!("Registering user ({}) failed, rolled back: \n{}", &new_user.email, e);
+      Err(ServiceError::InternalServerError)?
+    }
+  }
 }
 
-#[derive(Deserialize, ToSchema)]
+#[derive(Deserialize, ToSchema, Clone)]
 struct RegisterRequest {
   pub username: String,
   pub email: String,

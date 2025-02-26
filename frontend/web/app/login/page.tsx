@@ -8,6 +8,7 @@
  *  Revision History:
  *  - 2025-02-20 - @codyduong - initial creation of website
  *  - 2025-02-25 - @hvwendt - create login page
+ *  - 2025-02-26 - @codyduong - consolidate login logic within UserContext
  */
 
 import "@mantine/core/styles.css";
@@ -52,10 +53,14 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
 
+      // Run login in background context, will error if fail for any reason.
+      // Otherwise will store in secure cookies if successful
       await Effect.runPromise(login(values.email, values.password));
 
+      // For now go to profile page
       router.push("/profile");
     } catch (err) {
+      // todo @codyduong, effectize this away from a promise, we can have much more meaningful error messages for the user
       setError(
         err instanceof Error
           ? err.message
