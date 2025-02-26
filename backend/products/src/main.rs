@@ -17,7 +17,7 @@
 */
 
 use actix_cors::Cors;
-use actix_web::{web::Data, App, HttpServer};
+use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use diesel::{
   prelude::*,
   r2d2::{self, ConnectionManager},
@@ -105,10 +105,16 @@ async fn main() -> std::io::Result<()> {
     let cors = Cors::default()
       .allowed_origin_fn(|origin, _req_head| ALLOWED_ORIGINS.iter().any(|&i| i == origin))
       .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-      .allowed_headers(vec!["Content-Type", "Authorization"])
+      .allowed_headers(vec![
+        "Content-Type",
+        "Authorization",
+        "b3",
+        "traceparent", 
+      ])
       .max_age(3600);
 
     App::new()
+      .wrap(Logger::default())
       .wrap(cors)
       .app_data(Data::new(pool.clone()))
       .configure(handlers::marketplaces::configure())

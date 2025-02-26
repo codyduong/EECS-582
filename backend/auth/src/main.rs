@@ -15,7 +15,7 @@
 */
 
 use actix_cors::Cors;
-use actix_web::{web::Data, App, HttpServer};
+use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use auth::*;
 use diesel::{
   prelude::*,
@@ -31,7 +31,7 @@ mod seed;
 #[cfg(debug_assertions)]
 const API_URL: &str = "127.0.0.1";
 #[cfg(debug_assertions)]
-const ALLOWED_ORIGINS: [&str; 1] = ["http://localhost:3000"];
+const ALLOWED_ORIGINS: [&str; 2] = ["127.0.0.1", "http://localhost:3000"];
 #[cfg(not(debug_assertions))]
 const API_URL: &str = "0.0.0.0";
 #[cfg(not(debug_assertions))]
@@ -99,16 +99,25 @@ async fn main() -> std::io::Result<()> {
 
   HttpServer::new(move || {
     let cors = Cors::default()
-      .allowed_origin_fn(|origin, _req_head| ALLOWED_ORIGINS.iter().any(|&i| i == origin))
-      .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-      .allowed_headers(vec!["Content-Type", "Authorization"])
+      .allowed_origin_fn(|origin, _req_head| 
+        ALLOWED_ORIGINS.iter().any(|&i| i == origin)
+      )
+      .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+      .allowed_headers(vec![
+        "Content-Type",
+        "Authorization",
+        "b3",
+        "traceparent", 
+      ])
+      .supports_credentials()
       .max_age(3600);
 
     App::new()
+      .wrap(Logger::default())
       .wrap(cors)
       .app_data(Data::new(pool.clone()))
       .configure(handlers::auth::configure())
-      .configure(handlers::users::configure())
+      // .configure(handlers::users::configure())
       .service(
         SwaggerUi::new("/swagger-ui/{_:.*}").urls(vec![(Url::new("api", "/api-docs/openapi.json"), ApiDoc::openapi())]),
       )

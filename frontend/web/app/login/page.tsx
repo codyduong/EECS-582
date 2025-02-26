@@ -4,9 +4,9 @@
  *  Page at "/login"
  *
  *  Authors: @codyduong
- *  Date Created: 2025-02-19
+ *  Date Created: 2025-02-20
  *  Revision History:
- *  - 2025-02-05 - @codyduong - initial creation of website
+ *  - 2025-02-20 - @codyduong - initial creation of website
  *  - 2025-02-25 - @hvwendt - create login page
  */
 
@@ -23,14 +23,16 @@ import {
   Text,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import bcrypt from "bcryptjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Effect } from "effect";
+import { useUser } from "@/contexts/UserContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { login } = useUser();
 
   const form = useForm({
     initialValues: {
@@ -50,41 +52,9 @@ export default function LoginPage() {
       setLoading(true);
       setError("");
 
-      // Hash password before sending
-      const hashedPassword = await bcrypt.hash(values.password, 10);
+      await Effect.runPromise(login(values.email, values.password));
 
-      const response = await fetch("http://localhost:8081/api/v1/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: values.email,
-          password: hashedPassword,
-          rememberMe: values.rememberMe,
-        }),
-      });
-
-      const data = await response.json();
-
-      console.log(data);
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-
-      // Handle successful login
-      if (data.token) {
-        // Store the token in localStorage or a secure cookie
-
-        // todo @codyduong, MOVE THIS into a context handler, and resolve issues
-        // with localStorage... probably prefer something like react-cookie,
-        // or the nextjs equivalent... CSRF is not really a concern since our
-        // APIs are guarded with CORs
-        localStorage.setItem("authToken", data.token);
-        // Redirect to dashboard or home page
-        router.push("/");
-      }
+      router.push("/profile");
     } catch (err) {
       setError(
         err instanceof Error
