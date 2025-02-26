@@ -14,6 +14,8 @@
  *  Revision History:
  *  - 2025-02-05 - @codyduong - initial creation of website
  *  - 2025-02-26 - @ehnuJ - create layout component
+ *  - 2025-02-20 - @codyduong - initial creation of website
+ *  - 2025-02-25 - @codyduong - add user context
  */
 
 import type React from "react";
@@ -28,6 +30,7 @@ import Link from "next/link";
 import "@mantine/core/styles.css";
 import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
+import UserProvider from "@/contexts/UserContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,13 +61,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen w-screen overflow-hidden flex flex-col`}
       >
         <MantineProvider>
-          <header className="flex justify-between items-center p-4 bg-white shadow-md">
-            <Link href="/" className="text-xl font-bold text-green-600">
-              GroceryWise
-            </Link>
-            <UserButton />
-          </header>
-          <main className="overflow-hidden flex-grow">{children}</main>
+          <UserProvider>
+            <header className="flex justify-between items-center p-4 bg-white shadow-md">
+              <Link href="/" className="text-xl font-bold text-green-600">
+                GroceryWise
+              </Link>
+              <UserButton />
+            </header>
+            <main className="overflow-hidden flex-grow">{children}</main>
+          </UserProvider>
         </MantineProvider>
       </body>
     </html>

@@ -11,11 +11,13 @@
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-16 - Cody Duong - add comments
   - 2025-02-25 - @codyduong - support logging in w/ email as well as username
+  - 2025-02-25 - @codyduong - rename `login_route` to `post_login`, add 'options_login'
 */
 
 use crate::errors::ServiceError;
 use crate::models::*;
 use crate::schema::*;
+use actix_web::options;
 use actix_web::{post, web, HttpResponse};
 use bcrypt::verify;
 use diesel::prelude::*;
@@ -76,7 +78,13 @@ pub async fn login_route(
 
   match verify(&credentials.password, &user.password_hash) {
     Ok(_) => {
-      let token = super::create_jwt(user.id, perms).map_err(|_| ServiceError::InternalServerError)?;
+      let token = super::create_jwt()
+        .user_id(user.id)
+        .permissions(perms)
+        .email(user.email)
+        .username(user.username)
+        .call()
+        .map_err(|_| ServiceError::InternalServerError)?;
       Ok(HttpResponse::Ok().json(LoginResponse { token }))
     }
     Err(e) => {
@@ -97,4 +105,21 @@ pub struct LoginRequest {
 #[derive(Serialize, ToSchema)]
 pub struct LoginResponse {
   token: String,
+}
+
+#[utoipa::path(
+  context_path = super::V1_PATH,
+  responses(
+    (status = OK, body = String, example = json!("Allow: OPTIONS, POST"))
+  ),
+)]
+#[options("/login")]
+pub async fn options_login() -> Result<HttpResponse, actix_web::Error> {
+  Ok(
+    HttpResponse::Ok()
+      .append_header(("Allow", "OPTIONS, POST"))
+      .append_header(("Accept", "application/json"))
+      .append_header(("Content-Type", "application/json"))
+      .finish(),
+  )
 }

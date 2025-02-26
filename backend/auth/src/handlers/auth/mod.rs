@@ -14,10 +14,12 @@
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-16 - Cody Duong - add comments
   - 2025-02-25 - @codyduong - add comment about concerns regarding JWT lifetimes
+  - 2025-02-25 - @codyduong - add more key/values to claims
 */
 
 use crate::models::PermissionName;
 use actix_web::web::{self, ServiceConfig};
+use bon::builder;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
@@ -39,11 +41,16 @@ pub struct Claims {
   pub sub: i32,   // subject: user id
   pub exp: usize, // expiration time
   pub permissions: Vec<PermissionName>,
+  pub email: String,
+  pub username: String,
 }
 
+#[builder]
 pub(crate) fn create_jwt(
   user_id: i32,
   permissions: Vec<PermissionName>,
+  email: String,
+  username: String,
 ) -> Result<String, jsonwebtoken::errors::Error> {
   let secret_key = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 
@@ -56,6 +63,8 @@ pub(crate) fn create_jwt(
     sub: user_id,
     exp: expiration as usize,
     permissions,
+    email,
+    username,
   };
 
   encode(

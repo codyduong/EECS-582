@@ -4,7 +4,7 @@
  *  Page at "/register"
  *
  *  Authors: @hvwendt
- *  Date Created: 2025-02-19
+ *  Date Created: 2025-02-25
  *  Revision History:
  *  - 2025-02-25 - @hvwendt - create register page
  */
