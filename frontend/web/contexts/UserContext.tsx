@@ -8,6 +8,7 @@
  *  Date Created: 2025-02-25
  *  Revision History:
  *  - 2025-02-25 - @codyduong - initial creation, improve authentication flow
+ *  - 2025-02-26 - @codyduong - add registration endpoint to context handler
  */
 
 import { getClaim, Permission } from "@/lib/jwt_utils";
@@ -22,6 +23,7 @@ import { HttpClientError } from "@effect/platform/HttpClientError";
 import { Effect, Schema } from "effect";
 import { ParseError } from "effect/ParseResult";
 import { createContext, useCallback, useContext, useState } from "react";
+import { ContextNotProvidedError } from "./utils";
 
 const AuthResponseSchema = Schema.Struct({
   token: Schema.String,
@@ -40,17 +42,14 @@ type UserContextValue = {
     email: string,
     password: string,
   ) => Effect.Effect<User, HttpBodyError | HttpClientError | ParseError>;
+  register: (
+    email: string,
+    password: string,
+  ) => Effect.Effect<User, HttpBodyError | HttpClientError | ParseError>;
   logout: () => void;
 };
 
-export const UserContext = createContext<UserContextValue>({
-  login: function (..._args: unknown[]) {
-    throw new Error("Function not implemented.");
-  },
-  logout: function () {
-    throw new Error("Function not implemented.");
-  },
-});
+export const UserContext = createContext<UserContextValue | null>(null);
 
 export default function UserProvider({
   children,
@@ -90,6 +89,37 @@ export default function UserProvider({
     [],
   );
 
+  const register = useCallback<UserContextValue["register"]>(
+    (email, password) =>
+      Effect.gen(function* () {
+        const client = yield* HttpClient.HttpClient;
+        return yield* HttpClientRequest.post(
+          // todo @codyduong, don't hardcode this LOL!
+          "http://localhost:8081/api/v1/auth/register",
+        ).pipe(
+          HttpClientRequest.bodyJson({
+            email,
+            password,
+          }),
+          Effect.flatMap(client.execute),
+          Effect.flatMap(HttpClientResponse.schemaBodyJson(AuthResponseSchema)),
+          Effect.flatMap(({ token }) => getClaim(token)),
+          Effect.flatMap((claim) => {
+            const user: User = {
+              id: claim.sub,
+              username: claim.username,
+              email: claim.email,
+              permissions: claim.permissions,
+            };
+            setUser(user);
+            return Effect.succeed(user);
+          }),
+          Effect.scoped,
+        );
+      }).pipe(Effect.provide(FetchHttpClient.layer)),
+    [],
+  );
+
   const logout = useCallback(() => {
     // todo @codyduong effect a logout to the api, ie. expire the token
     setUser(null);
@@ -97,17 +127,21 @@ export default function UserProvider({
 
   const userContextValue = {
     user,
+    register,
     login,
     logout,
   } satisfies UserContextValue;
 
-  return (
-    <UserContext.Provider value={userContextValue}>
-      {children}
-    </UserContext.Provider>
-  );
+  return <UserContext value={userContextValue}>{children}</UserContext>;
 }
 
+/**
+ * @throws {ContextNotProvidedError}
+ */
 export const useUser = (): UserContextValue => {
-  return useContext(UserContext);
+  const context = useContext(UserContext);
+
+  if (!context) throw new ContextNotProvidedError(UserContext);
+
+  return context;
 };

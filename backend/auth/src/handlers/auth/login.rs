@@ -12,9 +12,11 @@
   - 2025-02-16 - Cody Duong - add comments
   - 2025-02-25 - @codyduong - support logging in w/ email as well as username
   - 2025-02-25 - @codyduong - rename `login_route` to `post_login`, add 'options_login'
+  - 2025-02-26 - @codyduong - use web blocking to improve performance, see here https://actix.rs/docs/databases/
 */
 
 use crate::errors::ServiceError;
+use crate::handlers::auth::get_permissions;
 use crate::models::*;
 use crate::schema::*;
 use actix_web::options;
@@ -35,46 +37,44 @@ pub async fn login_route(
   db: web::Data<crate::Pool>,
   credentials: web::Json<LoginRequest>,
 ) -> Result<HttpResponse, actix_web::Error> {
-  let mut conn = db.get().unwrap();
+  let users_maybe: Result<(User, Vec<PermissionName>, web::Json<LoginRequest>), ServiceError> = web::block(move || {
+    let mut conn = db.get().unwrap();
 
-  let user = match &credentials.email {
-    Some(email) => users::table
-      .filter(users::email.eq(&email))
-      .first::<User>(&mut conn)
-      .map_err(|err| {
-        log::error!("Failed to find user: {}", err);
-        ServiceError::InternalServerError
-      })?,
-    None => match &credentials.username {
-      Some(username) => users::table
+    let user = match (&credentials.email, &credentials.username) {
+      (Some(email), _) => users::table
+        .filter(users::email.eq(&email))
+        .first::<User>(&mut conn)
+        .map_err(|err| {
+          log::error!("Failed to find user: {}", err);
+          // todo @codyduong, do we want to expose a proper response like not found?
+          ServiceError::InternalServerError
+        })?,
+      (_, Some(username)) => users::table
         .filter(users::username.eq(&username))
         .first::<User>(&mut conn)
         .map_err(|err| {
           log::error!("Failed to find user: {}", err);
+          // todo @codyduong, do we want to expose a proper response like not found?
           ServiceError::InternalServerError
         })?,
-      None => {
+      (None, None) => {
         log::error!("Missing required field: `email` or `password`");
         Err(ServiceError::BadRequest(
           "Missing required field: `email` or `password`".to_string(),
         ))?
       }
-    },
-  };
+    };
 
-  let perms: Vec<PermissionName> = users_to_roles::table
-    .inner_join(roles::table.on(users_to_roles::role_id.eq(roles::id)))
-    .inner_join(roles_to_permissions::table.on(roles::id.eq(roles_to_permissions::role_id)))
-    .inner_join(permissions::table.on(roles_to_permissions::permission_id.eq(permissions::id)))
-    .filter(users_to_roles::user_id.eq(user.id))
-    .filter(users_to_roles::active.eq(true))
-    .select(permissions::name)
-    .distinct()
-    .load::<PermissionName>(&mut conn)
-    .map_err(|err| {
+    let perms = get_permissions(&mut conn, user.id).map_err(|err| {
       log::error!("Failed to get permissions: {}", err);
       ServiceError::InternalServerError
     })?;
+
+    Ok((user, perms, credentials))
+  })
+  .await?;
+
+  let (user, perms, credentials) = users_maybe?;
 
   match verify(&credentials.password, &user.password_hash) {
     Ok(_) => {
@@ -97,14 +97,14 @@ pub async fn login_route(
 #[derive(Deserialize, ToSchema)]
 #[schema(description = "Login request. Either `email` or `username` must be provided.")]
 pub struct LoginRequest {
-  email: Option<String>,
-  username: Option<String>,
+  pub email: Option<String>,
+  pub username: Option<String>,
   password: String,
 }
 
 #[derive(Serialize, ToSchema)]
 pub struct LoginResponse {
-  token: String,
+  pub token: String,
 }
 
 #[utoipa::path(
