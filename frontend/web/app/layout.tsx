@@ -13,7 +13,7 @@
  *  Date Created: 2025-02-19
  *  Revision History:
  *  - 2025-02-05 - @codyduong - initial creation of website
- *  - 2025-02-26 - @joonhee_ooten - create layout component
+ *  - 2025-02-26 - @ehnuJ - create layout component
  */
 
 import type React from "react"

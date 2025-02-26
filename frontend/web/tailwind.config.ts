@@ -12,16 +12,16 @@
  * The configuration ensures that Tailwind utilities can be used alongside
  * Mantine components without style conflicts.
  * 
- * Authors: @codyduong @joonhee_ooten
+ * Authors: @codyduong @ehnuJ
  * Date Created: 2025-02-20
  * Revision History: 
- *  -2025-02-26 - @joonhee_ooten - updated Tailwind setup
+ *  -2025-02-26 - @ehnuJ - updated Tailwind setup
  */
 
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
 
-export default {
-  darkMode: ["class"],
+const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -31,11 +31,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -73,7 +73,6 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate")],
-  corePlugins: {
-    preflight: false,
-  }
-} satisfies Config;
+}
+
+export default config
