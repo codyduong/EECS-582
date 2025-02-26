@@ -1,3 +1,19 @@
+"""
+Name: dillons-scraper.py
+
+Description: Obtains an OAuth2 token from Kroger. Searches for nearby store IDs in the specified zip code.
+For each store ID, scrapes products matching each ingredient in list.
+Writes the combined results to a dillons_scrape_results.json file (or use the data as needed).
+
+Programmer: Joon Hee Ooten
+Date Created: 2025-02-16
+Revision History:
+    -2025-02-25 - Joon Hee Ooten - add prologue comments
+
+Preconditions:
+- Must have OAuth2 access credentials for Kroger API
+"""
+
 import requests
 import json
 import time
