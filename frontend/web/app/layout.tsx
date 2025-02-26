@@ -16,27 +16,47 @@
  *  - 2025-02-26 - @ehnuJ - create layout component
  */
 
-import type React from "react"
-import type { Metadata } from "next"
-import { MantineProvider } from "@mantine/core"
-import { UserButton } from "@/components/UserButton"
-import Link from "next/link"
-import "@mantine/core/styles.css"
-import "./globals.css"
+import type React from "react";
+import type { Metadata } from "next";
+import {
+  ColorSchemeScript,
+  MantineProvider,
+  mantineHtmlProps,
+} from "@mantine/core";
+import { UserButton } from "@/components/UserButton";
+import Link from "next/link";
+import "@mantine/core/styles.css";
+import "./globals.css";
+import { Geist, Geist_Mono } from "next/font/google";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "GroceryWise",
   description: "Your smart grocery shopping companion",
-}
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" {...mantineHtmlProps}>
+      <head>
+        <ColorSchemeScript />
+      </head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen w-screen overflow-hidden flex flex-col`}
+      >
         <MantineProvider>
           <header className="flex justify-between items-center p-4 bg-white shadow-md">
             <Link href="/" className="text-xl font-bold text-green-600">
@@ -44,9 +64,9 @@ export default function RootLayout({
             </Link>
             <UserButton />
           </header>
-          <main>{children}</main>
+          <main className="overflow-hidden flex-grow">{children}</main>
         </MantineProvider>
       </body>
     </html>
-  )
+  );
 }
