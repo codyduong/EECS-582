@@ -16,10 +16,15 @@
         "@mantine/notifications": "^7.17.0",
         "@tabler/icons-react": "^3.30.0",
         "bcryptjs": "^3.0.2",
+<<<<<<< HEAD
         "cookies-next": "^5.1.0",
         "effect": "^3.13.2",
         "framer-motion": "^12.4.7",
         "jsonwebtoken": "^9.0.2",
+||||||| parent of 2a204fb (Product page and changing a bit of layouts)
+=======
+        "lucide-react": "^0.476.0",
+>>>>>>> 2a204fb (Product page and changing a bit of layouts)
         "next": "15.1.7",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
