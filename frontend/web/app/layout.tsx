@@ -12,10 +12,10 @@
  *  Authors: @codyduong @joonhee_ooten
  *  Date Created: 2025-02-19
  *  Revision History:
- *  - 2025-02-05 - @codyduong - initial creation of website
- *  - 2025-02-26 - @ehnuJ - create layout component
  *  - 2025-02-20 - @codyduong - initial creation of website
+ *  - 2025-02-26 - @ehnuJ - create layout component
  *  - 2025-02-25 - @codyduong - add user context
+ *  - 2025-02-27 - @Tyler51235 - create buttons for product and grocery list
  */
 
 import type React from "react";
@@ -24,8 +24,10 @@ import {
   ColorSchemeScript,
   MantineProvider,
   mantineHtmlProps,
+  Button,
 } from "@mantine/core";
 import { UserButton } from "@/components/UserButton";
+import { Search, ShoppingBasketIcon as ShoppingList } from "lucide-react";
 import Link from "next/link";
 import "@mantine/core/styles.css";
 import "./globals.css";
@@ -67,7 +69,27 @@ export default function RootLayout({
               <Link href="/" className="text-xl font-bold text-green-600">
                 GroceryWise
               </Link>
-              <UserButton />
+              <div className="flex items-center gap-4">
+                <Link href="/grocery-list">
+                  <Button
+                    variant="outline"
+                    className="hidden sm:flex items-center gap-2 border-green-600 text-green-600 hover:bg-green-50"
+                    leftSection={<ShoppingList className="w-4 h-4" />}
+                  >
+                    Grocery List
+                  </Button>
+                </Link>
+                {/* Product page button */}
+                <Link href="/product_page">
+                  <Button
+                    variant="outline"
+                    className="items-center gap-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+                  >
+                    Products
+                  </Button>
+                </Link>
+                <UserButton />
+              </div>
             </header>
             <Suspense>
               <main className="flex-grow overflow-y-scroll">{children}</main>
