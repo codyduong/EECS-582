@@ -12,6 +12,7 @@
   - 2025-02-09 - Cody Duong - reorganize imports
   - 2025-02-16 - Cody Duong - add comments
   - 2025-02-25 - @codyduong - add CORS
+  - 2025-02-26 - @codyduong - add some initial groundwork for JWT refresh tokens
 */
 
 use actix_cors::Cors;
@@ -102,6 +103,7 @@ async fn main() -> std::io::Result<()> {
       .allowed_origin_fn(|origin, _req_head| ALLOWED_ORIGINS.iter().any(|&i| i == origin))
       .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
       .allowed_headers(vec!["Content-Type", "Authorization", "b3", "traceparent"])
+      .expose_headers(vec!["Authorization", "x-refresh-token"])
       .supports_credentials()
       .max_age(3600);
 

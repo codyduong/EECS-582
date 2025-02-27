@@ -9,25 +9,21 @@
  *  Revision History:
  *  - 2025-02-25 - @codyduong - initial creation, improve authentication flow
  *  - 2025-02-26 - @codyduong - add registration endpoint to context handler
+ *  - 2025-02-27 - @codyduong - improve pipeflow, use headers instead of body response
  */
 
-import { getClaim, Permission } from "@/lib/jwt_utils";
+import { decodeAccessClaimFromRequest, Permission } from "@/lib/jwt_utils";
 import {
   HttpClient,
   HttpClientRequest,
   FetchHttpClient,
-  HttpClientResponse,
 } from "@effect/platform";
 import { HttpBodyError } from "@effect/platform/HttpBody";
 import { HttpClientError } from "@effect/platform/HttpClientError";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { ParseError } from "effect/ParseResult";
 import { createContext, useCallback, useContext, useState } from "react";
 import { ContextNotProvidedError } from "./utils";
-
-const AuthResponseSchema = Schema.Struct({
-  token: Schema.String,
-});
 
 type User = {
   readonly id: number;
@@ -71,8 +67,7 @@ export default function UserProvider({
             password,
           }),
           Effect.flatMap(client.execute),
-          Effect.flatMap(HttpClientResponse.schemaBodyJson(AuthResponseSchema)),
-          Effect.flatMap(({ token }) => getClaim(token)),
+          Effect.flatMap(decodeAccessClaimFromRequest),
           Effect.flatMap((claim) => {
             const user: User = {
               id: claim.sub,
@@ -102,8 +97,7 @@ export default function UserProvider({
             password,
           }),
           Effect.flatMap(client.execute),
-          Effect.flatMap(HttpClientResponse.schemaBodyJson(AuthResponseSchema)),
-          Effect.flatMap(({ token }) => getClaim(token)),
+          Effect.flatMap(decodeAccessClaimFromRequest),
           Effect.flatMap((claim) => {
             const user: User = {
               id: claim.sub,

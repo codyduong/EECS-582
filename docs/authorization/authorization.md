@@ -21,7 +21,8 @@ you must first obtain from our auth api.
    ![post button](post.png)
 
 3. Press "Try it out" and login and fill it out with your test user data.
-   - Username is always `test`
+   - You can either use username: `test` or email: `test@example.com`
+     - The API endpoint should support one or the other, in the case both are provided, email takes precedence
    - Password is by default `abc123` but can be configured in `.env`
 
    Once you have done that you can press "Execute"
