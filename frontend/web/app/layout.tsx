@@ -62,13 +62,13 @@ export default function RootLayout({
       >
         <MantineProvider>
           <UserProvider>
-            <header className="flex justify-between items-center p-4 bg-white shadow-md">
+            <header className="flex justify-between items-center p-4 bg-white shadow-md z-50">
               <Link href="/" className="text-xl font-bold text-green-600">
                 GroceryWise
               </Link>
               <UserButton />
             </header>
-            <main className="overflow-hidden flex-grow">{children}</main>
+            <main className="flex-grow overflow-y-scroll">{children}</main>
           </UserProvider>
         </MantineProvider>
       </body>

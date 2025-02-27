@@ -46,7 +46,7 @@ type UserContextValue = {
     email: string,
     password: string,
   ) => Effect.Effect<User, HttpBodyError | HttpClientError | ParseError>;
-  logout: () => void;
+  logout: () => Effect.Effect<void, void, never>;
 };
 
 export const UserContext = createContext<UserContextValue | null>(null);
@@ -120,10 +120,13 @@ export default function UserProvider({
     [],
   );
 
-  const logout = useCallback(() => {
-    // todo @codyduong effect a logout to the api, ie. expire the token
-    setUser(null);
-  }, []);
+  const logout = useCallback(
+    () =>
+      Effect.gen(function* () {
+        setUser(null);
+      }),
+    [],
+  );
 
   const userContextValue = {
     user,

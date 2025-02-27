@@ -15,7 +15,7 @@ import React, { Suspense, useEffect } from "react";
  */
 
 interface ProtectedPageProps {
-  validator: PermissionValidator;
+  validator: PermissionValidator | false;
   children: React.ReactNode;
 }
 
@@ -27,6 +27,10 @@ export default function ProtectedPage({
   const { user } = useUser();
 
   useEffect(() => {
+    if (validator === false) {
+      return;
+    }
+
     if (!user) {
       router.push("/login");
     } else {
