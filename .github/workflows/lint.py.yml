@@ -1,10 +1,10 @@
-name: Python Ruff
+name: lint
 
 on:
     push:
         branches: [master]
         paths:
-            - ".github/workflows/lint-py.yml"
+            - ".github/workflows/lint.py.yml"
             - "**/*.py"
             - "**/pyproject.toml"
             - "**/ruff.toml"
@@ -12,7 +12,7 @@ on:
     pull_request:
         branches: [master]
         paths:
-            - ".github/workflows/lint-py.yml"
+            - ".github/workflows/lint.py.yml"
             - "**/*.py"
             - "**/pyproject.toml"
             - "**/ruff.toml"

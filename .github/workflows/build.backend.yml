@@ -1,10 +1,10 @@
-name: docker-compose.backend Build Check
+name: build
 
 on:
     push:
         branches: [master]
         paths:
-            - ".github/workflows/build-backend.yml"
+            - ".github/workflows/build.backend.yml"
             - "docker-compose.yml"
             - ".dockerignore"
             - "Dockerfile*"
@@ -18,7 +18,7 @@ on:
     pull_request:
         branches: [master]
         paths:
-            - ".github/workflows/build-backend.yml"
+            - ".github/workflows/build.backend.yml"
             - "docker-compose.yml"
             - ".dockerignore"
             - "Dockerfile*"
@@ -54,7 +54,7 @@ jobs:
               sarif_file: results.sarif
 
     docker-compose-build:
-        name: Docker Compose Build
+        name: docker-compose --build
         runs-on: ubuntu-latest
         if: github.event.pull_request.draft == false
 
