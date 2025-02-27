@@ -9,7 +9,7 @@
 
 import { GenericValidator } from "./validator";
 
-describe("PermissionValidator", () => {
+describe("GenericValidator", () => {
   it("A monad is just a monoid in the category of endofunctors -@codyduong", () => {
     const validator = GenericValidator.new<number>()
       .with(1)

@@ -1,11 +1,11 @@
-name: Lint frontend/web
+name: lint
 
 on:
   workflow_dispatch:
   push:
     branches: [ master ]
     paths:
-      - '.github/workflows/lint-web.yml'
+      - '.github/workflows/lint.web.yml'
       - 'frontend/web/**.ts'
       - 'frontend/web/**.tsx'
       - 'frontend/web/**.js'
@@ -18,7 +18,7 @@ defaults:
     working-directory: frontend/web
 
 jobs:
-  lint:
+  eslint:
     runs-on: ubuntu-latest
 
     strategy:
