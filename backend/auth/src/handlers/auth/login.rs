@@ -13,23 +13,28 @@
   - 2025-02-25 - @codyduong - support logging in w/ email as well as username
   - 2025-02-25 - @codyduong - rename `login_route` to `post_login`, add 'options_login'
   - 2025-02-26 - @codyduong - use web blocking to improve performance, see here https://actix.rs/docs/databases/
+  - 2025-02-26 - @codyduong - make claims more strict, add some initial groundwork for JWT refresh tokens
 */
 
 use crate::errors::ServiceError;
 use crate::handlers::auth::get_permissions;
 use crate::models::*;
 use crate::schema::*;
+use actix_web::http::header;
 use actix_web::options;
 use actix_web::{post, web, HttpResponse};
 use bcrypt::verify;
 use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use utoipa::ToSchema;
 
 #[utoipa::path(
   context_path = super::V1_PATH,
   responses(
-    (status = OK, body = LoginResponse)
+    (status = OK, headers(
+      ("authorization" = String),
+      ("x-refresh-token" = String),
+    )),
   ),
 )]
 #[post("/login")]
@@ -78,14 +83,22 @@ pub async fn login_route(
 
   match verify(&credentials.password, &user.password_hash) {
     Ok(_) => {
-      let token = super::create_jwt()
+      let (access_token, refresh_token) = super::create_jwt()
         .user_id(user.id)
         .permissions(perms)
         .email(user.email)
         .username(user.username)
         .call()
         .map_err(|_| ServiceError::InternalServerError)?;
-      Ok(HttpResponse::Ok().json(LoginResponse { token }))
+
+      let mut res = HttpResponse::Ok();
+
+      res.append_header((header::AUTHORIZATION, format!("Bearer {}", access_token)));
+      if let Some(refresh_token) = refresh_token {
+        res.append_header(("x-refresh-token", refresh_token));
+      }
+
+      Ok(res.finish())
     }
     Err(e) => {
       log::error!("Failed to login: {}", e);
@@ -100,11 +113,6 @@ pub struct LoginRequest {
   pub email: Option<String>,
   pub username: Option<String>,
   password: String,
-}
-
-#[derive(Serialize, ToSchema)]
-pub struct LoginResponse {
-  pub token: String,
 }
 
 #[utoipa::path(

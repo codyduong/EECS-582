@@ -17,12 +17,14 @@
   - 2025-02-25 - @codyduong - add more key/values to claims
   - 2025-02-26 - @codyduong - lift `get_permissions` utility function from `login.rs` to here
                               make username nullable
+  - 2025-02-26 - @codyduong - make claims more strict, add some initial groundwork for JWT refresh tokens
 */
 
 use crate::models::*;
 use crate::schema::*;
 use actix_web::web::{self, ServiceConfig};
 use bon::builder;
+use bon::Builder;
 use chrono::{Duration, Utc};
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
@@ -37,18 +39,33 @@ pub use register::*;
 
 pub(crate) const V1_PATH: &str = "/api/v1/auth";
 
-// IN PROD when you change claims it can invalidate old valid JWTs, todo
-// we need to update handling of failed claims...? would be better devUX
-// fuck the users though LOL! -- @codyduong
-
-// todo @codyduong: don't make claims live forever... LMAO! implement JWT expiry
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Builder)]
 pub struct Claims {
-  pub sub: i32,   // subject: user id
-  pub exp: usize, // expiration time
+  pub aud: Option<String>, // Audience
+  pub exp: usize,          // Expiration (as UTC Timestamp)
+  pub iat: usize,          // Issued at (as UTC Timestamp)
+  pub iss: String,         // Issuer
+  pub nbf: usize,          // Not before
+  pub sub: i32,            // Subject (user id)
+
+  // Custom claims
   pub permissions: Vec<PermissionName>,
   pub email: String,
+  #[builder(required)]
   pub username: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Builder)]
+pub struct RefreshClaims {
+  pub aud: Option<String>, // Audience
+  pub exp: usize,          // Expiration (as UTC Timestamp)
+  pub iat: usize,          // Issued at (as UTC Timestamp)
+  pub iss: String,         // Issuer
+  pub nbf: usize,          // Not before
+  pub sub: i32,            // Subject (user id)
+
+  // Custom claims
+  pub permissions: Vec<PermissionName>,
 }
 
 #[builder]
@@ -57,56 +74,67 @@ pub(crate) fn create_jwt(
   permissions: Vec<PermissionName>,
   email: String,
   #[builder(required)] username: Option<String>,
-) -> Result<String, jsonwebtoken::errors::Error> {
+) -> Result<(String, Option<String>), jsonwebtoken::errors::Error> {
   let secret_key = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 
-  let expiration = Utc::now()
-    .checked_add_signed(Duration::hours(24))
+  let exp = Utc::now()
+    // THIS VALUE SHOULD NEVER BE >3600 MINUTES, otherwise you're doing something wrong with your access_tokens
+    .checked_add_signed(Duration::minutes(60))
     .expect("valid timestamp")
     .timestamp();
 
-  let claims = Claims {
-    sub: user_id,
-    exp: expiration as usize,
-    permissions,
-    email,
-    username,
-  };
+  let iat = Utc::now().timestamp();
 
-  encode(
-    &Header::default(),
-    &claims,
-    &EncodingKey::from_secret(secret_key.as_ref()),
-  )
+  let access_token = Claims::builder()
+    .exp(exp as usize)
+    .iat(iat as usize)
+    .iss("auth".to_owned())
+    .nbf(iat as usize)
+    .sub(user_id)
+    .permissions(permissions.clone())
+    .email(email)
+    .username(username)
+    .build();
+
+  let exp = Utc::now()
+    // We should use iat as a mechanism instead for long-lived tokens, but TODO -@codyduong
+    .checked_add_signed(Duration::days(7))
+    .expect("valid timestamp")
+    .timestamp();
+
+  // TODO further work is needed to ensure stateful deletion of invalidated JWTs -@codyduong
+  let refresh_token = RefreshClaims::builder()
+    .exp(exp as usize)
+    .iat(iat as usize)
+    .iss("auth".to_owned())
+    .nbf(iat as usize)
+    .sub(user_id)
+    .permissions(permissions)
+    .build();
+
+  Ok((
+    encode(
+      &Header::default(),
+      &access_token,
+      &EncodingKey::from_secret(secret_key.as_ref()),
+    )?,
+    Some(encode(
+      &Header::default(),
+      &refresh_token,
+      &EncodingKey::from_secret(secret_key.as_ref()),
+    )?),
+  ))
 }
 
 pub fn decode_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
   let secret_key = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 
-  decode::<Claims>(
-    token,
-    &DecodingKey::from_secret(secret_key.as_ref()),
-    &Validation::new(Algorithm::HS256),
-  )
-  .map(|data| data.claims)
+  let mut validation = Validation::new(Algorithm::HS256);
+  validation.set_required_spec_claims(&["exp", "iat", "iss", "nbf", "sub", "email"]);
+  validation.set_issuer(&["auth"]);
+
+  decode::<Claims>(token, &DecodingKey::from_secret(secret_key.as_ref()), &validation).map(|data| data.claims)
 }
-
-// pub async fn validator(
-//   req: ServiceRequest,
-//   credentials: BearerAuth,
-// ) -> Result<ServiceRequest, (actix_web::Error, ServiceRequest)> {
-//   let secret_key = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set");
-
-//   let token = credentials.token();
-//   match decode::<Claims>(
-//     token,
-//     &DecodingKey::from_secret(secret_key.as_ref()),
-//     &Validation::new(Algorithm::HS256),
-//   ) {
-//     Ok(_) => Ok(req),
-//     Err(_) => Err((actix_web::error::ErrorUnauthorized("Invalid token"), req)),
-//   }
-// }
 
 pub fn get_permissions(
   conn: &mut PooledConnection<ConnectionManager<PgConnection>>,

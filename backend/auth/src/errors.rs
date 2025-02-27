@@ -39,6 +39,8 @@ pub enum ServiceError {
   #[display("BadRequest: {}", _0)]
   BadRequest(String),
 
+  // THIS ERROR should be returned on a permission failure, not on an unauthenticated users. Instead either
+  // return 404, 400, depending on your intent at the endpoint
   Unauthorized,
 }
 

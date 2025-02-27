@@ -12,13 +12,14 @@
   - 2025-02-16 - Cody Duong - add comments
   - 2025-02-26 - @codyduong - use web blocking, return user token on successful registration
                               make username nullable
+  - 2025-02-26 - @codyduong - make claims more strict, add some initial groundwork for JWT refresh tokens
 */
 
 use crate::errors::ServiceError;
-use crate::handlers::auth::LoginResponse;
 use crate::models::*;
 use crate::schema::*;
 use crate::RESERVED_TEST_USERNAMES;
+use actix_web::http::header;
 use actix_web::{post, web, HttpResponse};
 use bcrypt::hash;
 use diesel::{insert_into, prelude::*};
@@ -28,7 +29,10 @@ use utoipa::ToSchema;
 #[utoipa::path(
   context_path = super::V1_PATH,
   responses(
-    (status = CREATED, body = LoginResponse)
+    (status = CREATED, headers(
+      ("authorization" = String),
+      ("x-refresh-token" = String),
+    )),
   ),
 )]
 #[post("/register")]
@@ -72,7 +76,7 @@ pub(crate) async fn register_route(
 
         let perms = super::get_permissions(conn, user.id)?;
 
-        let token = super::create_jwt()
+        let res = super::create_jwt()
           .user_id(user.id)
           .permissions(perms)
           .email(user.email)
@@ -80,14 +84,23 @@ pub(crate) async fn register_route(
           .call()
           .map_err(|_| diesel::result::Error::RollbackTransaction)?;
 
-        diesel::result::QueryResult::Ok(token)
+        diesel::result::QueryResult::Ok(res)
       })
     })
     .await?
   };
 
   match res {
-    Ok(token) => Ok(HttpResponse::Created().json(LoginResponse { token })),
+    Ok((access_token, refresh_token)) => {
+      let mut res = HttpResponse::Ok();
+
+      res.append_header((header::AUTHORIZATION, format!("Bearer {}", access_token)));
+      if let Some(refresh_token) = refresh_token {
+        res.append_header(("x-refresh-token", refresh_token));
+      }
+
+      Ok(res.finish())
+    },
     Err(e) => {
       log::error!("Registering user ({}) failed, rolled back: \n{}", &new_user.email, e);
       Err(ServiceError::InternalServerError)?
