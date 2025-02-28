@@ -100,7 +100,7 @@ pub(crate) async fn register_route(
       }
 
       Ok(res.finish())
-    },
+    }
     Err(e) => {
       log::error!("Registering user ({}) failed, rolled back: \n{}", &new_user.email, e);
       Err(ServiceError::InternalServerError)?
