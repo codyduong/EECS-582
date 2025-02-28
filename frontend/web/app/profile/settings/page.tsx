@@ -39,7 +39,7 @@ export default function SettingsPage() {
     null,
   );
   const router = useRouter();
-  const { user } = useUser();
+  const { user, logout } = useUser();
 
   const form = useForm({
     initialValues: {
@@ -162,6 +162,11 @@ export default function SettingsPage() {
     }
   }, [form, router]);
 
+  const logoutCallback = useCallback(() => {
+    Effect.runPromise(logout()).catch((_) => {});
+    router.push("/login");
+  }, [logout, router]);
+
   // Update the useEffect hook for handling tab navigation
   useEffect(() => {
     return () => {
@@ -195,7 +200,7 @@ export default function SettingsPage() {
         </Title>
 
         <div>
-          <Button variant="filled" color="red">
+          <Button variant="filled" color="red" onClick={logoutCallback}>
             Logout
           </Button>
         </div>

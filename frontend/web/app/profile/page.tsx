@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 /*
@@ -12,33 +11,15 @@
  */
 
 import "@mantine/core/styles.css";
-import ProtectedPage from "@/components/ProtectedPage";
-import { PermissionValidator } from "@/lib/permissions";
-import router from "next/router";
-import { useForm } from "@mantine/form";
-import { useUser } from "@/contexts/UserContext";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Paper,
-  Title,
-  Text,
-  SimpleGrid,
-  Card,
-  RingProgress,
-  Group,
-  useMantineColorScheme,
-  ActionIcon,
-  Button,
-  Container,
-} from "@mantine/core";
+import { Paper, Title, Text, RingProgress, Group } from "@mantine/core";
 import {
   IconCash,
   IconShoppingCart,
   IconScan,
   IconArrowUpRight,
   IconArrowDownRight,
-  IconGripVertical,
 } from "@tabler/icons-react";
 import { Effect } from "effect";
 import {
@@ -54,67 +35,10 @@ import {
   rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToParentElement } from "@dnd-kit/modifiers";
 import { DashboardData, fetchDashboardData } from "./mock";
 import { DashboardWidget } from "@/components/profile/DashboardWidget";
-
-function ProfilePageOld() {
-  const [loading, setLoading] = useState(false);
-  const [_error, setError] = useState("");
-  const { logout } = useUser();
-
-  const form = useForm({
-    initialValues: {
-      password: "",
-    },
-    validate: {
-      password: (value) =>
-        value.length < 6 ? "Password should be at least 6 characters" : null,
-    },
-  });
-
-  const handleSubmit = async (_values: typeof form.values) => {
-    try {
-      setLoading(true);
-      setError("");
-
-      // Run logout in background context, will error if fail for any reason
-      await Effect.runPromise(logout());
-
-      router.push("/login");
-    } catch (err) {
-      // todo @codyduong, effectize this away from a promise, we can have much more meaningful error messages for the user
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to login. Please check your credentials.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <ProtectedPage validator={false /* new PermissionValidator() */}>
-      <Container size={420} my={40}>
-        <Title ta="center" className="font-bold">
-          Welcome back!
-        </Title>
-
-        <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-          <form onSubmit={form.onSubmit(handleSubmit)}>
-            <Button fullWidth mt="xl" type="submit" loading={loading}>
-              Logout
-            </Button>
-          </form>
-        </Paper>
-      </Container>
-    </ProtectedPage>
-  );
-}
 
 // Widget definitions
 const widgetDefinitions = [

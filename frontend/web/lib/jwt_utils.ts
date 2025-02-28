@@ -66,6 +66,8 @@ const AccessClaimSchema = Schema.Struct({
 
 export type AccessClaim = typeof AccessClaimSchema.Type;
 
+export type TokenAndAccessClaim = readonly [token: string, claim: AccessClaim];
+
 /**
  * Decodes the token into the claim provided by our JWT.
  * @param {string} token
@@ -73,18 +75,18 @@ export type AccessClaim = typeof AccessClaimSchema.Type;
  */
 export function decodeAccessToken(
   token: string,
-): Effect.Effect<AccessClaim, ParseError> {
+): Effect.Effect<TokenAndAccessClaim, ParseError> {
   const tokenCleaned = token.replace(/Bearer\w*/i, "").trim();
   const maybeClaims = decode(tokenCleaned);
 
-  return Schema.decodeUnknown(AccessClaimSchema)(maybeClaims);
+  return Schema.decodeUnknown(AccessClaimSchema)(maybeClaims).pipe(
+    Effect.map((r) => [`Bearer ${tokenCleaned}`, r] as const),
+  );
 }
 
 export function decodeAccessClaimFromRequest<E = never, R = never>(
   clientResponse: HttpClientResponse.HttpClientResponse,
-): Effect.Effect<AccessClaim, ParseError | E, R> {
-  console.log(clientResponse);
-
+): Effect.Effect<TokenAndAccessClaim, ParseError | E, R> {
   return pipe(
     Effect.succeed(clientResponse),
     Effect.flatMap(HttpClientResponse.schemaHeaders(JWTHeadersSchema)),

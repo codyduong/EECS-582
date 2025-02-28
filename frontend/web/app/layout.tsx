@@ -31,6 +31,7 @@ import "@mantine/core/styles.css";
 import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import UserProvider from "@/contexts/UserContext";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -68,7 +69,9 @@ export default function RootLayout({
               </Link>
               <UserButton />
             </header>
-            <main className="flex-grow overflow-y-scroll">{children}</main>
+            <Suspense>
+              <main className="flex-grow overflow-y-scroll">{children}</main>
+            </Suspense>
           </UserProvider>
         </MantineProvider>
       </body>

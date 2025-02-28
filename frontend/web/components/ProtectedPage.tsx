@@ -40,7 +40,24 @@ export default function ProtectedPage({
     }
   }, [validator, router, user]);
 
+  const unauthorized = validator ? user === null : false;
+  const allowed =
+    user && validator ? validator.validate(user.permissions) : false;
+  const msg = unauthorized
+    ? "Unauthorized"
+    : !allowed
+      ? "Forbidden"
+      : undefined;
+
   return (
-    <Suspense fallback={<div>Loading permissions</div>}>{children}</Suspense>
+    <Suspense fallback={<div>Loading permissions</div>}>
+      {msg ? (
+        <div className="h-full v-full flex items-center justify-center">
+          <h1>{msg}</h1>
+        </div>
+      ) : (
+        children
+      )}
+    </Suspense>
   );
 }
