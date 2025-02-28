@@ -1,3 +1,11 @@
+/*
+ * A common component for the dashboard widgets on /profile
+ *
+ * Author: @codyduong
+ * Revisions:
+ * - 2025-02-27 - initial creation
+ */
+
 import type React from "react";
 import { memo } from "react";
 import { Card, Title, ActionIcon } from "@mantine/core";
