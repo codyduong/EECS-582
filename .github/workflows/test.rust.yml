@@ -20,7 +20,7 @@ on:
 
 jobs:
     test:
-        name: Rust Tests
+        name: cargo test
         runs-on: ubuntu-latest
         strategy:
             matrix:
