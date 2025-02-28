@@ -1,3 +1,5 @@
+"use client";
+
 /*
  *  Page at "/product_page"
  *
@@ -8,9 +10,15 @@
  *  - 2025-02-26 - @Tyler51235 - specific product page
  */
 
-"use client"
-
-import {Card, Image, Text, Group, Container, Grid, Title } from "@mantine/core";
+import {
+  Card,
+  Image,
+  Text,
+  Group,
+  Container,
+  Grid,
+  Title,
+} from "@mantine/core";
 import { useRouter } from "next/navigation";
 
 // Sample product data being displayed
@@ -33,14 +41,14 @@ const products = [
     price: 3.29,
     image: "/placeholder.svg?height=400&width=400",
   },
-]
+];
 
 export default function ProductsPage() {
-  const router = useRouter()
+  const router = useRouter();
 
   const handleProductClick = (productId: number) => {
-    router.push(`/products/${productId}`)
-  }
+    router.push(`/products/${productId}`);
+  };
 
   return (
     <Container size="xl" className="py-8">
@@ -77,14 +85,13 @@ export default function ProductsPage() {
                 </Text>
               </Group>
 
-              <Text size="sm" c="dimmed">
+              {/* <Text size="sm" c="dimmed">
                 {product.category}
-              </Text>
+              </Text> */}
             </Card>
           </Grid.Col>
         ))}
       </Grid>
     </Container>
-  )
+  );
 }
-

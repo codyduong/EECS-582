@@ -27,7 +27,7 @@ import {
   Button,
 } from "@mantine/core";
 import { UserButton } from "@/components/UserButton";
-import { Search, ShoppingBasketIcon as ShoppingList } from "lucide-react";
+import { IconBasket } from "@tabler/icons-react";
 import Link from "next/link";
 import "@mantine/core/styles.css";
 import "./globals.css";
@@ -74,7 +74,7 @@ export default function RootLayout({
                   <Button
                     variant="outline"
                     className="hidden sm:flex items-center gap-2 border-green-600 text-green-600 hover:bg-green-50"
-                    leftSection={<ShoppingList className="w-4 h-4" />}
+                    leftSection={<IconBasket className="w-4 h-4" />}
                   >
                     Grocery List
                   </Button>
