@@ -80,7 +80,7 @@ export default function RootLayout({
                   </Button>
                 </Link>
                 {/* Product page button */}
-                <Link href="/product_page">
+                <Link href="/products">
                   <Button
                     variant="outline"
                     className="items-center gap-2 border-blue-600 text-blue-600 hover:bg-blue-50"
