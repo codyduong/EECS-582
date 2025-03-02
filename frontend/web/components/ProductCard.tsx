@@ -37,11 +37,13 @@ interface ProductProps {
 interface ProductCardProps {
   product: ProductProps;
   isInCarousel?: boolean;
+  inMain?: boolean;
 }
 
 export function ProductCard({
   product,
   isInCarousel = false,
+  // inMain = false,
 }: ProductCardProps) {
   const {
     id,
@@ -95,8 +97,14 @@ export function ProductCard({
         ) : (
           <motion.div
             layout="preserve-aspect"
-            layoutId={`product-image-${id}`}
-            transition={{ type: "spring", bounce: 0.2 }}
+            // this animation is problematic, see: 246ebace-15c1-4afe-af3e-c37fc3c9267e
+            // layoutId={`product-image-${id}`}
+            // transition={
+            //   inMain ? undefined : { type: "spring", bounce: 0.1, damping: 30 }
+            // }
+            initial="enter"
+            animate="center"
+            exit="exit"
           >
             <ImageImage />
           </motion.div>

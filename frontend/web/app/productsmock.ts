@@ -91,7 +91,7 @@ export const products = [
     price: 2.0,
     priceAdmonition: "each (est.)",
     weightPrice: "$2.00/lb",
-    image: "/mango.webp?height=80&width=160",
+    image: "/mango.avif?height=80&width=160",
     admonition: "Cost by weight",
     otherPrices: {
       Dillons: {
