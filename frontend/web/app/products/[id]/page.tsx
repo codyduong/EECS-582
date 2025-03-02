@@ -93,11 +93,20 @@ export default function ProductDetailPage() {
           {/* Left column - Product image */}
           <div className="flex justify-center items-start">
             <motion.div
-              layoutId={`product-image-${id}`}
+              // TODO reenable other animations, see: 246ebace-15c1-4afe-af3e-c37fc3c9267e
+              // layoutId={`product-image-${id}`}
               layout="preserve-aspect"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+              // initial={{ opacity: 0 }}
+              // animate={{ opacity: 1 }}
+              // transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                delay: 0.1,
+              }}
               className="w-full max-w-md"
             >
               <Image
@@ -119,7 +128,7 @@ export default function ProductDetailPage() {
                 type: "spring",
                 stiffness: 300,
                 damping: 30,
-                delay: 0.2,
+                delay: 0.1,
               }}
             >
               <Accordion defaultValue="description">
@@ -162,7 +171,7 @@ export default function ProductDetailPage() {
                 type: "spring",
                 stiffness: 300,
                 damping: 30,
-                delay: 0.3,
+                delay: 0.1,
               }}
               className="border rounded-md p-4"
             >
@@ -228,7 +237,7 @@ export default function ProductDetailPage() {
             type: "spring",
             stiffness: 300,
             damping: 30,
-            delay: 0.4,
+            delay: 0.2,
           }}
           className="mt-12"
         >

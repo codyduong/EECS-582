@@ -39,7 +39,7 @@ export default function ProductsPage() {
         {products.map((product) => (
           // Each card is in its own grid cell with plenty of spacing
           <div key={product.id} className="flex justify-center">
-            <ProductCard product={product} />
+            <ProductCard product={product} inMain />
           </div>
         ))}
       </div>
