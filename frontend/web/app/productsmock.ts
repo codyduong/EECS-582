@@ -4,6 +4,7 @@
  * Author: @codyduong
  * Reveisions:
  * - 2025-03-01: creation
+ * - 2025-03-02: more data possibilites
  */
 
 // Mock data array for grocery products
@@ -14,7 +15,7 @@ export const products = [
     name: "Honeycrisp Apple",
     price: 1.25,
     priceAdmonition: "each (est.)",
-    weightPrice: "$0.50/lb",
+    weightPrice: "$2.49/lb",
     image: "/apple.avif?height=80&width=160",
     admonition: "Cost by weight",
     otherPrices: {
@@ -62,15 +63,15 @@ export const products = [
     id: "200",
     at: "Walmart",
     name: "Green Grapes",
-    price: 0.27,
+    price: 0.33,
     priceAdmonition: "each (est.)",
     weightPrice: "$0.50/lb",
     image: "/green_grapes.webp?height=80&width=160",
     admonition: "Cost by weight",
     otherPrices: {
       Walmart: {
-        price: undefined,
-        weightPrice: undefined,
+        price: 0.33,
+        weightPrice: "$0.52/lb",
       },
       Target: {
         price: undefined,
@@ -86,22 +87,22 @@ export const products = [
   {
     id: "300",
     at: "Walmart",
-    name: "Persimmon",
-    price: 0.27,
+    name: "Mango",
+    price: 2.0,
     priceAdmonition: "each (est.)",
-    weightPrice: "$0.50/lb",
-    image: "/banana.webp?height=80&width=160",
+    weightPrice: "$2.00/lb",
+    image: "/mango.webp?height=80&width=160",
     admonition: "Cost by weight",
     otherPrices: {
+      Dillons: {
+        price: 2.0,
+        weightPrice: "$2.00/lb",
+      },
       Walmart: {
         price: undefined,
         weightPrice: undefined,
       },
       Target: {
-        price: undefined,
-        weightPrice: undefined,
-      },
-      Dillons: {
         price: undefined,
         weightPrice: undefined,
       },

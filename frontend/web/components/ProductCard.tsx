@@ -6,14 +6,17 @@
  *  Revision History:
  *  - 2025-02-25 - @haydenmroy10 - initial creation of product cards
  *  - 2025-03-01 - @codyduong - imrpove product card and details
+ *  - 2025-03-02 - @codyduong - add animation into product specific
  */
 
 "use client";
 
 import { Card, Image, Text, Button, Group } from "@mantine/core";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useCallback } from "react";
 
-interface ProductCardProps {
+interface ProductProps {
   id: string;
   name: string;
   price: number;
@@ -31,24 +34,47 @@ interface ProductCardProps {
   >;
 }
 
+interface ProductCardProps {
+  product: ProductProps;
+  isInCarousel?: boolean;
+}
+
 export function ProductCard({
-  id,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  at,
-  name,
-  price,
-  priceAdmonition,
-  image,
-  weightPrice,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  admonition,
-  otherPrices,
+  product,
+  isInCarousel = false,
 }: ProductCardProps) {
+  const {
+    id,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    at,
+    name,
+    price,
+    priceAdmonition,
+    image,
+    weightPrice,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    admonition,
+    otherPrices,
+  } = product;
+
   const router = useRouter();
 
   const handleClick = () => {
     router.push(`/products/${id}`);
   };
+
+  // dumb aaa name
+  const ImageImage = useCallback(
+    () => (
+      <Image
+        src={image || "/placeholder.svg"}
+        alt={name}
+        fit="contain"
+        className="w-full h-full aspect-square text-center justify-center"
+      />
+    ),
+    [image, name],
+  );
 
   return (
     <Card
@@ -64,12 +90,17 @@ export function ProductCard({
       }}
     >
       <Card.Section className="border-b flex-grow">
-        <Image
-          src={image || "/placeholder.svg"}
-          alt={name}
-          fit="contain"
-          className="w-full h-full aspect-square text-center justify-center"
-        />
+        {isInCarousel ? (
+          <ImageImage />
+        ) : (
+          <motion.div
+            layout="preserve-aspect"
+            layoutId={`product-image-${id}`}
+            transition={{ type: "spring", bounce: 0.2 }}
+          >
+            <ImageImage />
+          </motion.div>
+        )}
       </Card.Section>
 
       <Group mt="md" className="flex-row flex-nowrap justify-between">
