@@ -6,6 +6,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ```sh
 bun install
+
+bun add lucide-react # to open product page
 ```
 
 ## Getting Started
