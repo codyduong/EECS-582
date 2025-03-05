@@ -1,5 +1,5 @@
 /*
-  Name: mod.rs
+  Name: register.rs
 
   Description:
   The endpoint handler for `/api/v1/register`

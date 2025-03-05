@@ -59,6 +59,8 @@ const AccessClaimSchema = Schema.Struct({
   iss: Schema.String, // Issuer
   nbf: Schema.Number, // Not before
   sub: Schema.Number, // Subject (user id)
+
+  // Custom claims
   permissions: Schema.Array(PermissionSchema),
   email: Schema.String,
   username: Schema.NullOr(Schema.String),
@@ -67,6 +69,25 @@ const AccessClaimSchema = Schema.Struct({
 export type AccessClaim = typeof AccessClaimSchema.Type;
 
 export type TokenAndAccessClaim = readonly [token: string, claim: AccessClaim];
+
+const RefreshClaimSchema = Schema.Struct({
+  aud: Schema.NullOr(Schema.String), // Audience
+  exp: Schema.Number, // Expiration (as UTC Timestamp)
+  iat: Schema.Number, // Issued at (as UTC Timestamp)
+  iss: Schema.String, // Issuer
+  nbf: Schema.Number, // Not before
+  sub: Schema.Number, // Subject (user id)
+
+  // Custom claims
+  permissions: Schema.Array(PermissionSchema),
+});
+
+export type RefreshClaim = typeof RefreshClaimSchema.Type;
+
+export type TokenAndRefreshClaim = readonly [
+  token: string,
+  claim: RefreshClaim,
+];
 
 /**
  * Decodes the token into the claim provided by our JWT.
@@ -91,6 +112,27 @@ export function decodeAccessClaimFromRequest<E = never, R = never>(
     Effect.succeed(clientResponse),
     Effect.flatMap(HttpClientResponse.schemaHeaders(JWTHeadersSchema)),
     Effect.flatMap(({ authorization }) => decodeAccessToken(authorization)),
+  );
+}
+
+export function decodeRefreshToken(
+  token: string,
+): Effect.Effect<TokenAndRefreshClaim, ParseError> {
+  const tokenCleaned = token.replace(/Bearer\w*/i, "").trim();
+  const maybeClaims = decode(tokenCleaned);
+
+  return Schema.decodeUnknown(RefreshClaimSchema)(maybeClaims).pipe(
+    Effect.map((r) => [tokenCleaned, r] as const),
+  );
+}
+
+export function decodeRefreshClaimFromRequest<E = never, R = never>(
+  clientResponse: HttpClientResponse.HttpClientResponse,
+): Effect.Effect<TokenAndRefreshClaim, ParseError | E, R> {
+  return pipe(
+    Effect.succeed(clientResponse),
+    Effect.flatMap(HttpClientResponse.schemaHeaders(JWTHeadersSchema)),
+    Effect.flatMap(({ authorization }) => decodeRefreshToken(authorization)),
   );
 }
 
@@ -129,7 +171,7 @@ export function postAuth(
   return pipe(
     Effect.succeed(clientResponse),
     Effect.flatMap((res) => {
-      if (res.status === 401) {
+      if (res.status === 401 || res.status === 403) {
         Effect.gen(function* () {
           const client = yield* HttpClient.HttpClient;
 

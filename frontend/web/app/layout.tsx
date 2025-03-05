@@ -36,6 +36,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import UserProvider from "@/contexts/UserContext";
 import { Suspense } from "react";
 import AdminLink from "@/components/AdminLink";
+import { getClaimServer } from "@/server/utils";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,7 +53,7 @@ export const metadata: Metadata = {
   description: "Your smart grocery shopping companion",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -66,7 +67,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen w-screen overflow-hidden flex flex-col`}
       >
         <MantineProvider>
-          <UserProvider>
+          <UserProvider claimServer={await getClaimServer()}>
             <header className="flex justify-between items-center p-4 bg-white shadow-md z-50">
               <Link href="/" className="text-xl font-bold text-green-600">
                 GroceryWise

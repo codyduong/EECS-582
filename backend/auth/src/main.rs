@@ -13,6 +13,7 @@
   - 2025-02-16 - Cody Duong - add comments
   - 2025-02-25 - @codyduong - add CORS
   - 2025-02-26 - @codyduong - add some initial groundwork for JWT refresh tokens
+  - 2025-03-04 - @codyduong - add refresh route to docs
 */
 
 use actix_cors::Cors;
@@ -71,6 +72,7 @@ async fn main() -> std::io::Result<()> {
     modifiers(&SecurityAddon),
     paths(
       handlers::auth::login_route,
+      handlers::auth::refresh_route,
       handlers::auth::register_route,
       handlers::users::get_user_route,
       handlers::users::get_users_route
