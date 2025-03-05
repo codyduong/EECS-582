@@ -1,4 +1,4 @@
-import { useUser } from "@/contexts/UserContext";
+import { User, useUser } from "@/contexts/UserContext";
 import { PermissionValidator } from "@/lib/permissions";
 import { useRouter } from "next/navigation";
 import React, { Suspense, useEffect } from "react";
@@ -11,20 +11,23 @@ import React, { Suspense, useEffect } from "react";
  * Authors: @codyduong
  * Date Created: 2025-02-25
  * Revision History:
- * - 2025-02-05 - @codyduong - initial creation, improve authentication flow
+ * - 2025-02-25 - @codyduong - initial creation, improve authentication flow
+ * - 2025-03-05 - @codyduong - fix server rendering
  */
 
 interface ProtectedPageProps {
   validator: PermissionValidator | false;
   children: React.ReactNode;
+  userServer?: User;
 }
 
 export default function ProtectedPage({
   validator,
   children,
+  userServer,
 }: ProtectedPageProps): React.JSX.Element {
   const router = useRouter();
-  const { user } = useUser();
+  const { user = userServer } = useUser();
 
   useEffect(() => {
     if (validator === false) {
@@ -51,13 +54,15 @@ export default function ProtectedPage({
 
   return (
     <Suspense fallback={<div>Loading permissions</div>}>
-      {msg ? (
-        <div className="h-full v-full flex items-center justify-center">
-          <h1>{msg}</h1>
-        </div>
-      ) : (
-        children
-      )}
+      <div>
+        {msg ? (
+          <div className="h-full v-full flex items-center justify-center">
+            <h1>{msg}</h1>
+          </div>
+        ) : (
+          children
+        )}
+      </div>
     </Suspense>
   );
 }

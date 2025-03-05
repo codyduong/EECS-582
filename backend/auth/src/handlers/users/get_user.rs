@@ -21,7 +21,7 @@ use actix_web::{web, HttpResponse};
 use diesel::{QueryDsl, RunQueryDsl};
 use std::vec::Vec;
 
-fn db_get_user_by_id(pool: web::Data<Pool>, user_id: i32) -> Result<User, diesel::result::Error> {
+pub(crate) fn db_get_user_by_id(pool: web::Data<Pool>, user_id: i32) -> Result<User, diesel::result::Error> {
   let mut conn = pool.get().unwrap();
   users::table.find(user_id).get_result::<User>(&mut conn)
 }

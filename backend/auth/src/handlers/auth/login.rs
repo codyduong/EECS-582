@@ -1,5 +1,5 @@
 /*
-  Name: mod.rs
+  Name: login.rs
 
   Description:
   The endpoint handler for `/api/v1/login`
@@ -102,7 +102,7 @@ pub async fn login_route(
     }
     Err(e) => {
       log::error!("Failed to login: {}", e);
-      Err(ServiceError::Unauthorized.into())
+      Err(ServiceError::InternalServerError.into())
     }
   }
 }
