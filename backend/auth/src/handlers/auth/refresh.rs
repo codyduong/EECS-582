@@ -10,6 +10,7 @@
   - 2025-03-04 - Cody Duong - add refresh route
 */
 
+use super::decode_jwt_refresh;
 use crate::errors::ServiceError;
 use crate::handlers::auth::{create_jwt, get_permissions};
 use crate::handlers::users::db_get_user_by_id;
@@ -17,7 +18,6 @@ use actix_web::http::header;
 use actix_web::{post, web, HttpResponse};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use chrono::Utc;
-use super::decode_jwt_refresh;
 
 // YOU MUST post to this endpoint with a refresh token as Bearer. Not with an access token
 #[utoipa::path(
@@ -36,7 +36,7 @@ pub(crate) async fn refresh_route(
 ) -> Result<HttpResponse, actix_web::Error> {
   let token = auth.token().to_string();
 
-  let claims =  decode_jwt_refresh(&token).map_err(|e| {
+  let claims = decode_jwt_refresh(&token).map_err(|e| {
     log::error!("Server error: {:?}", e);
     ServiceError::BadRequest("Invalid token".to_string())
   })?;
@@ -45,7 +45,7 @@ pub(crate) async fn refresh_route(
   // already issued tokens
   let expired = (Utc::now().timestamp() as usize) > claims.exp;
   if expired {
-    return Err(ServiceError::Forbidden.into())
+    return Err(ServiceError::Forbidden.into());
   }
 
   // any user can grant themselves a refresh token, -todo restrict based on create:token permission
