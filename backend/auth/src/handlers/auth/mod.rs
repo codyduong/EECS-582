@@ -143,8 +143,8 @@ pub fn decode_jwt_refresh(token: &str) -> Result<RefreshClaims, jsonwebtoken::er
   let secret_key = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 
   let mut validation = Validation::new(Algorithm::HS256);
-  validation.set_required_spec_claims(&["exp", "iat", "iss", "nbf", /*"sub" */]); // for some reason sub fails?
-  // ^^^ TODO fix huge? wtf... -@codyduong
+  validation.set_required_spec_claims(&["exp", "iat", "iss", "nbf" /*"sub" */]); // for some reason sub fails?
+                                                                                 // ^^^ TODO fix huge? wtf... -@codyduong
   validation.set_issuer(&["auth"]);
 
   decode::<RefreshClaims>(token, &DecodingKey::from_secret(secret_key.as_ref()), &validation).map(|data| data.claims)
@@ -167,6 +167,11 @@ pub fn get_permissions(
 
 pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
   |config: &mut ServiceConfig| {
-    config.service(web::scope(V1_PATH).service(login_route).service(register_route).service(refresh_route));
+    config.service(
+      web::scope(V1_PATH)
+        .service(login_route)
+        .service(register_route)
+        .service(refresh_route),
+    );
   }
 }
