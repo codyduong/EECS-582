@@ -42,6 +42,8 @@ pub enum ServiceError {
   // THIS ERROR should be returned on a permission failure, not on an unauthenticated users. Instead either
   // return 404, 400, depending on your intent at the endpoint
   Unauthorized,
+
+  Forbidden,
 }
 
 // impl ResponseError trait allows to convert our errors into http responses with appropriate data
@@ -53,7 +55,8 @@ impl ResponseError for ServiceError {
       }
       ServiceError::NotFound(msg) => HttpResponse::NotFound().json(msg.as_ref().map_or("Not Found", |s| s)),
       ServiceError::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
-      ServiceError::Unauthorized => HttpResponse::Forbidden().json("Not allowed"),
+      ServiceError::Unauthorized => HttpResponse::Unauthorized().json("Not allowed"),
+      ServiceError::Forbidden => HttpResponse::Forbidden().json("Not allowed"),
     }
   }
 }
