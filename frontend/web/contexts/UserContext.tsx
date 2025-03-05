@@ -10,14 +10,18 @@
  *  - 2025-02-25 - @codyduong - initial creation, improve authentication flow
  *  - 2025-02-26 - @codyduong - add registration endpoint to context handler
  *  - 2025-02-27 - @codyduong - improve pipeflow, use headers instead of body response
+ *  - 2025-03-05 - @codyduong - add refetch using refresh tokens on expiry
  */
 
 import {
   AccessClaim,
   decodeAccessClaimFromRequest,
   decodeAccessToken,
+  decodeRefreshClaimFromRequest,
+  decodeRefreshToken,
   Permission,
   TokenAndAccessClaim,
+  TokenAndRefreshClaim,
 } from "@/lib/jwt_utils";
 import {
   HttpClient,
@@ -70,26 +74,94 @@ export function mapClaimToUser(claim: AccessClaim): User {
 
 export const UserContext = createContext<UserContextValue | null>(null);
 
+const setAuthCookie = ([token]: TokenAndAccessClaim) => {
+  setCookie("authorization", token, {});
+};
+
+const setRefreshCookie = ([token]: TokenAndRefreshClaim) => {
+  setCookie("x-refresh-token", token, {});
+};
+
+const getNewTokens = (refreshToken: Option.Option<string>) => {
+  return refreshToken.pipe(
+    Effect.flatMap(decodeRefreshToken),
+    Effect.flatMap((t) => {
+      // check if token expired
+      const claim = t[1];
+      const now = new Date().getTime() / 1000;
+      const expired = now > claim.exp; // todo use iss instead, allows for more dynamic expirations
+
+      if (expired) {
+        return Effect.fail(new ExpiredError());
+      }
+
+      return Effect.succeed(t[0]);
+    }),
+    // if not expired then get the new token
+    Effect.flatMap((refreshToken) => {
+      const req = Effect.gen(function* () {
+        const client = yield* HttpClient.HttpClient;
+        return yield* HttpClientRequest.post(
+          // todo @codyduong, don't hardcode this LOL!
+          "http://localhost:8081/api/v1/auth/refresh",
+        ).pipe(
+          HttpClientRequest.bodyJson({}),
+          Effect.map((r) => HttpClientRequest.bearerToken(r, refreshToken)),
+          Effect.flatMap(client.execute),
+          Effect.flatMap(decodeAccessClaimFromRequest),
+          Effect.scoped,
+        );
+      }).pipe(Effect.provide(FetchHttpClient.layer));
+      return req;
+    }),
+  );
+};
+
+class ExpiredError {
+  readonly _tag = "ExpiredError";
+}
+
 export default function UserProvider({
+  claimServer,
   children,
 }: {
+  claimServer: AccessClaim | undefined;
   children: React.ReactNode;
 }): React.JSX.Element {
-  const [user, setUser] = useState<User | null>(null);
+  const [claim, setClaim] = useState<AccessClaim | null>(claimServer ?? null);
 
   useEffect(() => {
     const authToken = Option.fromNullable(getCookie("authorization"));
+
     const sideEffect = authToken.pipe(
       Effect.flatMap(decodeAccessToken),
-      Effect.map(([_, c]) => mapClaimToUser(c)),
-      Effect.tap(setUser),
+      Effect.flatMap((token) => {
+        // check if token expired
+        const claim = token[1];
+        const now = new Date().getTime() / 1000;
+        const expired = now > claim.exp; // todo use iss instead, allows for more dynamic expirations
+
+        // if expired, try using refreshToken and getting a new token
+        if (expired) {
+          const refreshToken = Option.fromNullable(
+            getCookie("x-refresh-token"),
+          );
+
+          return getNewTokens(refreshToken);
+        }
+
+        // otherwise return the token
+        return Effect.succeed(token);
+      }),
+      Effect.tap(setAuthCookie),
+      Effect.map(([_token, claim]) => claim),
+      Effect.tap(setClaim),
     );
     // todo, do we need to log error? maybe write unit tests to prove soundness
-    Effect.runPromise(sideEffect).catch((_) => {});
-  }, []);
-
-  const setAuthCookie = useCallback(([token]: TokenAndAccessClaim) => {
-    setCookie("authorization", token, {});
+    Effect.runPromise(sideEffect).catch((e) => {
+      // todo REMOVE logging in prod
+      console.warn(`err: ${e}`);
+    });
   }, []);
 
   const login = useCallback<UserContextValue["login"]>(
@@ -105,15 +177,23 @@ export default function UserProvider({
             password,
           }),
           Effect.flatMap(client.execute),
-          Effect.flatMap(decodeAccessClaimFromRequest),
-          Effect.tap(setAuthCookie),
-          Effect.map(([_token, claim]) => claim),
-          Effect.map(mapClaimToUser),
-          Effect.tap(setUser),
+          Effect.flatMap((res) => {
+            return Effect.zip(
+              decodeRefreshClaimFromRequest(res).pipe(
+                Effect.tap(setRefreshCookie),
+              ),
+              decodeAccessClaimFromRequest(res).pipe(
+                Effect.tap(setAuthCookie),
+                Effect.map(([_token, claim]) => claim),
+                Effect.tap(setClaim),
+              ),
+            );
+          }),
+          Effect.map(([_, claim]) => mapClaimToUser(claim)),
           Effect.scoped,
         );
       }).pipe(Effect.provide(FetchHttpClient.layer)),
-    [setAuthCookie, setUser],
+    [setClaim],
   );
 
   const register = useCallback<UserContextValue["register"]>(
@@ -129,28 +209,46 @@ export default function UserProvider({
             password,
           }),
           Effect.flatMap(client.execute),
-          Effect.flatMap(decodeAccessClaimFromRequest),
-          Effect.tap(setAuthCookie),
-          Effect.map(([_token, claim]) => claim),
-          Effect.map(mapClaimToUser),
-          Effect.tap(setUser),
+          Effect.flatMap((res) => {
+            return Effect.zip(
+              decodeRefreshClaimFromRequest(res).pipe(
+                Effect.tap(setRefreshCookie),
+              ),
+              decodeAccessClaimFromRequest(res).pipe(
+                Effect.tap(setAuthCookie),
+                Effect.map(([_token, claim]) => claim),
+                Effect.tap(setClaim),
+              ),
+            );
+          }),
+          Effect.map(([_, claim]) => mapClaimToUser(claim)),
           Effect.scoped,
         );
       }).pipe(Effect.provide(FetchHttpClient.layer)),
-    [setAuthCookie, setUser],
+    [setClaim],
   );
 
   const logout = useCallback(
     () =>
       Effect.gen(function* () {
         deleteCookie("authorization");
-        setUser(null);
+        setClaim(null);
       }),
     [],
   );
 
+  // every 5 minutes check if our expiry is going to be invalid in the next 5 minutes
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      // todo implement the refresh check. if we are about to expire grant us a new token.
+    }, 60000 * 5);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
+
   const userContextValue = {
-    user,
+    user: claim && mapClaimToUser(claim),
     register,
     login,
     logout,

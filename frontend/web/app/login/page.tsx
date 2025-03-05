@@ -12,7 +12,7 @@
  */
 
 import "@mantine/core/styles.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   TextInput,
   PasswordInput,
@@ -33,7 +33,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { login } = useUser();
+  const { user, login } = useUser();
 
   const form = useForm({
     initialValues: {
@@ -70,6 +70,13 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // sometimes user may be logged in thru another method (ie. auto refresh)
+    if (user) {
+      router.push("/profile");
+    }
+  }, [router, user]);
 
   return (
     <Container size={420} my={40}>
