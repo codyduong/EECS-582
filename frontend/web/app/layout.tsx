@@ -9,13 +9,14 @@
  *  - Handles metadata for SEO
  *  The layout is shared across all pages, providing a consistent user experience.
  *
- *  Authors: @codyduong @joonhee_ooten
+ *  Authors: @codyduong @ehnuJ
  *  Date Created: 2025-02-19
  *  Revision History:
  *  - 2025-02-20 - @codyduong - initial creation of website
  *  - 2025-02-26 - @ehnuJ - create layout component
  *  - 2025-02-25 - @codyduong - add user context
  *  - 2025-02-27 - @Tyler51235 - create buttons for product and grocery list
+ *  - 2025-03-10 - @ehnuJ - add admin link for users with admin permissions
  */
 
 import type React from "react";

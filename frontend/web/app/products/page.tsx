@@ -9,7 +9,7 @@
  *  - 2025-02-28 - @haydenmroy10, @Tyler51235 - initial creation of products page
  *  - 2025-02-28 - @codyduong - use @tabler instead of ludite icons
  *  - 2025-03-01 - @codyduong - extract out mock data
- *  - 2025-03-05 - @v0 - add admin product management functionality
+ *  - 2025-03-10 - @ehnuJ - add admin product management functionality
 
  */
 

@@ -1,5 +1,18 @@
 "use client";
-
+/*
+ * Admin Link Component
+ *
+ * This component renders a navigation button to the admin section that is only
+ * visible to users with administrative permissions. Features include:
+ * - Permission-based visibility
+ * - Integration with the site header
+ * - Visual styling consistent with other navigation elements
+ *
+ * Authors: @ehnuJ
+ * Date Created: 2025-03-05
+ * Revision History:
+ * - 2025-03-10 - @ehnuJ - updated to use client component pattern
+ */
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@mantine/core";
 import { IconSettings } from "@tabler/icons-react";
