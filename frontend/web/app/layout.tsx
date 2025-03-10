@@ -34,6 +34,7 @@ import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import UserProvider from "@/contexts/UserContext";
 import { Suspense } from "react";
+import AdminLink from "@/components/AdminLink";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -88,6 +89,9 @@ export default function RootLayout({
                     Products
                   </Button>
                 </Link>
+                <Suspense fallback={null}>
+                  <AdminLink />
+                </Suspense>
                 <UserButton />
               </div>
             </header>

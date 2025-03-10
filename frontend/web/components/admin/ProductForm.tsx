@@ -65,7 +65,11 @@ interface ProductFormValues {
   isActive: boolean;
 }
 
-export default function ProductForm() {
+interface ProductFormProps {
+  onSuccess?: () => void;
+}
+
+export default function ProductForm({ onSuccess }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [skuCheckLoading, setSkuCheckLoading] = useState(false);
   const [skuUnique, setSkuUnique] = useState<boolean | null>(null);
@@ -141,6 +145,10 @@ export default function ProductForm() {
 
       form.reset();
       setSkuUnique(null);
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (_error) {
       notifications.show({
         title: "Error",
