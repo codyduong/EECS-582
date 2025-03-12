@@ -28,6 +28,7 @@
     "framer-motion": "^12.4.7",
     "jsonwebtoken": "^9.0.2",
     "next": "15.1.7",
+    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss-animate": "^1.0.7"
