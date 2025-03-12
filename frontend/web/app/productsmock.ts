@@ -1,10 +1,11 @@
 /*
  * A mock data file mimicking products. Should be temporary and eventually deleted
  *
- * Author: @codyduong
- * Reveisions:
- * - 2025-03-01: creation
- * - 2025-03-02: more data possibilites
+ * Author: @codyduong @Tyler51235
+ * Revisions:
+ * - 2025-03-01: @codyduong creation
+ * - 2025-03-02: @codyduong more data possibilites
+ * - 2025-03-02: @Tyler51235 more data possibilites
  */
 
 // Mock data array for grocery products
@@ -74,12 +75,12 @@ export const products = [
         weightPrice: "$0.52/lb",
       },
       Target: {
-        price: undefined,
-        weightPrice: undefined,
+        price: 0.45,
+        weightPrice: "$0.61/lb",
       },
       Dillons: {
-        price: undefined,
-        weightPrice: undefined,
+        price: 0.35,
+        weightPrice: "$0.55/lb",
       },
     },
   },
@@ -99,12 +100,12 @@ export const products = [
         weightPrice: "$2.00/lb",
       },
       Walmart: {
-        price: undefined,
-        weightPrice: undefined,
+        price: 1.90,
+        weightPrice: "1.78/lb",
       },
       Target: {
-        price: undefined,
-        weightPrice: undefined,
+        price: 3.0,
+        weightPrice: "1.80/lb",
       },
     },
   },

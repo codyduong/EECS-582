@@ -3,18 +3,20 @@
 /*
  *  Page at "/products"
  *
- *  Authors:  @codyduong
+ *  Authors:  @codyduong, @Tyler51235
  *  Date Created: 2025-03-01
  *  Revision History:
  *  - 2025-03-01 - @codyduong - make page data
  *  - 2025-03-02 - @codyduong - implement page description
+ *  - 2025-03-11 - @Tyler51235 - add QR code generator tab
  */
 
 import { useState } from "react";
-import { Container, Title, Group, Text, Accordion } from "@mantine/core";
+import { Container, Title, Group, Text, Accordion, Tabs } from "@mantine/core";
 import { motion, AnimatePresence } from "framer-motion";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { IconChevronLeft, IconChevronRight, IconQrcode, IconInfoCircle } from "@tabler/icons-react";
 import { ProductCard } from "@/components/ProductCard";
+import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { products } from "@/app/productsmock";
@@ -33,6 +35,7 @@ export default function ProductDetailPage() {
   // todo don't make this constant
   const [productsPerPage, _setProductsPerPage] = useState(4);
   const [direction, setDirection] = useState<-1 | 1>(1);
+  const [activeTab, setActiveTab] = useState<string | null>("details");
 
   // broken
   // useEffect(() => {
@@ -87,8 +90,20 @@ export default function ProductDetailPage() {
         <Group mb="xl" className="flex items-center">
           <Title order={1}>{product.name}</Title>
         </Group>
+        {/*creates a new tabs one to view products, the other to scan QR code*/}
+        <Tabs value={activeTab} onChange={setActiveTab} className="mb-8">
+          <Tabs.List>
+            <Tabs.Tab value="details" icon={<IconInfoCircle size="0.8rem" />}>
+              Product Details
+            </Tabs.Tab>
+            <Tabs.Tab value="qrcode" icon={<IconQrcode size="0.8rem" />}>
+              Price Comparison
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs>
 
-        {/* Main product section - 3 column layout on large screens */}
+        {activeTab === "details" ? (
+          /* Main product section - 3 column layout on large screens */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Left column - Product image */}
           <div className="flex justify-center items-start">
@@ -228,6 +243,12 @@ export default function ProductDetailPage() {
             </motion.div>
           </div>
         </div>
+        ) : (
+          /* QR Code tab content */
+          <div className="mb-12">
+            <QRCodeGenerator productId={product.id} productName={product.name} baseUrl="localhost:3000" />
+          </div>
+        )}
 
         {/* Related products section */}
         <motion.div
