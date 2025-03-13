@@ -132,6 +132,8 @@ pub(crate) fn create_jwt(
 pub fn decode_jwt(token: &str) -> Result<Claims, jsonwebtoken::errors::Error> {
   let secret_key = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 
+  // todo -@codyduong, investigate why this validation claim fails?
+  #[allow(unused_mut)]
   let mut validation = Validation::new(Algorithm::HS256);
   // validation.set_required_spec_claims(&["exp", "iat", "iss", "nbf", "sub", "email"]);
   // validation.set_issuer(&["auth"]);
