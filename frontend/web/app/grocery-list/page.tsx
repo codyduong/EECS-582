@@ -1,3 +1,5 @@
+"use client";
+
 /*
  *  Page at "/grocery-list"
  *
@@ -14,16 +16,22 @@
  *  - 2025-03-10 - @haydenmroy10 - initial creation of grocery list page
  */
 
-import { Container, Title, Button, Group } from "@mantine/core"
-import { IconShare } from "@tabler/icons-react"
-import ProtectedPage from "@/components/ProtectedPage"
-import { GroceryList } from "@/components/GroceryList"
-import { allPermissions } from "@/lib/permissions"
+import { Container, Title, Button, Group } from "@mantine/core";
+import { IconShare } from "@tabler/icons-react";
+import ProtectedPage from "@/components/ProtectedPage";
+import { GroceryList } from "@/components/GroceryList";
+import { PermissionValidator } from "@/lib/permissions";
 
 //Creates function to build GroceryListPage
 export default function GroceryListPage() {
   return (
-    <ProtectedPage validator={allPermissions}>
+    <ProtectedPage
+      validator={
+        // use an empty permission validator to require a user to be logged in, but doesn't need
+        // any special permissions
+        new PermissionValidator()
+      }
+    >
       <Container size="xl" py="xl">
         <div className="flex justify-between items-center mb-6">
           <Title order={1}>My Grocery List</Title>
@@ -41,6 +49,5 @@ export default function GroceryListPage() {
         <GroceryList />
       </Container>
     </ProtectedPage>
-  )
+  );
 }
-
