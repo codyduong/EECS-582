@@ -30,8 +30,8 @@ import ProductList from "@/components/admin/ProductList";
 
 // Create permission validator requiring admin product management permissions
 const productAdminValidator = PermissionValidator.new()
-  .with("create:product")
-  .and("update:product");
+  .with(["create:product", "update:product"])
+  .or(["create:all", "update:all"]);
 
 export default function AdminProductsPage() {
   const [activeTab, setActiveTab] = useState<string | null>("add");
