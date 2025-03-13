@@ -18,13 +18,13 @@ import { Button } from "@mantine/core";
 import { IconSettings } from "@tabler/icons-react";
 import Link from "next/link";
 
+const ALLOW = ["create:product", "update:product", "create:all", "update:all"];
+
 export default function AdminLink() {
   const { user } = useUser();
 
   // Check if user has admin permissions
-  const hasAdminAccess = user?.permissions.some(
-    (perm) => perm === "create:product" || perm === "update:product",
-  );
+  const hasAdminAccess = user?.permissions.some((perm) => ALLOW.includes(perm));
 
   if (!hasAdminAccess) return null;
 
