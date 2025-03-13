@@ -42,6 +42,9 @@ pub enum UnitSymbol {
   #[serde(rename = "g")]
   #[schema(rename = "g")]
   Gram,
+  #[serde(rename = "g")]
+  #[schema(rename = "g")]
+  Count,
 }
 
 impl ToSql<diesel::sql_types::Text, Pg> for UnitSymbol {
@@ -51,6 +54,7 @@ impl ToSql<diesel::sql_types::Text, Pg> for UnitSymbol {
       UnitSymbol::Ounce => out.write_all(b"oz")?,
       UnitSymbol::Milliliter => out.write_all(b"mL")?,
       UnitSymbol::Gram => out.write_all(b"g")?,
+      UnitSymbol::Count => out.write_all(b"count")?,
     }
     Ok(IsNull::No)
   }
@@ -63,6 +67,7 @@ impl FromSql<diesel::sql_types::Text, Pg> for UnitSymbol {
       b"oz" => Ok(UnitSymbol::Ounce),
       b"mL" => Ok(UnitSymbol::Milliliter),
       b"g" => Ok(UnitSymbol::Gram),
+      b"count" => Ok(UnitSymbol::Count),
       _ => Err("Unrecognized enum variant".into()),
     }
   }
