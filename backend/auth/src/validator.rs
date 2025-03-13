@@ -159,7 +159,10 @@ impl ValidatorBuilder {
               Err((ServiceError::Unauthorized.into(), req))
             }
           }
-          Err(_) => Err((ServiceError::BadRequest("Invalid token".to_string()).into(), req)),
+          Err(e) => {
+            log::debug!("Attempted: {:?}", e);
+            Err((ServiceError::BadRequest("Invalid token".to_string()).into(), req))
+          },
         }
       };
 
