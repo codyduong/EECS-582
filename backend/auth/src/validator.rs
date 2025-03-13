@@ -162,7 +162,7 @@ impl ValidatorBuilder {
           Err(e) => {
             log::debug!("Attempted: {:?}", e);
             Err((ServiceError::BadRequest("Invalid token".to_string()).into(), req))
-          },
+          }
         }
       };
 
