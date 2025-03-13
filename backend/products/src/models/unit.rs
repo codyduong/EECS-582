@@ -42,8 +42,8 @@ pub enum UnitSymbol {
   #[serde(rename = "g")]
   #[schema(rename = "g")]
   Gram,
-  #[serde(rename = "g")]
-  #[schema(rename = "g")]
+  #[serde(rename = "count")]
+  #[schema(rename = "count")]
   Count,
 }
 
