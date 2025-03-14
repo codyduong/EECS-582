@@ -14,6 +14,7 @@
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-12 - Cody Duong - abstract seperation of concerns better
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-02-26 - @codyduong - make username nullable
 
   Preconditions:
   - Diesel ORM must be installed and properly configured.
@@ -35,7 +36,7 @@ pub struct User {
   pub deleted: bool,
   pub deleted_at: Option<chrono::NaiveDateTime>,
   pub password_hash: String,
-  pub username: String,
+  pub username: Option<String>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -45,7 +46,7 @@ pub struct UserResponse {
   pub created_at: chrono::NaiveDateTime,
   pub deleted: bool,
   pub deleted_at: Option<chrono::NaiveDateTime>,
-  pub username: String,
+  pub username: Option<String>,
 }
 
 impl From<User> for UserResponse {
@@ -64,7 +65,7 @@ impl From<User> for UserResponse {
 #[derive(Deserialize, Insertable)]
 #[diesel(table_name = crate::schema::users)]
 pub struct NewUser<'a> {
-  pub username: &'a str,
+  pub username: Option<&'a str>,
   pub email: &'a str,
   pub password_hash: &'a str,
 }

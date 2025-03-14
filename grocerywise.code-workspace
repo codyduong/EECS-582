@@ -25,4 +25,7 @@
             "dbaeumer.vscode-eslint",
         ],
     },
+    "settings": {
+        "typescript.tsdk": "web\\node_modules\\typescript\\lib"
+    },
 }

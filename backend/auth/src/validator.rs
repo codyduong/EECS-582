@@ -14,14 +14,18 @@
                               deprecate the `build`, but still allow usage in
                               less complex RBAC needs
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-02-26 - @codyduong - DRY out some duplicated `decode` calls and use `decode_jwt` fn instead
 */
 
 use actix_web::dev::ServiceRequest;
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use jsonwebtoken::{decode, Algorithm, DecodingKey, TokenData, Validation};
-use std::{env, future::Future, pin::Pin};
+use std::{future::Future, pin::Pin};
 
-use crate::{errors::ServiceError, handlers::auth::Claims, models::PermissionName};
+use crate::{
+  errors::ServiceError,
+  handlers::auth::{decode_jwt, Claims},
+  models::PermissionName,
+};
 
 #[derive(Clone)]
 pub enum ScopeRequirement {
@@ -34,7 +38,6 @@ pub enum ScopeRequirement {
 #[derive(Clone)]
 pub struct ValidatorBuilder {
   required_scopes: Option<ScopeRequirement>,
-  secret_key: String,
 }
 
 impl Default for ValidatorBuilder {
@@ -45,10 +48,7 @@ impl Default for ValidatorBuilder {
 
 impl ValidatorBuilder {
   pub fn new() -> Self {
-    ValidatorBuilder {
-      required_scopes: None,
-      secret_key: env::var("SECRET_KEY").expect("SECRET_KEY must be set"),
-    }
+    ValidatorBuilder { required_scopes: None }
   }
 
   pub fn with_scope(mut self, scope: PermissionName) -> Self {
@@ -151,13 +151,9 @@ impl ValidatorBuilder {
       let validator = self.clone();
 
       let fut = async move {
-        match decode::<Claims>(
-          &token,
-          &DecodingKey::from_secret(validator.secret_key.as_ref()),
-          &Validation::new(Algorithm::HS256),
-        ) {
+        match decode_jwt(&token) {
           Ok(token_data) => {
-            if validator.check_requirements(&token_data.claims.permissions) {
+            if validator.check_requirements(&token_data.permissions) {
               Ok(req)
             } else {
               Err((ServiceError::Unauthorized.into(), req))
@@ -192,16 +188,12 @@ impl ValidatorBuilder {
   ///   Ok(HttpResponse::Ok().json(false))
   /// }
   /// ```
-  pub fn validate(self, credentials: &BearerAuth) -> Result<TokenData<Claims>, actix_web::Error> {
+  pub fn validate(self, credentials: &BearerAuth) -> Result<Claims, actix_web::Error> {
     let token = credentials.token().to_string();
 
-    match decode::<Claims>(
-      &token,
-      &DecodingKey::from_secret(self.secret_key.as_ref()),
-      &Validation::new(Algorithm::HS256),
-    ) {
+    match decode_jwt(&token) {
       Ok(token_data) => {
-        if self.check_requirements(&token_data.claims.permissions) {
+        if self.check_requirements(&token_data.permissions) {
           Ok(token_data)
         } else {
           Err(ServiceError::Unauthorized.into())
@@ -215,19 +207,9 @@ impl ValidatorBuilder {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use std::sync::Once;
-
-  static INIT: Once = Once::new();
-
-  fn initialize() {
-    INIT.call_once(|| {
-      env::set_var("SECRET_KEY", "foobar");
-    });
-  }
 
   #[test]
   fn test_simple_scope() {
-    initialize();
     let builder = ValidatorBuilder::new().with_scope(PermissionName::ReadAll);
     assert!(builder.check_requirements(&vec![PermissionName::ReadAll]));
     assert!(!builder.check_requirements(&vec![PermissionName::CreateAll]));
@@ -235,7 +217,6 @@ mod tests {
 
   #[test]
   fn test_and_scope() {
-    initialize();
     let builder = ValidatorBuilder::new()
       .with_scope(PermissionName::ReadAll)
       .with_scope(PermissionName::CreateAll);
@@ -246,7 +227,6 @@ mod tests {
 
   #[test]
   fn test_or_scope() {
-    initialize();
     let builder = ValidatorBuilder::new().with_or(vec![
       ScopeRequirement::Scope(PermissionName::ReadAll),
       ScopeRequirement::Scope(PermissionName::CreateAll),
@@ -259,7 +239,6 @@ mod tests {
 
   #[test]
   fn test_not_scope() {
-    initialize();
     let builder = ValidatorBuilder::new().with_not(ScopeRequirement::Scope(PermissionName::UpdateAll));
 
     assert!(builder.check_requirements(&vec![PermissionName::ReadAll]));
@@ -268,7 +247,6 @@ mod tests {
 
   #[test]
   fn test_complex_scope() {
-    initialize();
     let builder = ValidatorBuilder::new()
       .with_scope(PermissionName::ReadAll)
       .with_or(vec![
