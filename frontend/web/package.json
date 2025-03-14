@@ -16,7 +16,16 @@
     "@mantine/modals": "^7.17.0",
     "@mantine/notifications": "^7.17.0",
     "bcryptjs": "^3.0.2",
+<<<<<<< Updated upstream
     "next": "15.1.7",
+=======
+    "cookies-next": "^5.1.0",
+    "effect": "^3.13.2",
+    "framer-motion": "^12.4.7",
+    "jsonwebtoken": "^9.0.2",
+    "next": "^15.1.7",
+    "qrcode.react": "^4.2.0",
+>>>>>>> Stashed changes
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
