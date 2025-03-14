@@ -14,24 +14,18 @@
 */
 
 use crate::errors::ServiceError;
-use crate::handlers::auth::get_permissions;
 use crate::models::*;
 use crate::schema::*;
-use actix_web::http::header;
-use actix_web::options;
 use actix_web::{post, web, HttpResponse};
 use bcrypt::verify;
 use diesel::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 #[utoipa::path(
   context_path = super::V1_PATH,
   responses(
-    (status = OK, headers(
-      ("authorization" = String),
-      ("x-refresh-token" = String),
-    )),
+    (status = OK, body = LoginResponse)
   ),
 )]
 #[post("/login")]
@@ -41,8 +35,6 @@ pub async fn login_route(
 ) -> Result<HttpResponse, actix_web::Error> {
   let mut conn = db.get().unwrap();
 
-
-  //do we need this let user statement and the other one
   let user = match &credentials.email {
     Some(email) => users::table
       .filter(users::email.eq(&email))
@@ -68,64 +60,24 @@ pub async fn login_route(
     },
   };
 
-  //other one. Marked as conflict so i kept both versions
-  let users_maybe: Result<(User, Vec<PermissionName>, web::Json<LoginRequest>), ServiceError> = web::block(move || {
-    let mut conn = db.get().unwrap();
-
-    let user = match (&credentials.email, &credentials.username) {
-      (Some(email), _) => users::table
-        .filter(users::email.eq(&email))
-        .first::<User>(&mut conn)
-        .map_err(|err| {
-          log::error!("Failed to find user: {}", err);
-          // todo @codyduong, do we want to expose a proper response like not found?
-          ServiceError::InternalServerError
-        })?,
-      (_, Some(username)) => users::table
-        .filter(users::username.eq(&username))
-        .first::<User>(&mut conn)
-        .map_err(|err| {
-          log::error!("Failed to find user: {}", err);
-          // todo @codyduong, do we want to expose a proper response like not found?
-          ServiceError::InternalServerError
-        })?,
-      (None, None) => {
-        log::error!("Missing required field: `email` or `password`");
-        Err(ServiceError::BadRequest(
-          "Missing required field: `email` or `password`".to_string(),
-        ))?
-      }
-    };
-
-    let perms = get_permissions(&mut conn, user.id).map_err(|err| {
+  let perms: Vec<PermissionName> = users_to_roles::table
+    .inner_join(roles::table.on(users_to_roles::role_id.eq(roles::id)))
+    .inner_join(roles_to_permissions::table.on(roles::id.eq(roles_to_permissions::role_id)))
+    .inner_join(permissions::table.on(roles_to_permissions::permission_id.eq(permissions::id)))
+    .filter(users_to_roles::user_id.eq(user.id))
+    .filter(users_to_roles::active.eq(true))
+    .select(permissions::name)
+    .distinct()
+    .load::<PermissionName>(&mut conn)
+    .map_err(|err| {
       log::error!("Failed to get permissions: {}", err);
       ServiceError::InternalServerError
     })?;
 
-    Ok((user, perms, credentials))
-  })
-  .await?;
-
-  let (user, perms, credentials) = users_maybe?;
-
   match verify(&credentials.password, &user.password_hash) {
     Ok(_) => {
-      let (access_token, refresh_token) = super::create_jwt()
-        .user_id(user.id)
-        .permissions(perms)
-        .email(user.email)
-        .username(user.username)
-        .call()
-        .map_err(|_| ServiceError::InternalServerError)?;
-
-      let mut res = HttpResponse::Ok();
-
-      res.append_header((header::AUTHORIZATION, format!("Bearer {}", access_token)));
-      if let Some(refresh_token) = refresh_token {
-        res.append_header(("x-refresh-token", refresh_token));
-      }
-
-      Ok(res.finish())
+      let token = super::create_jwt(user.id, perms).map_err(|_| ServiceError::InternalServerError)?;
+      Ok(HttpResponse::Ok().json(LoginResponse { token }))
     }
     Err(e) => {
       log::error!("Failed to login: {}", e);
@@ -137,24 +89,12 @@ pub async fn login_route(
 #[derive(Deserialize, ToSchema)]
 #[schema(description = "Login request. Either `email` or `username` must be provided.")]
 pub struct LoginRequest {
-  pub email: Option<String>,
-  pub username: Option<String>,
+  email: Option<String>,
+  username: Option<String>,
   password: String,
 }
 
-#[utoipa::path(
-  context_path = super::V1_PATH,
-  responses(
-    (status = OK, body = String, example = json!("Allow: OPTIONS, POST"))
-  ),
-)]
-#[options("/login")]
-pub async fn options_login() -> Result<HttpResponse, actix_web::Error> {
-  Ok(
-    HttpResponse::Ok()
-      .append_header(("Allow", "OPTIONS, POST"))
-      .append_header(("Accept", "application/json"))
-      .append_header(("Content-Type", "application/json"))
-      .finish(),
-  )
+#[derive(Serialize, ToSchema)]
+pub struct LoginResponse {
+  token: String,
 }

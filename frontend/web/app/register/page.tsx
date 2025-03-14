@@ -4,10 +4,9 @@
  *  Page at "/register"
  *
  *  Authors: @hvwendt
- *  Date Created: 2025-02-25
+ *  Date Created: 2025-02-19
  *  Revision History:
  *  - 2025-02-25 - @hvwendt - create register page
- *  - 2025-02-26 - @codyduong - consolidate registration logic within UserContext
  */
 
 import "@mantine/core/styles.css";
@@ -22,16 +21,14 @@ import {
   Text,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import bcrypt from "bcryptjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Effect } from "effect";
-import { useUser } from "@/contexts/UserContext";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { register } = useUser();
 
   const form = useForm({
     initialValues: {
@@ -53,14 +50,33 @@ export default function RegisterPage() {
       setLoading(true);
       setError("");
 
-      // Run register in background context, will error if fail for any reason.
-      // Otherwise will store in secure cookies if successful
-      await Effect.runPromise(register(values.email, values.password));
+      // Hash password before sending
+      const hashedPassword = await bcrypt.hash(values.password, 10);
 
-      // For now go to profile page
-      router.push("/profile");
+      const response = await fetch(
+        "http://localhost:8081/api/v1/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: values.email,
+            password: hashedPassword,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Registration failed");
+      }
+
+      // Handle successful registration
+      // Redirect to login page with success message
+      router.push("/login?registered=true");
     } catch (err) {
-      // todo @codyduong, effectize this away from a promise, we can have much more meaningful error messages for the user
       setError(
         err instanceof Error
           ? err.message

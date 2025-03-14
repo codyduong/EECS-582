@@ -3,13 +3,6 @@ targetscraper.py
 
 A webscraper used for target.com
 currently using an website to scrape potato chips from target
-
-Author: @Tyler51235
-Date Created: 2025-02-16
-Revision History:
-- 2025-02-16 - @Tyler51235 - PoC of dillions scraper
-- 2025-02-19 - @Tyler51235 - Add prologue comment
-- 2025-02-25 - @codyduong - Update prologue comment
 """
 from playwright.sync_api import sync_playwright # Importing playwright to help webscrape, playwright is an open-source automation library for webscraping
 

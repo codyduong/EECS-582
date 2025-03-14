@@ -10,7 +10,6 @@
   - 2025-02-07 - Cody Duong - add seed.rs
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-16 - Cody Duong - add comments
-  - 2025-02-26 - @codyduong - make username nullable
 
   Preconditions:
   - Diesel ORM must be installed and properly configured.
@@ -48,7 +47,7 @@ pub(super) fn run(pool: crate::Pool) {
     // ensure we either add the user entirely, or don't at all
     match conn.transaction(|conn| {
       let test_user = NewUser {
-        username: Some(TEST_USERNAME),
+        username: TEST_USERNAME,
         email: "test@example.com",
         password_hash: &bcrypt::hash(std::env::var("TEST_PASSWORD").unwrap_or("abc123".to_owned()), 10).unwrap(),
       };
