@@ -1,3 +1,20 @@
+"""
+Name: dillons-scraper.py
+
+Description: Obtains an OAuth2 token from Kroger. Searches for nearby store IDs in the specified zip code.
+For each store ID, scrapes products matching each ingredient in list.
+Writes the combined results to a dillons_scrape_results.json file (or use the data as needed).
+
+Programmer: Joon Hee Ooten
+Date Created: 2025-02-16
+Revision History:
+    - 2025-02-25 - Joon Hee Ooten - add prologue comments
+    - 2025-02-25 - @codyduong - Add prologue comment & reformat w/ ruff
+
+Preconditions:
+- Must have OAuth2 access credentials for Kroger API
+"""
+
 import requests
 import json
 import time
@@ -10,7 +27,7 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env
 load_dotenv()
-CLIENT_ID = "grocerywise-24326124303424486d71346d664548627957596f68623757642e4230656f614a6a424357474d7752417551314d797242694b4a74514f696d5a4c366d1253636185741314204"
+CLIENT_ID = os.getenv("KROGER_CLIENT_ID")
 CLIENT_SECRET = os.getenv("KROGER_CLIENT_SECRET")
 
 # For CERTIFICATION environment:
@@ -28,6 +45,7 @@ PRODUCTS_URL = f"{BASE_URL}/v1/products"
 # Scope for product data
 SCOPE = "product.compact"
 
+
 # --------------------------------------------------
 # Obtain OAuth2 Token
 # --------------------------------------------------
@@ -44,6 +62,7 @@ def get_oauth2_token(client_id, client_secret, scope):
     resp.raise_for_status()
     token_data = resp.json()
     return token_data["access_token"]
+
 
 # --------------------------------------------------
 # Find Location IDs Near a Zip Code
@@ -75,10 +94,13 @@ def find_location_ids_near(zip_code, access_token, radius=10, limit=10):
             location_ids.append(loc_id)
     return location_ids
 
+
 # --------------------------------------------------
 # Fetch Products for a Location+Term, Single Page
 # --------------------------------------------------
-def fetch_products_for_location_and_term(access_token, location_id, term, start=0, limit=50):
+def fetch_products_for_location_and_term(
+    access_token, location_id, term, start=0, limit=50
+):
     """
     Calls the Kroger Products API for a single 'page' of results,
     searching for 'term' at 'location_id'.
@@ -99,6 +121,7 @@ def fetch_products_for_location_and_term(access_token, location_id, term, start=
     resp.raise_for_status()
     return resp.json()
 
+
 # --------------------------------------------------
 # Paginate Through All Products for One Ingredient
 # --------------------------------------------------
@@ -113,8 +136,7 @@ def scrape_products_for_ingredient(access_token, location_id, ingredient):
 
     while True:
         data = fetch_products_for_location_and_term(
-            access_token, location_id, ingredient,
-            start=start, limit=limit
+            access_token, location_id, ingredient, start=start, limit=limit
         )
         products = data.get("data", [])
         if not products:
@@ -137,6 +159,7 @@ def scrape_products_for_ingredient(access_token, location_id, ingredient):
         time.sleep(0.3)  # small delay to avoid rate-limiting
 
     return all_products
+
 
 # --------------------------------------------------
 # Integrating Both Location and Product Searches
@@ -177,6 +200,7 @@ def main():
         json.dump(results, f, indent=2)
 
     print("\nDone. Saved product data to 'dillons_scrape_results.json'.")
+
 
 if __name__ == "__main__":
     main()

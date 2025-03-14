@@ -11,11 +11,12 @@
   - 2025-02-07 - Cody Duong - add authentication endpoints
   - 2025-02-09 - Cody Duong - reorganize imports
   - 2025-02-16 - Cody Duong - add comments
-  - 2025-02-25 - @codyduong - add CORs
+  - 2025-02-25 - @codyduong - add CORS
+  - 2025-02-26 - @codyduong - add some initial groundwork for JWT refresh tokens
 */
 
 use actix_cors::Cors;
-use actix_web::{web::Data, App, HttpServer};
+use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use auth::*;
 use diesel::{
   prelude::*,
@@ -31,7 +32,7 @@ mod seed;
 #[cfg(debug_assertions)]
 const API_URL: &str = "127.0.0.1";
 #[cfg(debug_assertions)]
-const ALLOWED_ORIGINS: [&str; 1] = ["http://localhost:3000"];
+const ALLOWED_ORIGINS: [&str; 2] = ["127.0.0.1", "http://localhost:3000"];
 #[cfg(not(debug_assertions))]
 const API_URL: &str = "0.0.0.0";
 #[cfg(not(debug_assertions))]
@@ -100,11 +101,14 @@ async fn main() -> std::io::Result<()> {
   HttpServer::new(move || {
     let cors = Cors::default()
       .allowed_origin_fn(|origin, _req_head| ALLOWED_ORIGINS.iter().any(|&i| i == origin))
-      .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-      .allowed_headers(vec!["Content-Type", "Authorization"])
+      .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+      .allowed_headers(vec!["Content-Type", "Authorization", "b3", "traceparent"])
+      .expose_headers(vec!["Authorization", "x-refresh-token"])
+      .supports_credentials()
       .max_age(3600);
 
     App::new()
+      .wrap(Logger::default())
       .wrap(cors)
       .app_data(Data::new(pool.clone()))
       .configure(handlers::auth::configure())

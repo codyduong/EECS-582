@@ -1,0 +1,50 @@
+name: lint
+
+on:
+    push:
+        branches: [master]
+        paths:
+            - ".github/workflows/lint.py.yml"
+            - "**/*.py"
+            - "**/pyproject.toml"
+            - "**/ruff.toml"
+            - "**/.ruff.toml"
+    pull_request:
+        branches: [master]
+        paths:
+            - ".github/workflows/lint.py.yml"
+            - "**/*.py"
+            - "**/pyproject.toml"
+            - "**/ruff.toml"
+            - "**/.ruff.toml"
+
+jobs:
+    ruff:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                project:
+                    - scrapers/scraper-py-dillons
+                    - scrapers/scraper-py-sample
+                    - scrapers/scraper-py-target
+                    - scrapers/scraper-py-walmart
+                rust: [stable]
+                os: [ubuntu-latest]
+        defaults:
+            run:
+                working-directory: ${{ matrix.project }}
+
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v5
+              with:
+                enable-cache: true
+                cache-dependency-glob: ${{ matrix.project }}/uv.lock
+
+            - name: Install the project
+              run: uv sync --all-extras --dev
+
+            - name: Run ruff
+              run: uv run ruff check

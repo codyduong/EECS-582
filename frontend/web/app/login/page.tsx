@@ -4,10 +4,11 @@
  *  Page at "/login"
  *
  *  Authors: @codyduong
- *  Date Created: 2025-02-19
+ *  Date Created: 2025-02-20
  *  Revision History:
- *  - 2025-02-05 - @codyduong - initial creation of website
+ *  - 2025-02-20 - @codyduong - initial creation of website
  *  - 2025-02-25 - @hvwendt - create login page
+ *  - 2025-02-26 - @codyduong - consolidate login logic within UserContext
  */
 
 import "@mantine/core/styles.css";
@@ -23,14 +24,16 @@ import {
   Text,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import bcrypt from "bcryptjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Effect } from "effect";
+import { useUser } from "@/contexts/UserContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { login } = useUser();
 
   const form = useForm({
     initialValues: {
@@ -86,6 +89,14 @@ export default function LoginPage() {
         router.push("/");
       }
     } catch (err) {
+      // Run login in background context, will error if fail for any reason.
+      // Otherwise will store in secure cookies if successful
+      await Effect.runPromise(login(values.email, values.password));
+
+      // For now go to profile page
+      router.push("/profile");
+    } catch (err) {
+      // todo @codyduong, effectize this away from a promise, we can have much more meaningful error messages for the user
       setError(
         err instanceof Error
           ? err.message
