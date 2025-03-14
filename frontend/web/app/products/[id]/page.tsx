@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 /*
  *  Page at "/products"
@@ -9,74 +9,136 @@
  *  - 2025-03-01 - @codyduong - make page data
  *  - 2025-03-02 - @codyduong - implement page description
  *  - 2025-03-11 - @Tyler51235 - add QR code generator tab
+ *  - 2025-03-14 - @hvwendt - add price reporting functionality
  */
 
-import { useState } from "react";
-import { Container, Title, Group, Text, Accordion, Tabs } from "@mantine/core";
-import { motion, AnimatePresence } from "framer-motion";
-import { IconChevronLeft, IconChevronRight, IconQrcode, IconInfoCircle } from "@tabler/icons-react";
-import { ProductCard } from "@/components/ProductCard";
-import { QRCodeGenerator } from "@/components/QRCodeGenerator";
-import Image from "next/image";
-import { useParams } from "next/navigation";
-import { products } from "@/app/productsmock";
+import { useState } from "react"
+import {
+  Container,
+  Title,
+  Group,
+  Text,
+  Accordion,
+  Tabs,
+  Button,
+  Modal,
+  NumberInput,
+  Select,
+  Notification,
+} from "@mantine/core"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconQrcode,
+  IconInfoCircle,
+  IconReportMoney,
+  IconMapPin,
+  IconCoin,
+  IconCheck,
+  IconX,
+} from "@tabler/icons-react"
+import { ProductCard } from "@/components/ProductCard"
+import { QRCodeGenerator } from "@/components/QRCodeGenerator"
+import Image from "next/image"
+import { useParams } from "next/navigation"
+import { products } from "@/app/productsmock"
 
 export default function ProductDetailPage() {
-  const params = useParams();
-  const id = params.id as string;
+  const params = useParams()
+  const id = params.id as string
 
   // Find the current product
-  const product = products.find((p) => p.id === id);
+  const product = products.find((p) => p.id === id)
 
   // Get related products (excluding current product)
-  const relatedProducts = products.filter((p) => p.id !== id);
+  const relatedProducts = products.filter((p) => p.id !== id)
 
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(0)
   // todo don't make this constant
-  const [productsPerPage, _setProductsPerPage] = useState(4);
-  const [direction, setDirection] = useState<-1 | 1>(1);
-  const [activeTab, setActiveTab] = useState<string | null>("details");
+  const [productsPerPage, _setProductsPerPage] = useState(4)
+  const [direction, setDirection] = useState<-1 | 1>(1)
+  const [activeTab, setActiveTab] = useState<string | null>("details")
 
-  // broken
-  // useEffect(() => {
-  //   // Determine how many products to show based on screen size
-  //   const handleResize = () => {
-  //     const width = window.innerWidth;
-  //     let count = 1;
+  // Price reporting state
+  const [reportModalOpen, setReportModalOpen] = useState(false)
+  const [reportedPrice, setReportedPrice] = useState("")
+  const [reportedLocation, setReportedLocation] = useState("")
+  const [notification, setNotification] = useState({ show: false, message: "", type: "" })
 
-  //     if (width >= 1280) count = 4;
-  //     else if (width >= 1024) count = 3;
-  //     else if (width >= 768) count = 2;
+  // Function to handle price report submission
+  const handlePriceReport = async () => {
+    try {
+      // Validate inputs
+      if (!reportedPrice || !reportedLocation) {
+        setNotification({
+          show: true,
+          message: "Please fill in all fields",
+          type: "error",
+        })
+        return
+      }
 
-  //     const startIdx = currentIndex;
-  //     const endIdx = Math.min(startIdx + count, relatedProducts.length);
-  //     setVisibleProducts(relatedProducts.slice(startIdx, endIdx));
-  //   };
+      // Send data to API endpoint
+      const response = await fetch("/api/report-price", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId: id,
+          price: reportedPrice,
+          location: reportedLocation,
+          timestamp: new Date().toISOString(),
+        }),
+      })
 
-  //   handleResize();
-  //   window.addEventListener("resize", handleResize);
-  //   return () => window.removeEventListener("resize", handleResize);
-  // }, [currentIndex, relatedProducts]);
+      if (!response.ok) {
+        throw new Error("Failed to report price")
+      }
 
-  const totalPages = Math.ceil(relatedProducts.length / 4);
+      // Show success notification
+      setNotification({
+        show: true,
+        message: "Price reported successfully!",
+        type: "success",
+      })
+
+      // Reset form and close modal
+      setReportedPrice("")
+      setReportedLocation("")
+      setReportModalOpen(false)
+
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" })
+      }, 3000)
+    } catch (error) {
+      console.error("Error reporting price:", error)
+      setNotification({
+        show: true,
+        message: "Failed to report price. Please try again.",
+        type: "error",
+      })
+    }
+  }
+
+  const totalPages = Math.ceil(relatedProducts.length / 4)
 
   const handleNext = () => {
-    setDirection(1);
-    setPage((prev) => (prev + 1) % totalPages);
-  };
+    setDirection(1)
+    setPage((prev) => (prev + 1) % totalPages)
+  }
 
   const handlePrev = () => {
-    setDirection(-1);
-    setPage((prev) => (prev - 1 + totalPages) % totalPages);
-  };
+    setDirection(-1)
+    setPage((prev) => (prev - 1 + totalPages) % totalPages)
+  }
 
-  const visibleProducts = relatedProducts.slice(
-    page * productsPerPage,
-    (page + 1) * productsPerPage,
-  );
+  const visibleProducts = relatedProducts.slice(page * productsPerPage, (page + 1) * productsPerPage)
 
   if (!product) {
-    return <Container size="xl">Product not found</Container>;
+    return <Container size="xl">Product not found</Container>
   }
 
   return (
@@ -87,9 +149,27 @@ export default function ProductDetailPage() {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <Container size="xl" py="xl">
-        <Group mb="xl" className="flex items-center">
+        {/* Notification for success/error messages */}
+        {notification.show && (
+          <div className="mb-4">
+            <Notification
+              icon={notification.type === "success" ? <IconCheck size={18} /> : <IconX size={18} />}
+              color={notification.type === "success" ? "teal" : "red"}
+              title={notification.type === "success" ? "Success" : "Error"}
+              onClose={() => setNotification({ show: false, message: "", type: "" })}
+            >
+              {notification.message}
+            </Notification>
+          </div>
+        )}
+
+        <Group mb="xl" className="flex items-center justify-between">
           <Title order={1}>{product.name}</Title>
+          <Button leftIcon={<IconReportMoney size={18} />} onClick={() => setReportModalOpen(true)} variant="light">
+            Report Price
+          </Button>
         </Group>
+
         {/*creates a new tabs one to view products, the other to scan QR code*/}
         <Tabs value={activeTab} onChange={setActiveTab} className="mb-8">
           <Tabs.List>
@@ -104,104 +184,95 @@ export default function ProductDetailPage() {
 
         {activeTab === "details" ? (
           /* Main product section - 3 column layout on large screens */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          {/* Left column - Product image */}
-          <div className="flex justify-center items-start">
-            <motion.div
-              // TODO reenable other animations, see: 246ebace-15c1-4afe-af3e-c37fc3c9267e
-              // layoutId={`product-image-${id}`}
-              layout="preserve-aspect"
-              // initial={{ opacity: 0 }}
-              // animate={{ opacity: 1 }}
-              // transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-                delay: 0.1,
-              }}
-              className="w-full max-w-md"
-            >
-              <Image
-                src={product.image || "/placeholder.svg"}
-                alt={product.name}
-                width={400}
-                height={400}
-                className="w-full aspect-square object-contain rounded-md"
-              />
-            </motion.div>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+            {/* Left column - Product image */}
+            <div className="flex justify-center items-start">
+              <motion.div
+                // TODO reenable other animations, see: 246ebace-15c1-4afe-af3e-c37fc3c9267e
+                // layoutId={`product-image-${id}`}
+                layout="preserve-aspect"
+                // initial={{ opacity: 0 }}
+                // animate={{ opacity: 1 }}
+                // transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  delay: 0.1,
+                }}
+                className="w-full max-w-md"
+              >
+                <Image
+                  src={product.image || "/placeholder.svg"}
+                  alt={product.name}
+                  width={400}
+                  height={400}
+                  className="w-full aspect-square object-contain rounded-md"
+                />
+              </motion.div>
+            </div>
 
-          {/* Middle column - Product details */}
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-                delay: 0.1,
-              }}
-            >
-              <Accordion defaultValue="description">
-                <Accordion.Item value="description">
-                  <Accordion.Control>Product Description</Accordion.Control>
-                  <Accordion.Panel>
-                    <Text>
-                      {product.name} is a fresh produce item available at
-                      various grocery stores. This product is priced{" "}
-                      {product.admonition
-                        ? `by ${product.admonition.toLowerCase()}`
-                        : "individually"}
-                      . Compare prices across different stores to find the best
-                      deal.
-                    </Text>
-                  </Accordion.Panel>
-                </Accordion.Item>
+            {/* Middle column - Product details */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  delay: 0.1,
+                }}
+              >
+                <Accordion defaultValue="description">
+                  <Accordion.Item value="description">
+                    <Accordion.Control>Product Description</Accordion.Control>
+                    <Accordion.Panel>
+                      <Text>
+                        {product.name} is a fresh produce item available at various grocery stores. This product is
+                        priced {product.admonition ? `by ${product.admonition.toLowerCase()}` : "individually"}. Compare
+                        prices across different stores to find the best deal.
+                      </Text>
+                    </Accordion.Panel>
+                  </Accordion.Item>
 
-                <Accordion.Item value="nutrition">
-                  <Accordion.Control>Nutrition Information</Accordion.Control>
-                  <Accordion.Panel>
-                    <Text>
-                      Nutrition information for {product.name} varies by size
-                      and weight. Please check the product packaging for
-                      specific nutritional details. Generally, fresh produce is
-                      a healthy choice rich in vitamins and minerals.
-                    </Text>
-                  </Accordion.Panel>
-                </Accordion.Item>
-              </Accordion>
-            </motion.div>
-          </div>
+                  <Accordion.Item value="nutrition">
+                    <Accordion.Control>Nutrition Information</Accordion.Control>
+                    <Accordion.Panel>
+                      <Text>
+                        Nutrition information for {product.name} varies by size and weight. Please check the product
+                        packaging for specific nutritional details. Generally, fresh produce is a healthy choice rich in
+                        vitamins and minerals.
+                      </Text>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                </Accordion>
+              </motion.div>
+            </div>
 
-          {/* Right column - Pricing information */}
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-                delay: 0.1,
-              }}
-              className="border rounded-md p-4"
-            >
-              <Title order={3} mb="md">
-                Price Comparison
-              </Title>
+            {/* Right column - Pricing information */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                  delay: 0.1,
+                }}
+                className="border rounded-md p-4"
+              >
+                <Title order={3} mb="md">
+                  Price Comparison
+                </Title>
 
-              <div className="space-y-4">
-                {product.otherPrices &&
-                  Object.entries(product.otherPrices).map(
-                    ([store, details]) => (
-                      <div
-                        key={store}
-                        className="flex justify-between items-center border-b pb-2"
-                      >
+                <div className="space-y-4">
+                  {product.otherPrices &&
+                    Object.entries(product.otherPrices).map(([store, details]) => (
+                      <div key={store} className="flex justify-between items-center border-b pb-2">
                         <Text size="lg" fw={600}>
                           {store}
                         </Text>
@@ -220,29 +291,28 @@ export default function ProductDetailPage() {
                           )}
                         </div>
                       </div>
-                    ),
-                  )}
-              </div>
+                    ))}
+                </div>
 
-              <div className="pt-4">
-                <Text fw={500} mb="xs">
-                  Current Best Price:
-                </Text>
-                <Group className="flex-row flex-nowrap justify-between">
-                  <Text size="xl" fw={700} c="blue">
-                    ${product.price.toFixed(2)}
+                <div className="pt-4">
+                  <Text fw={500} mb="xs">
+                    Current Best Price:
                   </Text>
-                  <Text c="dimmed">{product.weightPrice}</Text>
-                </Group>
-                {product.priceAdmonition && (
-                  <Text size="sm" c="dimmed" mt="xs">
-                    {product.priceAdmonition}
-                  </Text>
-                )}
-              </div>
-            </motion.div>
+                  <Group className="flex-row flex-nowrap justify-between">
+                    <Text size="xl" fw={700} c="blue">
+                      ${product.price.toFixed(2)}
+                    </Text>
+                    <Text c="dimmed">{product.weightPrice}</Text>
+                  </Group>
+                  {product.priceAdmonition && (
+                    <Text size="sm" c="dimmed" mt="xs">
+                      {product.priceAdmonition}
+                    </Text>
+                  )}
+                </div>
+              </motion.div>
+            </div>
           </div>
-        </div>
         ) : (
           /* QR Code tab content */
           <div className="mb-12">
@@ -339,6 +409,58 @@ export default function ProductDetailPage() {
           </div>
         </motion.div>
       </Container>
+
+      {/* Price Reporting Modal */}
+      <Modal
+        opened={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        title={`Report Price for ${product.name}`}
+        size="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <Text size="sm" weight={500} mb={4}>
+              Price
+            </Text>
+            <NumberInput
+              value={reportedPrice}
+              onChange={(val) => setReportedPrice(val)}
+              placeholder="Enter price"
+              leftSection={<IconCoin size={16} />}
+              precision={2}
+              min={0}
+              required
+            />
+          </div>
+
+          <div>
+            <Text size="sm" weight={500} mb={4}>
+              Store
+            </Text>
+            <Select
+              value={reportedLocation}
+              onChange={(val) => setReportedLocation(val)}
+              placeholder="Select store location"
+              leftSection={<IconMapPin size={16} />}
+              data={[
+                { value: "walmart", label: "Walmart" },
+                { value: "target", label: "Target" },
+                { value: "dillons", label: "Dillons" },
+                { value: "other", label: "Other Location" },
+              ]}
+              required
+            />
+          </div>
+
+          <Group position="right" mt="md">
+            <Button variant="outline" onClick={() => setReportModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handlePriceReport}>Submit</Button>
+          </Group>
+        </div>
+      </Modal>
     </motion.div>
-  );
+  )
 }
+
