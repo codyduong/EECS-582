@@ -1,18 +1,6 @@
-"""
-json-parser.py
-
-Parses web response from walmart API endpoint
-
-Author: @haydenmroy10
-Date Created: 2025-02-16
-Revision History:
-- 2025-02-16 - @haydenmroy10 - PoC of walmart scraper
-- 2025-02-25 - @codyduong - Add prologue comment & reformat w/ ruff
-"""
-
 import json
 
-with open("response.json", "r") as file:
+with open('response.json', 'r') as file:
     data = json.load(file)
 
 ids = []
@@ -33,9 +21,9 @@ for item in data["data"]["search"]["searchResult"]["itemStacks"][0]["itemsV2"]:
         print(f"Name: {item_name}, Price: {item_price}")
 
 # Save IDs to 'ids.json'
-with open("ids.json", "w") as file:
+with open('ids.json', 'w') as file:
     json.dump(ids, file, indent=4)
 
 # Save prices to 'prices.json'
-with open("prices.json", "w") as file:
+with open('prices.json', 'w') as file:
     json.dump(prices, file, indent=4)

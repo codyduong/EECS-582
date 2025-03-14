@@ -1,0 +1,88 @@
+name: docker-compose.backend Build Check
+
+on:
+    push:
+        branches: [master]
+        paths:
+            - ".github/workflows/build-backend.yml"
+            - "docker-compose.yml"
+            - ".dockerignore"
+            - "Dockerfile*"
+            - "**/Dockerfile*"
+            - "**/*.rs"
+            - "**/rustfmt.toml"
+            - "**/clippy.toml"
+            - "**/build.rs"
+            - "**/Cargo.lock"
+            - "**/Cargo.toml"
+    pull_request:
+        branches: [master]
+        paths:
+            - ".github/workflows/build-backend.yml"
+            - "docker-compose.yml"
+            - ".dockerignore"
+            - "Dockerfile*"
+            - "**/Dockerfile*"
+            - "**/*.rs"
+            - "**/rustfmt.toml"
+            - "**/clippy.toml"
+            - "**/build.rs"
+            - "**/Cargo.lock"
+            - "**/Cargo.toml"
+
+jobs:
+    docker-compose-build:
+        name: Docker Compose Build
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Cache Docker Compose
+              id: cache-docker-compose
+              uses: actions/cache@v4
+              with:
+                  path: /usr/local/bin/docker-compose
+                  key: docker-compose-${{ runner.os }}-v2.32.4
+                  restore-keys: |
+                      docker-compose-${{ runner.os }}-
+
+            - name: Install Docker Compose (if not cached)
+              if: steps.cache-docker-compose.outputs.cache-hit != 'true'
+              run: |
+                  sudo curl -L "https://github.com/docker/compose/releases/download/v2.32.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                  sudo chmod +x /usr/local/bin/docker-compose
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v2
+              with:
+                  driver-opts: image=moby/buildkit:v0.11.1-rootless
+
+            - name: Build auth
+              uses: docker/build-push-action@v4
+              with:
+                  context: . # Build from the root of the repo
+                  file: ./Dockerfile.auth
+                  load: true # Load images into the local Docker daemon
+                  cache-from: type=local,src=/tmp/.buildx-cache
+                  cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+
+            - name: Build products
+              uses: docker/build-push-action@v4
+              with:
+                  context: . # Build from the root of the repo
+                  file: ./Dockerfile.products
+                  load: true # Load images into the local Docker daemon
+                  cache-from: type=local,src=/tmp/.buildx-cache
+                  cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+
+            - name: Build with docker-compose
+              run: docker-compose -f docker-compose.backend.yml build
+
+            - name: Save buildx cache
+              uses: actions/cache@v4
+              with:
+                  path: /tmp/.buildx-cache
+                  key: ${{ runner.os }}-buildx-${{ github.sha }}
+                  restore-keys: |
+                      ${{ runner.os }}-buildx-

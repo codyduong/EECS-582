@@ -1,0 +1,56 @@
+name: Rust Lint & Clippy Checks
+
+on:
+    push:
+        branches: [master]
+        paths:
+            - ".github/workflows/lint-rust.yml"
+            - "**/*.rs"
+            - "**/rustfmt.toml"
+            - "**/clippy.toml"
+            - "**/build.rs"
+            - "**/Cargo.lock"
+            - "**/Cargo.toml"
+    pull_request:
+        branches: [master]
+        paths:
+            - ".github/workflows/lint-rust.yml"
+            - "**/*.rs"
+            - "**/rustfmt.toml"
+            - "**/clippy.toml"
+            - "**/build.rs"
+            - "**/Cargo.lock"
+            - "**/Cargo.toml"
+
+jobs:
+    fmt-and-clippy:
+        name: Format and Clippy Checks
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                project:
+                    - backend/auth
+                    - backend/products
+                rust: [stable]
+                os: [ubuntu-latest]
+        defaults:
+            run:
+                working-directory: ${{ matrix.project }}
+
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+            - name: Rustfmt Check
+              run: cargo fmt --all --check
+
+            - name: Clippy Check
+              run: cargo clippy --all -- -D warnings
+
+            - name: Upload clippy output if errors
+              if: failure() && contains(matrix.rust, 'stable')
+              uses: actions/upload-artifact@v4
+              with:
+                  name: clippy-output-${{ matrix.project }}
+                  path: ${{ matrix.project }}/target/clippy-report.html
+                  retention-days: 1
