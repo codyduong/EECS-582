@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 /*
  *  Page at "/products"
@@ -12,7 +12,7 @@
  *  - 2025-03-14 - @hvwendt - add price reporting functionality
  */
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   Container,
   Title,
@@ -25,8 +25,8 @@ import {
   NumberInput,
   Select,
   Notification,
-} from "@mantine/core"
-import { motion, AnimatePresence } from "framer-motion"
+} from "@mantine/core";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -37,34 +37,38 @@ import {
   IconCoin,
   IconCheck,
   IconX,
-} from "@tabler/icons-react"
-import { ProductCard } from "@/components/ProductCard"
-import { QRCodeGenerator } from "@/components/QRCodeGenerator"
-import Image from "next/image"
-import { useParams } from "next/navigation"
-import { products } from "@/app/productsmock"
+} from "@tabler/icons-react";
+import { ProductCard } from "@/components/ProductCard";
+import { QRCodeGenerator } from "@/components/QRCodeGenerator";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import { products } from "@/app/productsmock";
 
 export default function ProductDetailPage() {
-  const params = useParams()
-  const id = params.id as string
+  const params = useParams();
+  const id = params.id as string;
 
   // Find the current product
-  const product = products.find((p) => p.id === id)
+  const product = products.find((p) => p.id === id);
 
   // Get related products (excluding current product)
-  const relatedProducts = products.filter((p) => p.id !== id)
+  const relatedProducts = products.filter((p) => p.id !== id);
 
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(0);
   // todo don't make this constant
-  const [productsPerPage, _setProductsPerPage] = useState(4)
-  const [direction, setDirection] = useState<-1 | 1>(1)
-  const [activeTab, setActiveTab] = useState<string | null>("details")
+  const [productsPerPage, _setProductsPerPage] = useState(4);
+  const [direction, setDirection] = useState<-1 | 1>(1);
+  const [activeTab, setActiveTab] = useState<string | null>("details");
 
   // Price reporting state
-  const [reportModalOpen, setReportModalOpen] = useState(false)
-  const [reportedPrice, setReportedPrice] = useState("")
-  const [reportedLocation, setReportedLocation] = useState("")
-  const [notification, setNotification] = useState({ show: false, message: "", type: "" })
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportedPrice, setReportedPrice] = useState("");
+  const [reportedLocation, setReportedLocation] = useState("");
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "",
+  });
 
   // Function to handle price report submission
   const handlePriceReport = async () => {
@@ -75,8 +79,8 @@ export default function ProductDetailPage() {
           show: true,
           message: "Please fill in all fields",
           type: "error",
-        })
-        return
+        });
+        return;
       }
 
       // Send data to API endpoint
@@ -91,10 +95,10 @@ export default function ProductDetailPage() {
           location: reportedLocation,
           timestamp: new Date().toISOString(),
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to report price")
+        throw new Error("Failed to report price");
       }
 
       // Show success notification
@@ -102,43 +106,46 @@ export default function ProductDetailPage() {
         show: true,
         message: "Price reported successfully!",
         type: "success",
-      })
+      });
 
       // Reset form and close modal
-      setReportedPrice("")
-      setReportedLocation("")
-      setReportModalOpen(false)
+      setReportedPrice("");
+      setReportedLocation("");
+      setReportModalOpen(false);
 
       // Hide notification after 3 seconds
       setTimeout(() => {
-        setNotification({ show: false, message: "", type: "" })
-      }, 3000)
+        setNotification({ show: false, message: "", type: "" });
+      }, 3000);
     } catch (error) {
-      console.error("Error reporting price:", error)
+      console.error("Error reporting price:", error);
       setNotification({
         show: true,
         message: "Failed to report price. Please try again.",
         type: "error",
-      })
+      });
     }
-  }
+  };
 
-  const totalPages = Math.ceil(relatedProducts.length / 4)
+  const totalPages = Math.ceil(relatedProducts.length / 4);
 
   const handleNext = () => {
-    setDirection(1)
-    setPage((prev) => (prev + 1) % totalPages)
-  }
+    setDirection(1);
+    setPage((prev) => (prev + 1) % totalPages);
+  };
 
   const handlePrev = () => {
-    setDirection(-1)
-    setPage((prev) => (prev - 1 + totalPages) % totalPages)
-  }
+    setDirection(-1);
+    setPage((prev) => (prev - 1 + totalPages) % totalPages);
+  };
 
-  const visibleProducts = relatedProducts.slice(page * productsPerPage, (page + 1) * productsPerPage)
+  const visibleProducts = relatedProducts.slice(
+    page * productsPerPage,
+    (page + 1) * productsPerPage,
+  );
 
   if (!product) {
-    return <Container size="xl">Product not found</Container>
+    return <Container size="xl">Product not found</Container>;
   }
 
   return (
@@ -153,10 +160,18 @@ export default function ProductDetailPage() {
         {notification.show && (
           <div className="mb-4">
             <Notification
-              icon={notification.type === "success" ? <IconCheck size={18} /> : <IconX size={18} />}
+              icon={
+                notification.type === "success" ? (
+                  <IconCheck size={18} />
+                ) : (
+                  <IconX size={18} />
+                )
+              }
               color={notification.type === "success" ? "teal" : "red"}
               title={notification.type === "success" ? "Success" : "Error"}
-              onClose={() => setNotification({ show: false, message: "", type: "" })}
+              onClose={() =>
+                setNotification({ show: false, message: "", type: "" })
+              }
             >
               {notification.message}
             </Notification>
@@ -165,7 +180,11 @@ export default function ProductDetailPage() {
 
         <Group mb="xl" className="flex items-center justify-between">
           <Title order={1}>{product.name}</Title>
-          <Button leftIcon={<IconReportMoney size={18} />} onClick={() => setReportModalOpen(true)} variant="light">
+          <Button
+            leftSection={<IconReportMoney size={18} />}
+            onClick={() => setReportModalOpen(true)}
+            variant="light"
+          >
             Report Price
           </Button>
         </Group>
@@ -173,10 +192,13 @@ export default function ProductDetailPage() {
         {/*creates a new tabs one to view products, the other to scan QR code*/}
         <Tabs value={activeTab} onChange={setActiveTab} className="mb-8">
           <Tabs.List>
-            <Tabs.Tab value="details" icon={<IconInfoCircle size="0.8rem" />}>
+            <Tabs.Tab
+              value="details"
+              leftSection={<IconInfoCircle size="0.8rem" />}
+            >
               Product Details
             </Tabs.Tab>
-            <Tabs.Tab value="qrcode" icon={<IconQrcode size="0.8rem" />}>
+            <Tabs.Tab value="qrcode" leftSection={<IconQrcode size="0.8rem" />}>
               Price Comparison
             </Tabs.Tab>
           </Tabs.List>
@@ -231,9 +253,13 @@ export default function ProductDetailPage() {
                     <Accordion.Control>Product Description</Accordion.Control>
                     <Accordion.Panel>
                       <Text>
-                        {product.name} is a fresh produce item available at various grocery stores. This product is
-                        priced {product.admonition ? `by ${product.admonition.toLowerCase()}` : "individually"}. Compare
-                        prices across different stores to find the best deal.
+                        {product.name} is a fresh produce item available at
+                        various grocery stores. This product is priced{" "}
+                        {product.admonition
+                          ? `by ${product.admonition.toLowerCase()}`
+                          : "individually"}
+                        . Compare prices across different stores to find the
+                        best deal.
                       </Text>
                     </Accordion.Panel>
                   </Accordion.Item>
@@ -242,9 +268,10 @@ export default function ProductDetailPage() {
                     <Accordion.Control>Nutrition Information</Accordion.Control>
                     <Accordion.Panel>
                       <Text>
-                        Nutrition information for {product.name} varies by size and weight. Please check the product
-                        packaging for specific nutritional details. Generally, fresh produce is a healthy choice rich in
-                        vitamins and minerals.
+                        Nutrition information for {product.name} varies by size
+                        and weight. Please check the product packaging for
+                        specific nutritional details. Generally, fresh produce
+                        is a healthy choice rich in vitamins and minerals.
                       </Text>
                     </Accordion.Panel>
                   </Accordion.Item>
@@ -271,27 +298,32 @@ export default function ProductDetailPage() {
 
                 <div className="space-y-4">
                   {product.otherPrices &&
-                    Object.entries(product.otherPrices).map(([store, details]) => (
-                      <div key={store} className="flex justify-between items-center border-b pb-2">
-                        <Text size="lg" fw={600}>
-                          {store}
-                        </Text>
-                        <div className="text-right">
-                          {details.price ? (
-                            <Text size="lg" c="blue" fw={700}>
-                              ${details.price.toFixed(2)}
-                            </Text>
-                          ) : (
-                            <Text c="dimmed">Price unavailable</Text>
-                          )}
-                          {details.weightPrice && (
-                            <Text size="sm" c="dimmed">
-                              {details.weightPrice}
-                            </Text>
-                          )}
+                    Object.entries(product.otherPrices).map(
+                      ([store, details]) => (
+                        <div
+                          key={store}
+                          className="flex justify-between items-center border-b pb-2"
+                        >
+                          <Text size="lg" fw={600}>
+                            {store}
+                          </Text>
+                          <div className="text-right">
+                            {details.price ? (
+                              <Text size="lg" c="blue" fw={700}>
+                                ${details.price.toFixed(2)}
+                              </Text>
+                            ) : (
+                              <Text c="dimmed">Price unavailable</Text>
+                            )}
+                            {details.weightPrice && (
+                              <Text size="sm" c="dimmed">
+                                {details.weightPrice}
+                              </Text>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                 </div>
 
                 <div className="pt-4">
@@ -316,7 +348,11 @@ export default function ProductDetailPage() {
         ) : (
           /* QR Code tab content */
           <div className="mb-12">
-            <QRCodeGenerator productId={product.id} productName={product.name} baseUrl="localhost:3000" />
+            <QRCodeGenerator
+              productId={product.id}
+              productName={product.name}
+              baseUrl="localhost:3000"
+            />
           </div>
         )}
 
@@ -419,27 +455,28 @@ export default function ProductDetailPage() {
       >
         <div className="space-y-4">
           <div>
-            <Text size="sm" weight={500} mb={4}>
+            <Text size="sm" mb={4}>
               Price
             </Text>
             <NumberInput
               value={reportedPrice}
+              // @ts-expect-error: todo fix -codyduong
               onChange={(val) => setReportedPrice(val)}
               placeholder="Enter price"
               leftSection={<IconCoin size={16} />}
-              precision={2}
+              decimalScale={2}
               min={0}
               required
             />
           </div>
 
           <div>
-            <Text size="sm" weight={500} mb={4}>
+            <Text size="sm" mb={4}>
               Store
             </Text>
             <Select
               value={reportedLocation}
-              onChange={(val) => setReportedLocation(val)}
+              onChange={(val) => val && setReportedLocation(val)}
               placeholder="Select store location"
               leftSection={<IconMapPin size={16} />}
               data={[
@@ -452,7 +489,7 @@ export default function ProductDetailPage() {
             />
           </div>
 
-          <Group position="right" mt="md">
+          <Group mt="md">
             <Button variant="outline" onClick={() => setReportModalOpen(false)}>
               Cancel
             </Button>
@@ -461,6 +498,5 @@ export default function ProductDetailPage() {
         </div>
       </Modal>
     </motion.div>
-  )
+  );
 }
-
