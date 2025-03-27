@@ -54,9 +54,9 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Result
   let result = products::table
     .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
     .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
-    .inner_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
+    .left_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
     .filter(products::gtin.eq(gtin))
-    .load::<(Product, ProductToMeasure, Unit, ProductToImage)>(&mut conn)?;
+    .load::<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>(&mut conn)?;
 
   fold_products_and_measures(result)
     .first()
@@ -122,8 +122,8 @@ fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductRespo
   let result = products::table
     .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
     .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
-    .inner_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
-    .load::<(Product, ProductToMeasure, Unit, ProductToImage)>(&mut conn)?;
+    .left_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
+    .load::<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>(&mut conn)?;
 
   Ok(fold_products_and_measures(result))
 }
@@ -162,11 +162,13 @@ pub(crate) async fn get_products(db: web::Data<Pool>, auth: BearerAuth) -> Resul
   }
 }
 
-fn fold_products_and_measures(results: Vec<(Product, ProductToMeasure, Unit, ProductToImage)>) -> Vec<ProductResponse> {
+fn fold_products_and_measures(
+  results: Vec<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>,
+) -> Vec<ProductResponse> {
   results
     .into_iter()
     .fold(
-      HashMap::<Product, Vec<(ProductToMeasure, Unit, ProductToImage)>>::new(),
+      HashMap::<Product, Vec<(ProductToMeasure, Unit, Option<ProductToImage>)>>::new(),
       |mut acc, (product, product_measure, unit, product_image)| {
         acc
           .entry(product) // Clone the product for the key
@@ -188,7 +190,9 @@ fn fold_products_and_measures(results: Vec<(Product, ProductToMeasure, Unit, Pro
             unit,
           });
 
-          images.push(products_to_images);
+          if let Some(image) = products_to_images {
+            images.push(image);
+          }
         });
 
       ProductResponse {
