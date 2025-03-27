@@ -141,8 +141,10 @@ fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductRespo
 #[get("")]
 pub(crate) async fn get_products(db: web::Data<Pool>, auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::ReadAll)
-    .with_or(vec![ScopeRequirement::Scope(PermissionName::ReadProduct)])
+    .with_or(vec![
+      ScopeRequirement::Scope(PermissionName::ReadAll),
+      ScopeRequirement::Scope(PermissionName::ReadProduct),
+    ])
     .validate(&auth)?;
 
   let result = web::block(move || db_get_all_products(db)).await;
@@ -279,8 +281,10 @@ pub(crate) async fn post_products(
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::CreateAll)
-    .with_or(vec![ScopeRequirement::Scope(PermissionName::ReadProduct)])
+    .with_or(vec![
+      ScopeRequirement::Scope(PermissionName::ReadAll),
+      ScopeRequirement::Scope(PermissionName::ReadProduct),
+    ])
     .validate(&auth)?;
 
   let new_products: Vec<NewProductPost> = new_product_union.into_inner().into();
