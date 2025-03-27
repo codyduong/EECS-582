@@ -71,6 +71,9 @@ pub struct RefreshClaims {
   pub permissions: Vec<PermissionName>,
 }
 
+// WHENEVER THIS IS MODIFIED BE SURE YOU DON'T BREAK ANYTHING IN OUR GATEWAY
+// CTRL+F: 97f13b61-0eaf-4d0a-9285-df32d3546949
+// -@codyduong
 #[builder]
 pub(crate) fn create_jwt(
   user_id: i32,
@@ -115,16 +118,18 @@ pub(crate) fn create_jwt(
     .permissions(permissions)
     .build();
 
+  let encoding_key = EncodingKey::from_secret(secret_key.as_ref());
+
   Ok((
     encode(
       &Header::default(),
       &access_token,
-      &EncodingKey::from_secret(secret_key.as_ref()),
+      &encoding_key,
     )?,
     Some(encode(
       &Header::default(),
       &refresh_token,
-      &EncodingKey::from_secret(secret_key.as_ref()),
+      &encoding_key,
     )?),
   ))
 }
