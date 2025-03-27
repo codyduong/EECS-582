@@ -1,0 +1,20 @@
+{
+  "scripts": {
+    "compose": "mesh-compose -o supergraph.graphql",
+    "lint:changed": "node scripts/lint.mjs"
+  },
+  "dependencies": {
+    "@graphql-hive/gateway": "^1.13.4",
+    "@graphql-mesh/compose-cli": "^1.4.3",
+    "@graphql-mesh/transport-rest": "^0.9.3",
+    "@omnigraph/openapi": "^0.109.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.5",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0"
+  }
+}

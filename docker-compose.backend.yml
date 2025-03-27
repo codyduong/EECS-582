@@ -31,6 +31,17 @@ services:
       SECRET_KEY: ${JWT_SECRET}
     restart: always
 
+  gateway:
+    ports:
+      - "4000:4000"
+    build:
+      context: ./backend/gateway/
+      dockerfile: ./Dockerfile.local
+    environment:
+      SECRET_KEY: ${JWT_SECRET}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   db:
     image: postgres:17
     ports:

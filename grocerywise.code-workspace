@@ -2,6 +2,7 @@
     "folders": [
         { "path": "." },
         { "path": "backend/auth" },
+        { "path": "backend/gateway" },
         { "path": "backend/products" },
         { "path": "scrapers/scraper-py-dillons" },
         { "path": "scrapers/scraper-py-sample" },
