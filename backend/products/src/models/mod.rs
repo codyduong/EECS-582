@@ -11,6 +11,7 @@
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-12 - Cody Duong - abstract seperation of concerns better
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-03-26 - Cody Duong - add product_to_image
 
   Postconditions:
   - Every file under the parent directory `./models` should be exported
@@ -21,6 +22,8 @@ mod marketplace;
 pub use marketplace::*;
 mod physical_marketplace;
 pub use physical_marketplace::*;
+mod product_to_image;
+pub use product_to_image::*;
 mod product_to_measure;
 pub use product_to_measure::*;
 mod product;

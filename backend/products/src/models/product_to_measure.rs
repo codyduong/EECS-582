@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 #[derive(Queryable, Selectable, Debug, Deserialize, Serialize, ToSchema, PartialEq, Hash, Clone)]
-#[diesel(belongs_to(crate::models::Marketplace))]
+#[diesel(belongs_to(crate::models::Product))]
 #[diesel(table_name = crate::schema::products_to_measures)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ProductToMeasure {

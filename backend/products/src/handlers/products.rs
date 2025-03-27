@@ -24,6 +24,7 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 use anyhow::anyhow;
 use auth::errors::ServiceError;
 use auth::models::PermissionName;
+use auth::validator::ScopeRequirement;
 use auth::validator::ValidatorBuilder;
 use diesel::dsl::insert_into;
 use diesel::Connection;
@@ -53,8 +54,9 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Result
   let result = products::table
     .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
     .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
+    .inner_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
     .filter(products::gtin.eq(gtin))
-    .load::<(Product, ProductToMeasure, Unit)>(&mut conn)?;
+    .load::<(Product, ProductToMeasure, Unit, ProductToImage)>(&mut conn)?;
 
   fold_products_and_measures(result)
     .first()
@@ -83,6 +85,7 @@ pub(crate) async fn get_product(
 ) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
     .with_scope(PermissionName::ReadAll)
+    .with_or(vec![ScopeRequirement::Scope(PermissionName::ReadProduct)])
     .validate(&auth)?;
 
   let result = {
@@ -119,7 +122,8 @@ fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductRespo
   let result = products::table
     .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
     .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
-    .load::<(Product, ProductToMeasure, Unit)>(&mut conn)?;
+    .inner_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
+    .load::<(Product, ProductToMeasure, Unit, ProductToImage)>(&mut conn)?;
 
   Ok(fold_products_and_measures(result))
 }
@@ -138,6 +142,7 @@ fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductRespo
 pub(crate) async fn get_products(db: web::Data<Pool>, auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
     .with_scope(PermissionName::ReadAll)
+    .with_or(vec![ScopeRequirement::Scope(PermissionName::ReadProduct)])
     .validate(&auth)?;
 
   let result = web::block(move || db_get_all_products(db)).await;
@@ -155,29 +160,40 @@ pub(crate) async fn get_products(db: web::Data<Pool>, auth: BearerAuth) -> Resul
   }
 }
 
-fn fold_products_and_measures(results: Vec<(Product, ProductToMeasure, Unit)>) -> Vec<ProductResponse> {
+fn fold_products_and_measures(results: Vec<(Product, ProductToMeasure, Unit, ProductToImage)>) -> Vec<ProductResponse> {
   results
     .into_iter()
     .fold(
-      HashMap::<Product, Vec<(ProductToMeasure, Unit)>>::new(),
-      |mut acc, (product, product_measure, unit)| {
+      HashMap::<Product, Vec<(ProductToMeasure, Unit, ProductToImage)>>::new(),
+      |mut acc, (product, product_measure, unit, product_image)| {
         acc
           .entry(product) // Clone the product for the key
           .or_default()
-          .push((product_measure, unit));
+          .push((product_measure, unit, product_image));
         acc
       },
     )
     .into_iter()
     .map(|(product, conjoined)| {
-      let measures = conjoined
+      let mut measures: Vec<ProductToMeasureResponse> = Vec::new();
+      let mut images: Vec<ProductToImage> = Vec::new();
+
+      conjoined
         .into_iter()
-        .map(|(product_to_measure, unit)| ProductToMeasureResponse {
-          product_to_measure,
-          unit,
-        })
-        .collect();
-      ProductResponse { product, measures }
+        .for_each(|(product_to_measure, unit, products_to_images)| {
+          measures.push(ProductToMeasureResponse {
+            product_to_measure,
+            unit,
+          });
+
+          images.push(products_to_images);
+        });
+
+      ProductResponse {
+        product,
+        measures,
+        images,
+      }
     })
     .collect()
 }
@@ -264,6 +280,7 @@ pub(crate) async fn post_products(
 ) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
     .with_scope(PermissionName::CreateAll)
+    .with_or(vec![ScopeRequirement::Scope(PermissionName::ReadProduct)])
     .validate(&auth)?;
 
   let new_products: Vec<NewProductPost> = new_product_union.into_inner().into();

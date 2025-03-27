@@ -30,6 +30,17 @@ diesel::table! {
 }
 
 diesel::table! {
+    products_to_images (id) {
+        id -> Int4,
+        #[max_length = 14]
+        gtin -> Bpchar,
+        image_url -> Text,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     products_to_measures (id) {
         id -> Int8,
         gtin -> Text,
@@ -50,6 +61,7 @@ diesel::table! {
 }
 
 diesel::joinable!(physical_marketplaces -> marketplaces (marketplace_id));
+diesel::joinable!(products_to_images -> products (gtin));
 diesel::joinable!(products_to_measures -> products (gtin));
 diesel::joinable!(products_to_measures -> units (unit_id));
 
@@ -57,6 +69,7 @@ diesel::allow_tables_to_appear_in_same_query!(
   marketplaces,
   physical_marketplaces,
   products,
+  products_to_images,
   products_to_measures,
   units,
 );

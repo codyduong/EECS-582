@@ -74,6 +74,8 @@ async fn main() -> std::io::Result<()> {
       handlers::marketplaces::get_marketplace,
       handlers::marketplaces::get_marketplaces,
       handlers::marketplaces::post_marketplace,
+      handlers::products_to_images::get_image,
+      handlers::products_to_images::post_image,
       handlers::products::get_product,
       handlers::products::get_products,
       handlers::products::post_products,
@@ -113,6 +115,7 @@ async fn main() -> std::io::Result<()> {
       .wrap(cors)
       .app_data(Data::new(pool.clone()))
       .configure(handlers::marketplaces::configure())
+      .configure(handlers::products_to_images::configure())
       .configure(handlers::products::configure())
       .service(
         SwaggerUi::new("/swagger-ui/{_:.*}").urls(vec![(Url::new("api", "/api-docs/openapi.json"), ApiDoc::openapi())]),
