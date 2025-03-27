@@ -121,16 +121,8 @@ pub(crate) fn create_jwt(
   let encoding_key = EncodingKey::from_secret(secret_key.as_ref());
 
   Ok((
-    encode(
-      &Header::default(),
-      &access_token,
-      &encoding_key,
-    )?,
-    Some(encode(
-      &Header::default(),
-      &refresh_token,
-      &encoding_key,
-    )?),
+    encode(&Header::default(), &access_token, &encoding_key)?,
+    Some(encode(&Header::default(), &refresh_token, &encoding_key)?),
   ))
 }
 
