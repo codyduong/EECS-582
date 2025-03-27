@@ -71,8 +71,10 @@ pub(crate) async fn get_image(
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::ReadAll)
-    .with_or(vec![ScopeRequirement::Scope(PermissionName::ReadProduct)])
+    .with_or(vec![
+      ScopeRequirement::Scope(PermissionName::ReadAll),
+      ScopeRequirement::Scope(PermissionName::ReadProduct),
+    ])
     .validate(&auth)?;
 
   let result = {
@@ -136,8 +138,10 @@ pub(crate) async fn post_image(
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::CreateAll)
-    .with_or(vec![ScopeRequirement::Scope(PermissionName::CreateProduct)])
+    .with_or(vec![
+      ScopeRequirement::Scope(PermissionName::ReadAll),
+      ScopeRequirement::Scope(PermissionName::ReadProduct),
+    ])
     .validate(&auth)?;
 
   let new_images: Vec<NewProductToImage> = new_images_union.into_inner().into();
