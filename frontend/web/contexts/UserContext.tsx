@@ -41,6 +41,7 @@ import {
 } from "react";
 import { ContextNotProvidedError } from "./utils";
 import { deleteCookie, getCookie, setCookie } from "cookies-next/client";
+import { AUTH_URL } from "@/lib/consts";
 
 export type User = {
   readonly id: number;
@@ -102,8 +103,7 @@ const getNewTokens = (refreshToken: Option.Option<string>) => {
       const req = Effect.gen(function* () {
         const client = yield* HttpClient.HttpClient;
         return yield* HttpClientRequest.post(
-          // todo @codyduong, don't hardcode this LOL!
-          "http://localhost:8081/api/v1/auth/refresh",
+          `${AUTH_URL}/api/v1/auth/refresh`,
         ).pipe(
           HttpClientRequest.bodyJson({}),
           Effect.map((r) => HttpClientRequest.bearerToken(r, refreshToken)),
@@ -169,8 +169,7 @@ export default function UserProvider({
       Effect.gen(function* () {
         const client = yield* HttpClient.HttpClient;
         return yield* HttpClientRequest.post(
-          // todo @codyduong, don't hardcode this LOL!
-          "http://localhost:8081/api/v1/auth/login",
+          `${AUTH_URL}/api/v1/auth/login`,
         ).pipe(
           HttpClientRequest.bodyJson({
             email,
@@ -201,8 +200,7 @@ export default function UserProvider({
       Effect.gen(function* () {
         const client = yield* HttpClient.HttpClient;
         return yield* HttpClientRequest.post(
-          // todo @codyduong, don't hardcode this LOL!
-          "http://localhost:8081/api/v1/auth/register",
+          `${AUTH_URL}/api/v1/auth/register`,
         ).pipe(
           HttpClientRequest.bodyJson({
             email,
