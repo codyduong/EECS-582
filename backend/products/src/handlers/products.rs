@@ -10,6 +10,7 @@
   - 2025-02-08 - Cody Duong - init product endpoint
   - 2025-02-14 - Cody Duong - add product POST
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-03-28 - @codyduong - remove auth on some endpoints
 */
 
 use crate::models::*;
@@ -73,20 +74,20 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Result
   params(
     ("gtin" = String, Path, description = "Global Trade Item Number (gtin)")
   ),
-  security(
-    ("http" = [])
-  )
+  // security(
+  //   ("http" = [])
+  // )
 )]
 #[get("/{gtin}")]
 pub(crate) async fn get_product(
   gtin: web::Path<String>,
   db: web::Data<Pool>,
-  auth: BearerAuth,
+  // _auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::ReadAll)
-    .with_or(vec![ScopeRequirement::Scope(PermissionName::ReadProduct)])
-    .validate(&auth)?;
+  // let _claims = ValidatorBuilder::new()
+  //   .with_scope(PermissionName::ReadAll)
+  //   .with_or(vec![ScopeRequirement::Scope(PermissionName::ReadProduct)])
+  //   .validate(&auth)?;
 
   let result = {
     let gtin = gtin.clone();
@@ -134,18 +135,19 @@ fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductRespo
     (status = OK, body = Vec<ProductResponse>),
     (status = 401),
   ),
-  security(
-    ("http" = [])
-  )
+  // security(
+  //   ("http" = [])
+  // )
 )]
 #[get("")]
-pub(crate) async fn get_products(db: web::Data<Pool>, auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
-    .with_or(vec![
-      ScopeRequirement::Scope(PermissionName::ReadAll),
-      ScopeRequirement::Scope(PermissionName::ReadProduct),
-    ])
-    .validate(&auth)?;
+pub(crate) async fn get_products(db: web::Data<Pool>, // _auth: BearerAuth
+) -> Result<HttpResponse, actix_web::Error> {
+  // let _claims = ValidatorBuilder::new()
+  //   .with_or(vec![
+  //     ScopeRequirement::Scope(PermissionName::ReadAll),
+  //     ScopeRequirement::Scope(PermissionName::ReadProduct),
+  //   ])
+  //   .validate(&auth)?;
 
   let result = web::block(move || db_get_all_products(db)).await;
 
@@ -286,8 +288,8 @@ pub(crate) async fn post_products(
 ) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
     .with_or(vec![
-      ScopeRequirement::Scope(PermissionName::ReadAll),
-      ScopeRequirement::Scope(PermissionName::ReadProduct),
+      ScopeRequirement::Scope(PermissionName::CreateAll),
+      ScopeRequirement::Scope(PermissionName::CreateProduct),
     ])
     .validate(&auth)?;
 

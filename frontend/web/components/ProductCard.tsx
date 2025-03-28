@@ -15,27 +15,28 @@ import { Card, Image, Text, Button, Group } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useCallback } from "react";
+import { ProductsQuery } from "@/graphql/graphql";
 
-interface ProductProps {
-  id: string;
-  name: string;
-  price: number;
-  at: string;
-  priceAdmonition?: string;
-  image: string;
-  weightPrice: string;
-  admonition?: string;
-  otherPrices?: Record<
-    string,
-    {
-      price?: number;
-      weightPrice?: string;
-    }
-  >;
-}
+// interface ProductProps {
+//   id: string;
+//   name: string;
+//   price: number;
+//   at: string;
+//   priceAdmonition?: string;
+//   image: string;
+//   weightPrice: string;
+//   admonition?: string;
+//   otherPrices?: Record<
+//     string,
+//     {
+//       price?: number;
+//       weightPrice?: string;
+//     }
+//   >;
+// }
 
 interface ProductCardProps {
-  product: ProductProps;
+  product: NonNullable<NonNullable<ProductsQuery["get_products"]>[number]>;
   isInCarousel?: boolean;
   inMain?: boolean;
 }
@@ -46,18 +47,38 @@ export function ProductCard({
   // inMain = false,
 }: ProductCardProps) {
   const {
-    id,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    at,
-    name,
-    price,
-    priceAdmonition,
-    image,
-    weightPrice,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    admonition,
-    otherPrices,
+    // id,
+    // at,
+    // name,
+    // price,
+    // priceAdmonition,
+    // image,
+    // weightPrice,
+    // admonition,
+    // otherPrices,
+    gtin: id,
+    productname: name,
   } = product;
+
+  // TODO: all
+  const image = undefined;
+  const price = 1.25;
+  const priceAdmonition = "each (est.)";
+  const weightPrice = "2.49/oz";
+  const otherPrices = {
+    Dillons: {
+      price: 1.25,
+      weightPrice: "$2.49/lb",
+    },
+    Walmart: {
+      price: 1.47,
+      weightPrice: "$2.79/lb",
+    },
+    Target: {
+      price: 1.59,
+      weightPrice: "$3.99/lb",
+    },
+  };
 
   const router = useRouter();
 

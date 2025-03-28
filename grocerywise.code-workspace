@@ -27,6 +27,7 @@
         ],
     },
     "settings": {
-        "typescript.tsdk": "web\\node_modules\\typescript\\lib"
+        "typescript.tsdk": "web\\node_modules\\typescript\\lib",
+        "typescript.enablePromptUseWorkspaceTsdk": true
     },
 }

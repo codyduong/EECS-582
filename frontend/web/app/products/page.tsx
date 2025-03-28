@@ -10,7 +10,7 @@
  *  - 2025-02-28 - @codyduong - use @tabler instead of ludite icons
  *  - 2025-03-01 - @codyduong - extract out mock data
  *  - 2025-03-10 - @ehnuJ - add admin product management functionality
-
+ *  - 2025-03-28 - @codyduong - add gql
  */
 
 import { useState } from "react";
@@ -33,17 +33,34 @@ import {
   IconList,
   IconAdjustmentsHorizontal,
 } from "@tabler/icons-react";
-import { products } from "../productsmock";
 import { useUser } from "@/contexts/UserContext";
 import ProductForm from "@/components/admin/ProductForm";
 import BulkProductUpload from "@/components/admin/BulkProductUpload";
 import ProductList from "@/components/admin/ProductList";
+import { graphql } from "@/graphql";
+import { execute } from "@/graphql/execute";
+import { useQuery } from "@tanstack/react-query";
+
+const ProductsQuery = graphql(`
+  query Products {
+    get_products {
+      gtin
+      productname
+    }
+  }
+`);
 
 export default function ProductsPage() {
   const [searchValue, setSearchValue] = useState("");
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>("add");
   const { user } = useUser();
+  const { data } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => execute(ProductsQuery),
+  });
+
+  const products = data?.get_products?.filter((p) => !!p) ?? [];
 
   // Check if user has admin permissions
   const hasAdminAccess =
@@ -55,9 +72,9 @@ export default function ProductsPage() {
       user.permissions.includes("update:all"));
 
   // Filter products based on search
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchValue.toLowerCase()),
-  );
+  // const filteredProducts = products.filter((product) =>
+  //   product.name.toLowerCase().includes(searchValue.toLowerCase()),
+  // );
 
   return (
     // Container component to center content and add horizontal padding
@@ -93,10 +110,10 @@ export default function ProductsPage() {
       {/* Grid layout instead of flex for more precise control */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">
         {/* Map through the products array to create a card for each product */}
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map((product) => (
+        {products.length > 0 ? (
+          products.map((product) => (
             // Each card is in its own grid cell with plenty of spacing
-            <div key={product.id} className="flex justify-center">
+            <div key={product.gtin} className="flex justify-center">
               <ProductCard product={product} inMain />
             </div>
           ))
