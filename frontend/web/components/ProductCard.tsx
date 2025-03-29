@@ -56,12 +56,13 @@ export function ProductCard({
     // weightPrice,
     // admonition,
     // otherPrices,
+    images,
     gtin: id,
     productname: name,
   } = product;
 
   // TODO: all
-  const image = undefined;
+  const image = images[0]?.image_url;
   const price = 1.25;
   const priceAdmonition = "each (est.)";
   const weightPrice = "2.49/oz";

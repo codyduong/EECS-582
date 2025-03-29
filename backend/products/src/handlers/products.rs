@@ -11,6 +11,7 @@
   - 2025-02-14 - Cody Duong - add product POST
   - 2025-02-16 - Cody Duong - add comments
   - 2025-03-28 - @codyduong - remove auth on some endpoints
+  - 2025-03-28 - @codyduong - fix ordering
 */
 
 use crate::models::*;
@@ -124,6 +125,7 @@ fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductRespo
     .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
     .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
     .left_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
+    .order((products::gtin.asc(), products_to_images::id.asc()))
     .load::<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>(&mut conn)?;
 
   Ok(fold_products_and_measures(result))
@@ -167,48 +169,53 @@ pub(crate) async fn get_products(db: web::Data<Pool>, // _auth: BearerAuth
 fn fold_products_and_measures(
   results: Vec<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>,
 ) -> Vec<ProductResponse> {
-  results
-    .into_iter()
-    .fold(
+  let (product_map, product_order) = results.into_iter().fold(
+    (
       HashMap::<Product, Vec<(ProductToMeasure, Unit, Option<ProductToImage>)>>::new(),
-      |mut acc, (product, product_measure, unit, product_image)| {
-        acc
-          .entry(product) // Clone the product for the key
-          .or_default()
-          .push((product_measure, unit, product_image));
-        acc
-      },
-    )
-    .into_iter()
-    .map(|(product, conjoined)| {
-      let mut measures: Vec<ProductToMeasureResponse> = Vec::new();
-      let mut images: Vec<ProductToImage> = Vec::new();
-
-      conjoined
-        .into_iter()
-        .for_each(|(product_to_measure, unit, products_to_images)| {
-          measures.push(ProductToMeasureResponse {
-            product_to_measure,
-            unit,
-          });
-
-          if let Some(image) = products_to_images {
-            images.push(image);
-          }
-        });
-
-      ProductResponse {
-        product,
-        measures,
-        images,
+      Vec::<Product>::new(),
+    ),
+    |(mut acc, mut order), (product, product_measure, unit, product_image)| {
+      if !acc.contains_key(&product) {
+        order.push(product.clone())
       }
+
+      acc
+        .entry(product)
+        .or_default()
+        .push((product_measure, unit, product_image));
+
+      (acc, order)
+    },
+  );
+
+  product_order
+    .into_iter()
+    .filter_map(|product| {
+      product_map.get(&product).map(|conjoined| {
+        let measures: Vec<ProductToMeasureResponse> = conjoined
+          .iter()
+          .map(|(product_to_measure, unit, _)| ProductToMeasureResponse {
+            product_to_measure: product_to_measure.clone(),
+            unit: unit.clone(),
+          })
+          .collect();
+
+        let images: Vec<ProductToImage> = conjoined.iter().filter_map(|(_, _, image)| image.clone()).collect();
+
+        ProductResponse {
+          product,
+          measures,
+          images,
+        }
+      })
     })
     .collect()
 }
 
-fn db_insert_products(new_products: Vec<NewProductPost>, pool: web::Data<Pool>) -> anyhow::Result<bool> {
-  let mut conn = pool.get()?;
-
+pub fn db_insert_products(
+  new_products: Vec<NewProductPost>,
+  conn: &mut diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>,
+) -> anyhow::Result<bool> {
   match conn.transaction(|conn| {
     let hashmap_unitsymbol_to_id =
       units::table
@@ -224,25 +231,41 @@ fn db_insert_products(new_products: Vec<NewProductPost>, pool: web::Data<Pool>) 
     let new_measures_to_products: Vec<_> = new_products
       .clone()
       .into_iter()
-      .flat_map(|un| {
-        let unit_id = hashmap_unitsymbol_to_id.get(&un.measures.unit);
+      .flat_map(|new_product| {
+        <NewProductToMeasurePartialUnion as std::convert::Into<Vec<NewProductToMeasurePartial>>>::into(
+          new_product.measures,
+        )
+        .into_iter()
+        .map({
+          let value = hashmap_unitsymbol_to_id.clone();
+          move |measure| {
+            let unit_id = value.get(&measure.unit);
 
-        match unit_id {
-          Some(id) => itertools::Either::Left(
-            Into::<Vec<NewProductToMeasurePartial>>::into(un.measures.new_product_to_measure)
-              .into_iter()
-              .map(move |v| v.convert(un.new_product.gtin.clone(), *id))
-              .map(Ok),
-          ),
-          None => {
-            log::error!("Failed to find symbol '{}'", un.measures.unit);
-            itertools::Either::Right(std::iter::once(Err(diesel::result::Error::RollbackTransaction)))
+            match unit_id {
+              Some(id) => Ok(measure.convert(new_product.new_product.gtin.clone(), *id)),
+              None => {
+                log::error!("Failed to find symbol '{}'", measure.unit);
+                Err(diesel::result::Error::RollbackTransaction)
+              }
+            }
           }
-        }
+        })
       })
       .try_collect()?;
 
-    let new_products_reduced: Vec<NewProduct> = new_products.into_iter().map(|n| n.new_product).collect();
+    let new_products_reduced: Vec<NewProduct> = new_products.clone().into_iter().map(|n| n.new_product).collect();
+
+    let images: Vec<_> = new_products
+      .clone()
+      .into_iter()
+      .flat_map(|n| {
+        n.images.into_iter().flat_map(move |t| {
+          <NewProductToImageUnion as std::convert::Into<Vec<NewProductToImage>>>::into(
+            t.convert(n.new_product.gtin.clone()),
+          )
+        })
+      })
+      .collect();
 
     insert_into(products::table)
       .values(new_products_reduced)
@@ -251,6 +274,8 @@ fn db_insert_products(new_products: Vec<NewProductPost>, pool: web::Data<Pool>) 
     insert_into(products_to_measures::table)
       .values(new_measures_to_products)
       .execute(conn)?;
+
+    insert_into(products_to_images::table).values(images).execute(conn)?;
 
     diesel::result::QueryResult::Ok(())
   }) {
@@ -295,7 +320,11 @@ pub(crate) async fn post_products(
 
   let new_products: Vec<NewProductPost> = new_product_union.into_inner().into();
 
-  let result = web::block(move || db_insert_products(new_products, pool)).await;
+  let result = web::block(move || {
+    let mut conn = pool.get().unwrap();
+    db_insert_products(new_products, &mut conn)
+  })
+  .await;
 
   match result {
     Ok(Ok(res)) => Ok(HttpResponse::Ok().json(res)),

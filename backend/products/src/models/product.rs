@@ -59,7 +59,8 @@ pub struct NewProduct {
 pub struct NewProductPost {
   #[serde(flatten)]
   pub new_product: NewProduct,
-  pub measures: super::NewProductToMeasurePost,
+  pub measures: super::NewProductToMeasurePartialUnion,
+  pub images: Option<super::NewProductToImagePartialUnion>,
 }
 
 #[derive(Deserialize, ToSchema)]

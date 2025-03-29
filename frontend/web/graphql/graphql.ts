@@ -234,7 +234,7 @@ export enum Link__Purpose {
 export type ProductsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ProductsQuery = { __typename?: 'Query', get_products?: Array<{ __typename?: 'ProductResponse', gtin: any, productname: string } | null> | null };
+export type ProductsQuery = { __typename?: 'Query', get_products?: Array<{ __typename?: 'ProductResponse', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } | null> | null };
 
 export class TypedDocumentString<TResult, TVariables>
   extends String
@@ -260,6 +260,9 @@ export const ProductsDocument = new TypedDocumentString(`
   get_products {
     gtin
     productname
+    images {
+      image_url
+    }
   }
 }
     `) as unknown as TypedDocumentString<ProductsQuery, ProductsQueryVariables>;

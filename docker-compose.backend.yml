@@ -29,6 +29,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/products
       PORT: 8082
       SECRET_KEY: ${JWT_SECRET}
+      SEED: 1
     restart: always
 
   gateway:
