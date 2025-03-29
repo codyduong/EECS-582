@@ -43,6 +43,7 @@ pub struct ProductResponse {
   #[serde(flatten)]
   pub product: Product,
   pub measures: Vec<super::ProductToMeasureResponse>,
+  pub images: Vec<super::ProductToImageResponse>,
 }
 
 #[derive(Deserialize, Insertable, ToSchema, Clone, Debug)]
@@ -58,7 +59,8 @@ pub struct NewProduct {
 pub struct NewProductPost {
   #[serde(flatten)]
   pub new_product: NewProduct,
-  pub measures: super::NewProductToMeasurePost,
+  pub measures: super::NewProductToMeasurePartialUnion,
+  pub images: Option<super::NewProductToImagePartialUnion>,
 }
 
 #[derive(Deserialize, ToSchema)]

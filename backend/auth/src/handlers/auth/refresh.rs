@@ -28,6 +28,9 @@ use chrono::Utc;
       ("x-refresh-token" = String),
     )),
   ),
+  security(
+    ("http" = [])
+  )
 )]
 #[post("/refresh")]
 pub(crate) async fn refresh_route(

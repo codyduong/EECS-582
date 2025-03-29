@@ -18,6 +18,7 @@ import {
 import { Effect, pipe, Schema } from "effect";
 import { ParseError } from "effect/ParseResult";
 import { decode } from "jsonwebtoken";
+import { AUTH_URL } from "./consts";
 
 // THIS SHOULD ALWAYS MATCH THE backend/auth `Permission` enum
 const PermissionSchema = Schema.Union(
@@ -176,8 +177,7 @@ export function postAuth(
           const client = yield* HttpClient.HttpClient;
 
           return yield* HttpClientRequest.post(
-            // todo @codyduong, don't hardcode this LOL!
-            "http://localhost:8081/api/v1/auth/refresh",
+            `${AUTH_URL}/api/v1/auth/refresh`,
           ).pipe(
             (h) => Effect.succeed(h),
             Effect.map((h) => {

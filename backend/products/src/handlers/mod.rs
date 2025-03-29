@@ -11,6 +11,7 @@
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-09 - Cody Duong - fix failing ci with allow amibigious_glob_reexports
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-93-26 - Cody Duong - add products_to_images
 
   Postconditions:
   - Every file under the parent directory `./handlers` should be exported
@@ -20,6 +21,9 @@
 pub mod marketplaces;
 #[allow(ambiguous_glob_reexports)]
 pub use marketplaces::*;
+pub mod products_to_images;
+#[allow(ambiguous_glob_reexports)]
+pub use products_to_images::*;
 pub mod products;
 #[allow(ambiguous_glob_reexports)]
 pub use products::*;

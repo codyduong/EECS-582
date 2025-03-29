@@ -29,7 +29,19 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/products
       PORT: 8082
       SECRET_KEY: ${JWT_SECRET}
+      SEED: 1
     restart: always
+
+  gateway:
+    ports:
+      - "4000:4000"
+    build:
+      context: ./backend/gateway/
+      dockerfile: ./Dockerfile.local
+    environment:
+      SECRET_KEY: ${JWT_SECRET}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   db:
     image: postgres:17

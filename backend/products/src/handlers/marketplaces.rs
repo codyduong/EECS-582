@@ -53,7 +53,7 @@ fn db_get_marketplace(pool: web::Data<Pool>, id: &i32) -> anyhow::Result<Marketp
     ("id" = i32, Path, description = "id")
   ),
   security(
-    ("http" = [])
+    ("http" = [""])
   )
 )]
 #[get("/{id}")]

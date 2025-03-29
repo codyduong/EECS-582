@@ -28,7 +28,7 @@ use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 use utoipa_swagger_ui::{SwaggerUi, Url};
 
-// mod seed;
+mod seed;
 
 #[cfg(debug_assertions)]
 const API_URL: &str = "127.0.0.1";
@@ -65,7 +65,7 @@ async fn main() -> std::io::Result<()> {
   let mut conn = pool.get().unwrap();
   conn.run_pending_migrations(MIGRATIONS).unwrap();
 
-  // seed::run(pool.clone());
+  seed::run(pool.clone());
 
   #[derive(OpenApi)]
   #[openapi(
@@ -74,6 +74,8 @@ async fn main() -> std::io::Result<()> {
       handlers::marketplaces::get_marketplace,
       handlers::marketplaces::get_marketplaces,
       handlers::marketplaces::post_marketplace,
+      handlers::products_to_images::get_image,
+      handlers::products_to_images::post_image,
       handlers::products::get_product,
       handlers::products::get_products,
       handlers::products::post_products,
@@ -113,6 +115,7 @@ async fn main() -> std::io::Result<()> {
       .wrap(cors)
       .app_data(Data::new(pool.clone()))
       .configure(handlers::marketplaces::configure())
+      .configure(handlers::products_to_images::configure())
       .configure(handlers::products::configure())
       .service(
         SwaggerUi::new("/swagger-ui/{_:.*}").urls(vec![(Url::new("api", "/api-docs/openapi.json"), ApiDoc::openapi())]),

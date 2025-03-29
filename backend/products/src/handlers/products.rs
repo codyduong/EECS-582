@@ -10,6 +10,8 @@
   - 2025-02-08 - Cody Duong - init product endpoint
   - 2025-02-14 - Cody Duong - add product POST
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-03-28 - @codyduong - remove auth on some endpoints
+  - 2025-03-28 - @codyduong - fix ordering
 */
 
 use crate::models::*;
@@ -24,6 +26,7 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 use anyhow::anyhow;
 use auth::errors::ServiceError;
 use auth::models::PermissionName;
+use auth::validator::ScopeRequirement;
 use auth::validator::ValidatorBuilder;
 use diesel::dsl::insert_into;
 use diesel::Connection;
@@ -53,8 +56,9 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Result
   let result = products::table
     .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
     .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
+    .left_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
     .filter(products::gtin.eq(gtin))
-    .load::<(Product, ProductToMeasure, Unit)>(&mut conn)?;
+    .load::<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>(&mut conn)?;
 
   fold_products_and_measures(result)
     .first()
@@ -71,19 +75,20 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Result
   params(
     ("gtin" = String, Path, description = "Global Trade Item Number (gtin)")
   ),
-  security(
-    ("http" = [])
-  )
+  // security(
+  //   ("http" = [])
+  // )
 )]
 #[get("/{gtin}")]
 pub(crate) async fn get_product(
   gtin: web::Path<String>,
   db: web::Data<Pool>,
-  auth: BearerAuth,
+  // _auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::ReadAll)
-    .validate(&auth)?;
+  // let _claims = ValidatorBuilder::new()
+  //   .with_scope(PermissionName::ReadAll)
+  //   .with_or(vec![ScopeRequirement::Scope(PermissionName::ReadProduct)])
+  //   .validate(&auth)?;
 
   let result = {
     let gtin = gtin.clone();
@@ -119,7 +124,9 @@ fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductRespo
   let result = products::table
     .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
     .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
-    .load::<(Product, ProductToMeasure, Unit)>(&mut conn)?;
+    .left_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
+    .order((products::gtin.asc(), products_to_images::id.asc()))
+    .load::<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>(&mut conn)?;
 
   Ok(fold_products_and_measures(result))
 }
@@ -130,15 +137,19 @@ fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductRespo
     (status = OK, body = Vec<ProductResponse>),
     (status = 401),
   ),
-  security(
-    ("http" = [])
-  )
+  // security(
+  //   ("http" = [])
+  // )
 )]
 #[get("")]
-pub(crate) async fn get_products(db: web::Data<Pool>, auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::ReadAll)
-    .validate(&auth)?;
+pub(crate) async fn get_products(db: web::Data<Pool>, // _auth: BearerAuth
+) -> Result<HttpResponse, actix_web::Error> {
+  // let _claims = ValidatorBuilder::new()
+  //   .with_or(vec![
+  //     ScopeRequirement::Scope(PermissionName::ReadAll),
+  //     ScopeRequirement::Scope(PermissionName::ReadProduct),
+  //   ])
+  //   .validate(&auth)?;
 
   let result = web::block(move || db_get_all_products(db)).await;
 
@@ -155,36 +166,56 @@ pub(crate) async fn get_products(db: web::Data<Pool>, auth: BearerAuth) -> Resul
   }
 }
 
-fn fold_products_and_measures(results: Vec<(Product, ProductToMeasure, Unit)>) -> Vec<ProductResponse> {
-  results
+fn fold_products_and_measures(
+  results: Vec<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>,
+) -> Vec<ProductResponse> {
+  let (product_map, product_order) = results.into_iter().fold(
+    (
+      HashMap::<Product, Vec<(ProductToMeasure, Unit, Option<ProductToImage>)>>::new(),
+      Vec::<Product>::new(),
+    ),
+    |(mut acc, mut order), (product, product_measure, unit, product_image)| {
+      if !acc.contains_key(&product) {
+        order.push(product.clone())
+      }
+
+      acc
+        .entry(product)
+        .or_default()
+        .push((product_measure, unit, product_image));
+
+      (acc, order)
+    },
+  );
+
+  product_order
     .into_iter()
-    .fold(
-      HashMap::<Product, Vec<(ProductToMeasure, Unit)>>::new(),
-      |mut acc, (product, product_measure, unit)| {
-        acc
-          .entry(product) // Clone the product for the key
-          .or_default()
-          .push((product_measure, unit));
-        acc
-      },
-    )
-    .into_iter()
-    .map(|(product, conjoined)| {
-      let measures = conjoined
-        .into_iter()
-        .map(|(product_to_measure, unit)| ProductToMeasureResponse {
-          product_to_measure,
-          unit,
-        })
-        .collect();
-      ProductResponse { product, measures }
+    .filter_map(|product| {
+      product_map.get(&product).map(|conjoined| {
+        let measures: Vec<ProductToMeasureResponse> = conjoined
+          .iter()
+          .map(|(product_to_measure, unit, _)| ProductToMeasureResponse {
+            product_to_measure: product_to_measure.clone(),
+            unit: unit.clone(),
+          })
+          .collect();
+
+        let images: Vec<ProductToImage> = conjoined.iter().filter_map(|(_, _, image)| image.clone()).collect();
+
+        ProductResponse {
+          product,
+          measures,
+          images,
+        }
+      })
     })
     .collect()
 }
 
-fn db_insert_products(new_products: Vec<NewProductPost>, pool: web::Data<Pool>) -> anyhow::Result<bool> {
-  let mut conn = pool.get()?;
-
+pub fn db_insert_products(
+  new_products: Vec<NewProductPost>,
+  conn: &mut diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>,
+) -> anyhow::Result<bool> {
   match conn.transaction(|conn| {
     let hashmap_unitsymbol_to_id =
       units::table
@@ -200,25 +231,41 @@ fn db_insert_products(new_products: Vec<NewProductPost>, pool: web::Data<Pool>) 
     let new_measures_to_products: Vec<_> = new_products
       .clone()
       .into_iter()
-      .flat_map(|un| {
-        let unit_id = hashmap_unitsymbol_to_id.get(&un.measures.unit);
+      .flat_map(|new_product| {
+        <NewProductToMeasurePartialUnion as std::convert::Into<Vec<NewProductToMeasurePartial>>>::into(
+          new_product.measures,
+        )
+        .into_iter()
+        .map({
+          let value = hashmap_unitsymbol_to_id.clone();
+          move |measure| {
+            let unit_id = value.get(&measure.unit);
 
-        match unit_id {
-          Some(id) => itertools::Either::Left(
-            Into::<Vec<NewProductToMeasurePartial>>::into(un.measures.new_product_to_measure)
-              .into_iter()
-              .map(move |v| v.convert(un.new_product.gtin.clone(), *id))
-              .map(Ok),
-          ),
-          None => {
-            log::error!("Failed to find symbol '{}'", un.measures.unit);
-            itertools::Either::Right(std::iter::once(Err(diesel::result::Error::RollbackTransaction)))
+            match unit_id {
+              Some(id) => Ok(measure.convert(new_product.new_product.gtin.clone(), *id)),
+              None => {
+                log::error!("Failed to find symbol '{}'", measure.unit);
+                Err(diesel::result::Error::RollbackTransaction)
+              }
+            }
           }
-        }
+        })
       })
       .try_collect()?;
 
-    let new_products_reduced: Vec<NewProduct> = new_products.into_iter().map(|n| n.new_product).collect();
+    let new_products_reduced: Vec<NewProduct> = new_products.clone().into_iter().map(|n| n.new_product).collect();
+
+    let images: Vec<_> = new_products
+      .clone()
+      .into_iter()
+      .flat_map(|n| {
+        n.images.into_iter().flat_map(move |t| {
+          <NewProductToImageUnion as std::convert::Into<Vec<NewProductToImage>>>::into(
+            t.convert(n.new_product.gtin.clone()),
+          )
+        })
+      })
+      .collect();
 
     insert_into(products::table)
       .values(new_products_reduced)
@@ -227,6 +274,8 @@ fn db_insert_products(new_products: Vec<NewProductPost>, pool: web::Data<Pool>) 
     insert_into(products_to_measures::table)
       .values(new_measures_to_products)
       .execute(conn)?;
+
+    insert_into(products_to_images::table).values(images).execute(conn)?;
 
     diesel::result::QueryResult::Ok(())
   }) {
@@ -263,12 +312,19 @@ pub(crate) async fn post_products(
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::CreateAll)
+    .with_or(vec![
+      ScopeRequirement::Scope(PermissionName::CreateAll),
+      ScopeRequirement::Scope(PermissionName::CreateProduct),
+    ])
     .validate(&auth)?;
 
   let new_products: Vec<NewProductPost> = new_product_union.into_inner().into();
 
-  let result = web::block(move || db_insert_products(new_products, pool)).await;
+  let result = web::block(move || {
+    let mut conn = pool.get().unwrap();
+    db_insert_products(new_products, &mut conn)
+  })
+  .await;
 
   match result {
     Ok(Ok(res)) => Ok(HttpResponse::Ok().json(res)),

@@ -1,6 +1,8 @@
 # EECS-582
 
 * [backend](./backend/)
+  + [gateway](./backend/gateway/) is a hive GQL federation server
+    - http://localhost:4000/
   + [auth](./backend/auth/) is a REST server with a postgresql database
     - SwaggerUI: http://localhost:8081/swagger-ui/#/
     - OpenAPI Spec: http://localhost:8081/api-docs/openapi.json

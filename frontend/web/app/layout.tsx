@@ -37,6 +37,7 @@ import UserProvider from "@/contexts/UserContext";
 import { Suspense } from "react";
 import AdminLink from "@/components/AdminLink";
 import { getClaimServer } from "@/server/utils";
+import { QueryProvider } from "@/contexts/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -66,42 +67,44 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen w-screen overflow-hidden flex flex-col`}
       >
-        <MantineProvider>
-          <UserProvider claimServer={await getClaimServer()}>
-            <header className="flex justify-between items-center p-4 bg-white shadow-md z-50">
-              <Link href="/" className="text-xl font-bold text-green-600">
-                GroceryWise
-              </Link>
-              <div className="flex items-center gap-4">
-                <Link href="/grocery-list">
-                  <Button
-                    variant="outline"
-                    className="hidden sm:flex items-center gap-2 border-green-600 text-green-600 hover:bg-green-50"
-                    leftSection={<IconBasket className="w-4 h-4" />}
-                  >
-                    Grocery List
-                  </Button>
+        <QueryProvider>
+          <MantineProvider>
+            <UserProvider claimServer={await getClaimServer()}>
+              <header className="flex justify-between items-center p-4 bg-white shadow-md z-50">
+                <Link href="/" className="text-xl font-bold text-green-600">
+                  GroceryWise
                 </Link>
-                {/* Product page button */}
-                <Link href="/products">
-                  <Button
-                    variant="outline"
-                    className="items-center gap-2 border-blue-600 text-blue-600 hover:bg-blue-50"
-                  >
-                    Products
-                  </Button>
-                </Link>
-                <Suspense fallback={null}>
-                  <AdminLink />
-                </Suspense>
-                <UserButton />
-              </div>
-            </header>
-            <Suspense>
-              <main className="flex-grow overflow-y-scroll">{children}</main>
-            </Suspense>
-          </UserProvider>
-        </MantineProvider>
+                <div className="flex items-center gap-4">
+                  <Link href="/grocery-list">
+                    <Button
+                      variant="outline"
+                      className="hidden sm:flex items-center gap-2 border-green-600 text-green-600 hover:bg-green-50"
+                      leftSection={<IconBasket className="w-4 h-4" />}
+                    >
+                      Grocery List
+                    </Button>
+                  </Link>
+                  {/* Product page button */}
+                  <Link href="/products">
+                    <Button
+                      variant="outline"
+                      className="items-center gap-2 border-blue-600 text-blue-600 hover:bg-blue-50"
+                    >
+                      Products
+                    </Button>
+                  </Link>
+                  <Suspense fallback={null}>
+                    <AdminLink />
+                  </Suspense>
+                  <UserButton />
+                </div>
+              </header>
+              <Suspense>
+                <main className="flex-grow overflow-y-scroll">{children}</main>
+              </Suspense>
+            </UserProvider>
+          </MantineProvider>
+        </QueryProvider>
       </body>
     </html>
   );
