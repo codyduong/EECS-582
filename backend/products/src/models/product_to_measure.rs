@@ -68,6 +68,7 @@ pub struct NewProductToMeasurePartial {
   pub is_converted: Option<bool>,
   #[schema(value_type = f64)]
   pub raw_amount: Option<bigdecimal::BigDecimal>,
+  pub unit: super::UnitSymbol,
 }
 
 impl NewProductToMeasurePartial {
@@ -84,17 +85,22 @@ impl NewProductToMeasurePartial {
 }
 
 #[derive(Deserialize, ToSchema, Clone)]
-pub struct NewProductToMeasurePost {
-  #[serde(flatten)]
-  pub new_product_to_measure: NewProductToMeasurePartialUnion,
-  pub unit: super::UnitSymbol,
-}
-
-#[derive(Deserialize, ToSchema, Clone)]
 #[serde(untagged)]
 pub enum NewProductToMeasurePartialUnion {
   Single(NewProductToMeasurePartial),
   Multiple(Vec<NewProductToMeasurePartial>),
+}
+
+impl From<NewProductToMeasurePartial> for NewProductToMeasurePartialUnion {
+  fn from(val: NewProductToMeasurePartial) -> Self {
+    NewProductToMeasurePartialUnion::Single(val)
+  }
+}
+
+impl From<Vec<NewProductToMeasurePartial>> for NewProductToMeasurePartialUnion {
+  fn from(val: Vec<NewProductToMeasurePartial>) -> Self {
+    NewProductToMeasurePartialUnion::Multiple(val)
+  }
 }
 
 impl From<NewProductToMeasurePartialUnion> for Vec<NewProductToMeasurePartial> {

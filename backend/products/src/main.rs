@@ -28,7 +28,7 @@ use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 use utoipa_swagger_ui::{SwaggerUi, Url};
 
-// mod seed;
+mod seed;
 
 #[cfg(debug_assertions)]
 const API_URL: &str = "127.0.0.1";
@@ -65,7 +65,7 @@ async fn main() -> std::io::Result<()> {
   let mut conn = pool.get().unwrap();
   conn.run_pending_migrations(MIGRATIONS).unwrap();
 
-  // seed::run(pool.clone());
+  seed::run(pool.clone());
 
   #[derive(OpenApi)]
   #[openapi(

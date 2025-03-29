@@ -46,6 +46,9 @@ const ProductsQuery = graphql(`
     get_products {
       gtin
       productname
+      images {
+        image_url
+      }
     }
   }
 `);
