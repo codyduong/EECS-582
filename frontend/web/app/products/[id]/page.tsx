@@ -12,6 +12,8 @@
  *  - 2025-03-14 - @hvwendt - add price reporting functionality
  */
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { useState } from "react";
 import {
   Container,
@@ -37,19 +39,43 @@ import {
   IconCoin,
   IconCheck,
   IconX,
+  IconArrowBack,
 } from "@tabler/icons-react";
 import { ProductCard } from "@/components/ProductCard";
 import { QRCodeGenerator } from "@/components/QRCodeGenerator";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { products } from "@/app/productsmock";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { graphql } from "@/graphql";
+import { execute } from "@/graphql/execute";
+
+const ProductQuery = graphql(`
+  query Product($gtin: String!) {
+    get_product(gtin: $gtin) {
+      gtin
+      productname
+      images {
+        image_url
+      }
+    }
+  }
+`);
 
 export default function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
-  // Find the current product
-  const product = products.find((p) => p.id === id);
+  const { data } = useQuery({
+    queryKey: [`product_${id}`],
+    queryFn: () => execute(ProductQuery, { gtin: id }),
+  });
+
+  const product = data?.get_product;
+
+  // TODO: @codyduong remove
+  const oldProduct = products[0];
 
   // Get related products (excluding current product)
   const relatedProducts = products.filter((p) => p.id !== id);
@@ -139,13 +165,22 @@ export default function ProductDetailPage() {
     setPage((prev) => (prev - 1 + totalPages) % totalPages);
   };
 
-  const visibleProducts = relatedProducts.slice(
-    page * productsPerPage,
-    (page + 1) * productsPerPage,
-  );
+  // const visibleProducts = relatedProducts.slice(
+  //   page * productsPerPage,
+  //   (page + 1) * productsPerPage,
+  // );
 
   if (!product) {
-    return <Container size="xl">Product not found</Container>;
+    return (
+      <Container size="md" py="xl">
+        <Text>Product not found</Text>
+        <Link href="/products">
+          <Button leftSection={<IconArrowBack size={14} />} mt="md">
+            Back to Products
+          </Button>
+        </Link>
+      </Container>
+    );
   }
 
   return (
@@ -179,7 +214,7 @@ export default function ProductDetailPage() {
         )}
 
         <Group mb="xl" className="flex items-center justify-between">
-          <Title order={1}>{product.name}</Title>
+          <Title order={1}>{product.productname}</Title>
           <Button
             leftSection={<IconReportMoney size={18} />}
             onClick={() => setReportModalOpen(true)}
@@ -227,8 +262,8 @@ export default function ProductDetailPage() {
                 className="w-full max-w-md"
               >
                 <Image
-                  src={product.image || "/placeholder.svg"}
-                  alt={product.name}
+                  src={product.images[0]?.image_url || "/placeholder.svg"}
+                  alt={product.productname}
                   width={400}
                   height={400}
                   className="w-full aspect-square object-contain rounded-md"
@@ -253,13 +288,14 @@ export default function ProductDetailPage() {
                     <Accordion.Control>Product Description</Accordion.Control>
                     <Accordion.Panel>
                       <Text>
-                        {product.name} is a fresh produce item available at
-                        various grocery stores. This product is priced{" "}
+                        {product.productname} is a fresh produce item available
+                        at various grocery stores.
+                        {/* TODO: @codyduong use description This product is priced{" "}
                         {product.admonition
                           ? `by ${product.admonition.toLowerCase()}`
                           : "individually"}
                         . Compare prices across different stores to find the
-                        best deal.
+                        best deal. */}
                       </Text>
                     </Accordion.Panel>
                   </Accordion.Item>
@@ -268,10 +304,11 @@ export default function ProductDetailPage() {
                     <Accordion.Control>Nutrition Information</Accordion.Control>
                     <Accordion.Panel>
                       <Text>
-                        Nutrition information for {product.name} varies by size
-                        and weight. Please check the product packaging for
-                        specific nutritional details. Generally, fresh produce
-                        is a healthy choice rich in vitamins and minerals.
+                        Nutrition information for {product.productname} varies
+                        by size and weight. Please check the product packaging
+                        for specific nutritional details. Generally, fresh
+                        produce is a healthy choice rich in vitamins and
+                        minerals.
                       </Text>
                     </Accordion.Panel>
                   </Accordion.Item>
@@ -297,8 +334,8 @@ export default function ProductDetailPage() {
                 </Title>
 
                 <div className="space-y-4">
-                  {product.otherPrices &&
-                    Object.entries(product.otherPrices).map(
+                  {oldProduct.otherPrices &&
+                    Object.entries(oldProduct.otherPrices).map(
                       ([store, details]) => (
                         <div
                           key={store}
@@ -332,13 +369,13 @@ export default function ProductDetailPage() {
                   </Text>
                   <Group className="flex-row flex-nowrap justify-between">
                     <Text size="xl" fw={700} c="blue">
-                      ${product.price.toFixed(2)}
+                      ${oldProduct.price.toFixed(2)}
                     </Text>
-                    <Text c="dimmed">{product.weightPrice}</Text>
+                    <Text c="dimmed">{oldProduct.weightPrice}</Text>
                   </Group>
-                  {product.priceAdmonition && (
+                  {oldProduct.priceAdmonition && (
                     <Text size="sm" c="dimmed" mt="xs">
-                      {product.priceAdmonition}
+                      {oldProduct.priceAdmonition}
                     </Text>
                   )}
                 </div>
@@ -349,8 +386,8 @@ export default function ProductDetailPage() {
           /* QR Code tab content */
           <div className="mb-12">
             <QRCodeGenerator
-              productId={product.id}
-              productName={product.name}
+              productId={product.gtin}
+              productName={product.productname}
               baseUrl="localhost:3000"
             />
           </div>
@@ -393,7 +430,7 @@ export default function ProductDetailPage() {
             </button>
 
             {/* Products carousel */}
-            <div className="overflow-hidden mx-12 px-4 relative">
+            {/* <div className="overflow-hidden mx-12 px-4 relative">
               <AnimatePresence initial={false} custom="direction">
                 <motion.div
                   initial="enter"
@@ -429,7 +466,7 @@ export default function ProductDetailPage() {
                   ))}
                 </motion.div>
               </AnimatePresence>
-            </div>
+            </div> */}
 
             {/* Pagination indicators */}
             <div className="flex justify-center mt-4 gap-2">
@@ -450,7 +487,7 @@ export default function ProductDetailPage() {
       <Modal
         opened={reportModalOpen}
         onClose={() => setReportModalOpen(false)}
-        title={`Report Price for ${product.name}`}
+        title={`Report Price for ${product.productname}`}
         size="md"
       >
         <div className="space-y-4">

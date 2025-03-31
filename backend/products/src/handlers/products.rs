@@ -47,6 +47,7 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
     config.service(
       web::scope(V1_PATH)
         .service(get_product)
+        .service(delete_product)
         .service(get_products)
         .service(post_products),
     );
@@ -393,8 +394,10 @@ pub(crate) async fn delete_product(
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
   let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::DeleteAll)
-    .with_or(vec![ScopeRequirement::Scope(PermissionName::DeleteProduct)])
+    .with_or(vec![
+      ScopeRequirement::Scope(PermissionName::DeleteAll),
+      ScopeRequirement::Scope(PermissionName::DeleteProduct),
+    ])
     .validate(&auth)?;
 
   let result = {
