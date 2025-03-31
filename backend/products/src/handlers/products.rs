@@ -12,6 +12,7 @@
   - 2025-02-16 - Cody Duong - add comments
   - 2025-03-28 - @codyduong - remove auth on some endpoints
   - 2025-03-28 - @codyduong - fix ordering
+  - 2025-03-30 - @codyduong - add delete/edit
 */
 
 use crate::models::*;
@@ -29,6 +30,7 @@ use auth::models::PermissionName;
 use auth::validator::ScopeRequirement;
 use auth::validator::ValidatorBuilder;
 use diesel::dsl::insert_into;
+use diesel::upsert::excluded;
 use diesel::Connection;
 use diesel::ExpressionMethods;
 use diesel::JoinOnDsl;
@@ -267,14 +269,25 @@ pub fn db_insert_products(
       })
       .collect();
 
-    insert_into(products::table)
+    diesel::insert_into(products::table)
       .values(new_products_reduced)
+      .on_conflict(products::gtin)
+      .do_update()
+      .set((
+        products::productname.eq(excluded(products::productname)),
+        products::sellsinraw.eq(excluded(products::sellsinraw)),
+        products::updated_at.eq(diesel::dsl::now),
+      ))
       .execute(conn)?;
+
+    let gtins: Vec<String> = new_products.iter().map(|p| p.new_product.gtin.clone()).collect();
+    diesel::delete(products_to_measures::table.filter(products_to_measures::gtin.eq_any(gtins.clone())))
+      .execute(conn)?;
+    diesel::delete(products_to_images::table.filter(products_to_images::gtin.eq_any(gtins.clone()))).execute(conn)?;
 
     insert_into(products_to_measures::table)
       .values(new_measures_to_products)
       .execute(conn)?;
-
     insert_into(products_to_images::table).values(images).execute(conn)?;
 
     diesel::result::QueryResult::Ok(())
@@ -332,6 +345,78 @@ pub(crate) async fn post_products(
       log::error!("{}", err);
       Ok(Err(ServiceError::InternalServerError)?)
     }
+    Err(err) => {
+      log::error!("{}", err);
+      Ok(Err(ServiceError::InternalServerError)?)
+    }
+  }
+}
+
+fn db_delete_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Result<ProductResponse> {
+  let mut conn = pool.get()?;
+
+  let result = products::table
+    .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
+    .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
+    .left_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
+    .filter(products::gtin.eq(&gtin))
+    .load::<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>(&mut conn)?;
+
+  let product_response = fold_products_and_measures(result)
+    .first()
+    .cloned()
+    .ok_or_else(|| anyhow!("Failed to find product"))?;
+
+  diesel::delete(products::table.filter(products::gtin.eq(&gtin))).execute(&mut conn)?;
+
+  Ok(product_response)
+}
+
+#[utoipa::path(
+  context_path = V1_PATH,
+  responses(
+    (status = OK, body = ProductResponse),
+    (status = 401),
+  ),
+  params(
+    ("gtin" = String, Path, description = "Global Trade Item Number (gtin)")
+  ),
+  security(
+    ("http" = [])
+  )
+)]
+#[get("/{gtin}")]
+pub(crate) async fn delete_product(
+  gtin: web::Path<String>,
+  db: web::Data<Pool>,
+  auth: BearerAuth,
+) -> Result<HttpResponse, actix_web::Error> {
+  let _claims = ValidatorBuilder::new()
+    .with_scope(PermissionName::DeleteAll)
+    .with_or(vec![ScopeRequirement::Scope(PermissionName::DeleteProduct)])
+    .validate(&auth)?;
+
+  let result = {
+    let gtin = gtin.clone();
+    web::block(move || db_delete_product_by_gtin(db, gtin)).await
+  };
+
+  match result {
+    Ok(Ok(res)) => Ok(HttpResponse::Ok().json(Into::<ProductResponse>::into(res))),
+    Ok(Err(err)) => match err.downcast_ref::<diesel::result::Error>() {
+      Some(diesel::result::Error::NotFound) => {
+        log::warn!("Product not found {}", gtin);
+        Ok(Err(ServiceError::NotFound(Some("Product not found".to_string())))?)
+      }
+      Some(_) => {
+        log::error!("{}", err);
+        Ok(Err(ServiceError::InternalServerError)?)
+      }
+      None => {
+        log::error!("{}", err);
+        Ok(Err(ServiceError::InternalServerError)?)
+      }
+    },
     Err(err) => {
       log::error!("{}", err);
       Ok(Err(ServiceError::InternalServerError)?)
