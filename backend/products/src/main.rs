@@ -77,6 +77,7 @@ async fn main() -> std::io::Result<()> {
       handlers::products_to_images::get_image,
       handlers::products_to_images::post_image,
       handlers::products::get_product,
+      handlers::products::delete_product,
       handlers::products::get_products,
       handlers::products::post_products,
     )

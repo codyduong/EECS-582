@@ -60,11 +60,17 @@ export type Marketplace = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  delete_product?: Maybe<ProductResponse>;
   login_route?: Maybe<Scalars['JSON']['output']>;
   post_marketplace?: Maybe<Marketplace>;
   post_products?: Maybe<Scalars['Boolean']['output']>;
   refresh_route?: Maybe<Scalars['JSON']['output']>;
   register_route?: Maybe<Scalars['JSON']['output']>;
+};
+
+
+export type MutationDelete_ProductArgs = {
+  gtin: Scalars['String']['input'];
 };
 
 
@@ -93,9 +99,14 @@ export type NewMarketplace_Input = {
 
 export type NewProductPost_Input = {
   gtin: Scalars['mutationInput_post_products_input_items_allOf_0_gtin']['input'];
-  measures: NewProductToMeasurePost_Input;
+  images?: InputMaybe<Array<InputMaybe<MutationInput_Post_Products_Input_Items_AllOf_1_Images_Input>>>;
+  measures: Array<InputMaybe<NewProductToMeasurePartial_Input>>;
   productname: Scalars['String']['input'];
   sku?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type NewProductToImagePartial_Input = {
+  image_url: Scalars['String']['input'];
 };
 
 export type NewProductToImage_Input = {
@@ -103,7 +114,7 @@ export type NewProductToImage_Input = {
   image_url: Scalars['String']['input'];
 };
 
-export type NewProductToMeasurePost_Input = {
+export type NewProductToMeasurePartial_Input = {
   amount: Scalars['Float']['input'];
   is_converted?: InputMaybe<Scalars['Boolean']['input']>;
   is_primary_measure: Scalars['Boolean']['input'];
@@ -230,6 +241,11 @@ export enum Link__Purpose {
   /** `SECURITY` features provide metadata necessary to securely resolve fields. */
   Security = 'SECURITY'
 }
+
+export type MutationInput_Post_Products_Input_Items_AllOf_1_Images_Input = {
+  NewProductToImagePartial_Input?: InputMaybe<NewProductToImagePartial_Input>;
+  Void?: InputMaybe<Scalars['Void']['input']>;
+};
 
 export type ProductsQueryVariables = Exact<{ [key: string]: never; }>;
 

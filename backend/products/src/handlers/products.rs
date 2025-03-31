@@ -18,6 +18,7 @@
 use crate::models::*;
 use crate::schema::*;
 use crate::Pool;
+use actix_web::delete;
 use actix_web::get;
 use actix_web::post;
 use actix_web::web;
@@ -385,7 +386,7 @@ fn db_delete_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Res
     ("http" = [])
   )
 )]
-#[get("/{gtin}")]
+#[delete("/{gtin}")]
 pub(crate) async fn delete_product(
   gtin: web::Path<String>,
   db: web::Data<Pool>,

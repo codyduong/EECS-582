@@ -69,6 +69,10 @@ type Marketplace @join__type(graph: PRODUCTS) {
 }
 
 type Mutation @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
+  delete_product(
+    """Global Trade Item Number (gtin)"""
+    gtin: String!
+  ): ProductResponse @httpOperation(subgraph: "Products", path: "/api/v1/products/{args.gtin}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: DELETE) @join__field(graph: PRODUCTS)
   login_route(input: LoginRequest_Input): JSON @httpOperation(subgraph: "Auth", path: "/api/v1/auth/login", operationSpecificHeaders: [["Content-Type", "application/json"]], httpMethod: POST) @join__field(graph: AUTH)
   post_marketplace(input: NewMarketplace_Input): Marketplace @httpOperation(subgraph: "Products", path: "/api/v1/marketplaces", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST) @join__field(graph: PRODUCTS)
   post_products(input: [NewProductPost_Input]): Boolean @httpOperation(subgraph: "Products", path: "/api/v1/products", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "text/plain"]], httpMethod: POST) @join__field(graph: PRODUCTS)
@@ -82,9 +86,14 @@ input NewMarketplace_Input @join__type(graph: PRODUCTS) {
 
 input NewProductPost_Input @join__type(graph: PRODUCTS) {
   gtin: mutationInput_post_products_input_items_allOf_0_gtin!
-  measures: NewProductToMeasurePost_Input!
+  images: [mutationInput_post_products_input_items_allOf_1_images_Input]
+  measures: [NewProductToMeasurePartial_Input]!
   productname: String!
   sku: String
+}
+
+input NewProductToImagePartial_Input @join__type(graph: PRODUCTS) {
+  image_url: String!
 }
 
 input NewProductToImage_Input @join__type(graph: PRODUCTS) {
@@ -92,7 +101,7 @@ input NewProductToImage_Input @join__type(graph: PRODUCTS) {
   image_url: String!
 }
 
-input NewProductToMeasurePost_Input @join__type(graph: PRODUCTS) {
+input NewProductToMeasurePartial_Input @join__type(graph: PRODUCTS) {
   amount: Float!
   is_converted: Boolean
   is_primary_measure: Boolean!
@@ -213,6 +222,11 @@ enum link__Purpose {
 }
 
 scalar mutationInput_post_products_input_items_allOf_0_gtin @length(subgraph: "Products", min: 8, max: 14) @join__type(graph: PRODUCTS)
+
+input mutationInput_post_products_input_items_allOf_1_images_Input @join__type(graph: PRODUCTS) {
+  NewProductToImagePartial_Input: NewProductToImagePartial_Input
+  Void: Void
+}
 
 scalar queryInput_post_image_input_items_gtin @length(subgraph: "Products", min: 8, max: 14) @join__type(graph: PRODUCTS)
 
