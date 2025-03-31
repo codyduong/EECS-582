@@ -247,6 +247,15 @@ type Mutation @join__type(graph: AUTH)  @join__type(graph: PRODUCTS)  {
     operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "text/plain"]]
     httpMethod: POST
   ) @join__field(graph: PRODUCTS) 
+  delete_product("""
+  Global Trade Item Number (gtin)
+  """
+  gtin: String!) : ProductResponse @httpOperation(
+    subgraph: "Products"
+    path: "/api/v1/products/{args.gtin}"
+    operationSpecificHeaders: [["accept", "application/json"]]
+    httpMethod: DELETE
+  ) @join__field(graph: PRODUCTS) 
 }
 
 type Marketplace @join__type(graph: PRODUCTS)  {
@@ -344,10 +353,20 @@ input NewProductPost_Input @join__type(graph: PRODUCTS)  {
   gtin: mutationInput_post_products_input_items_allOf_0_gtin!
   productname: String!
   sku: String
-  measures: NewProductToMeasurePost_Input!
+  images: [mutationInput_post_products_input_items_allOf_1_images_Input]
+  measures: [NewProductToMeasurePartial_Input]!
 }
 
-input NewProductToMeasurePost_Input @join__type(graph: PRODUCTS)  {
+input mutationInput_post_products_input_items_allOf_1_images_Input @join__type(graph: PRODUCTS)  {
+  Void: Void
+  NewProductToImagePartial_Input: NewProductToImagePartial_Input
+}
+
+input NewProductToImagePartial_Input @join__type(graph: PRODUCTS)  {
+  image_url: String!
+}
+
+input NewProductToMeasurePartial_Input @join__type(graph: PRODUCTS)  {
   amount: Float!
   is_converted: Boolean
   is_primary_measure: Boolean!
