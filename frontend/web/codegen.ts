@@ -6,7 +6,7 @@ const schema = "../../backend/gateway/supergraph.graphql";
 
 const config: CodegenConfig = {
   schema,
-  documents: ["**/*.tsx"],
+  documents: ["**/*.tsx", "./app/products/[id]/page.tsx"],
   ignoreNoDocuments: true,
   generates: {
     "./graphql/": {

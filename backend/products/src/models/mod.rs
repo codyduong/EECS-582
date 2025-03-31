@@ -12,6 +12,7 @@
   - 2025-02-12 - Cody Duong - abstract seperation of concerns better
   - 2025-02-16 - Cody Duong - add comments
   - 2025-03-26 - Cody Duong - add product_to_image
+  - 2025-03-31 - @codyduong - add shopping_list
 
   Postconditions:
   - Every file under the parent directory `./models` should be exported
@@ -30,3 +31,5 @@ mod product;
 pub use product::*;
 mod unit;
 pub use unit::*;
+mod shopping_list;
+pub use shopping_list::*;

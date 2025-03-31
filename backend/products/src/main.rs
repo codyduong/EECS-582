@@ -80,6 +80,9 @@ async fn main() -> std::io::Result<()> {
       handlers::products::delete_product,
       handlers::products::get_products,
       handlers::products::post_products,
+      handlers::shopping_lists::create_shopping_list,
+      handlers::shopping_lists::update_shopping_list,
+      handlers::shopping_lists::delete_shopping_list,
     )
   )]
   struct ApiDoc;
@@ -115,6 +118,7 @@ async fn main() -> std::io::Result<()> {
       .wrap(Logger::default())
       .wrap(cors)
       .app_data(Data::new(pool.clone()))
+      .configure(handlers::shopping_lists::configure())
       .configure(handlers::marketplaces::configure())
       .configure(handlers::products_to_images::configure())
       .configure(handlers::products::configure())

@@ -247,6 +247,13 @@ export type MutationInput_Post_Products_Input_Items_AllOf_1_Images_Input = {
   Void?: InputMaybe<Scalars['Void']['input']>;
 };
 
+export type ProductQueryVariables = Exact<{
+  gtin: Scalars['String']['input'];
+}>;
+
+
+export type ProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } | null };
+
 export type ProductsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -271,6 +278,17 @@ export class TypedDocumentString<TResult, TVariables>
   }
 }
 
+export const ProductDocument = new TypedDocumentString(`
+    query Product($gtin: String!) {
+  get_product(gtin: $gtin) {
+    gtin
+    productname
+    images {
+      image_url
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<ProductQuery, ProductQueryVariables>;
 export const ProductsDocument = new TypedDocumentString(`
     query Products {
   get_products {

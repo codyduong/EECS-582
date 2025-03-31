@@ -27,3 +27,6 @@ pub use products_to_images::*;
 pub mod products;
 #[allow(ambiguous_glob_reexports)]
 pub use products::*;
+pub mod shopping_lists;
+#[allow(ambiguous_glob_reexports)]
+pub use shopping_lists::*;
