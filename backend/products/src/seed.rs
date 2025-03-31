@@ -152,7 +152,8 @@ pub(super) fn run(pool: crate::Pool) {
 
     let _ = delete(products::table)
       .filter(products::gtin.eq_any(gtins))
-      .execute(&mut conn).unwrap();
+      .execute(&mut conn)
+      .unwrap();
 
     let result = db_insert_products(products, &mut conn);
 
