@@ -7,9 +7,10 @@ currently using an website to scrape potato chips from target
 Author: @Tyler51235
 Date Created: 2025-02-16
 Revision History:
-- 2025-02-16 - @Tyler51235 - PoC of dillions scraper
+- 2025-02-16 - @Tyler51235 - PoC of Target scraper
 - 2025-02-19 - @Tyler51235 - Add prologue comment
 - 2025-02-25 - @codyduong - Update prologue comment
+- 2025-04-12 - @Tyler51235 - Improve scraper
 """
 import asyncio
 import re
