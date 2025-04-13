@@ -22,6 +22,7 @@
   - The `users` table must exist in the database.
 */
 
+use common_rs::to_rfc3339;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
@@ -39,14 +40,24 @@ pub struct User {
   pub username: Option<String>,
 }
 
-#[derive(Serialize, ToSchema)]
+#[derive(Serialize, ToSchema, Clone)]
 pub struct UserResponse {
   pub id: i32,
   pub email: String,
-  pub created_at: chrono::NaiveDateTime,
-  pub deleted: bool,
-  pub deleted_at: Option<chrono::NaiveDateTime>,
   pub username: Option<String>,
+  #[serde(with = "to_rfc3339")]
+  pub created_at: chrono::NaiveDateTime,
+  // #[serde(with = "to_rfc3339")]
+  // pub updated_at: chrono::NaiveDateTime,
+  pub deleted: bool,
+  #[serde(with = "to_rfc3339::option")]
+  pub deleted_at: Option<chrono::NaiveDateTime>,
+  #[schema(nullable, required = false)]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub roles: Option<Vec<super::Role>>,
+  #[schema(nullable, required = false)]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub permissions: Option<Vec<super::Permission>>,
 }
 
 impl From<User> for UserResponse {
@@ -54,10 +65,13 @@ impl From<User> for UserResponse {
     Self {
       id: user.id,
       email: user.email,
+      username: user.username,
       created_at: user.created_at,
+      // updated_at: user.updated_at,
       deleted: user.deleted,
       deleted_at: user.deleted_at,
-      username: user.username,
+      roles: None,
+      permissions: None,
     }
   }
 }

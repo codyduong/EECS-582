@@ -21,8 +21,9 @@
 
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Queryable, Identifiable, Selectable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Identifiable, Selectable, Debug, Serialize, Deserialize, Clone, ToSchema)]
 #[diesel(table_name = crate::schema::roles)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Role {

@@ -38,16 +38,19 @@ import ProductForm from "@/components/admin/ProductForm";
 import BulkProductUpload from "@/components/admin/BulkProductUpload";
 import ProductList from "@/components/admin/ProductList";
 import { graphql } from "@/graphql";
-import { execute } from "@/graphql/execute";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@apollo/client";
 
 const ProductsQuery = graphql(`
   query Products {
     get_products {
-      gtin
-      productname
-      images {
-        image_url
+      edges {
+        node {
+          gtin
+          productname
+          images {
+            image_url
+          }
+        }
       }
     }
   }
@@ -58,12 +61,10 @@ export default function ProductsPage() {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>("add");
   const { user } = useUser();
-  const { data } = useQuery({
-    queryKey: ["products"],
-    queryFn: () => execute(ProductsQuery),
-  });
+  const { data } = useQuery(ProductsQuery, {});
 
-  const products = data?.get_products?.filter((p) => !!p) ?? [];
+  const products =
+    data?.get_products?.edges?.filter((p) => !!p).map(({ node }) => node) ?? [];
 
   // Check if user has admin permissions
   const hasAdminAccess =

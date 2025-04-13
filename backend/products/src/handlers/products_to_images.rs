@@ -20,13 +20,12 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 use anyhow::anyhow;
 use auth::errors::ServiceError;
 use auth::models::PermissionName;
-use auth::validator::ScopeRequirement;
-use auth::validator::ValidatorBuilder;
 use diesel::dsl::insert_into;
 use diesel::Connection;
 use diesel::ExpressionMethods;
 use diesel::{QueryDsl, RunQueryDsl};
 use std::vec::Vec;
+use validator_rs::ValidatorBuilder;
 
 pub(crate) const V1_PATH: &str = "/api/v1/product_to_image";
 
@@ -70,12 +69,10 @@ pub(crate) async fn get_image(
   db: web::Data<Pool>,
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
-    .with_or(vec![
-      ScopeRequirement::Scope(PermissionName::ReadAll),
-      ScopeRequirement::Scope(PermissionName::ReadProduct),
-    ])
-    .validate(&auth)?;
+  let claims = auth::get_claims(&auth)?;
+  ValidatorBuilder::new()
+    .with_or(vec![PermissionName::ReadAll, PermissionName::ReadProduct])
+    .validate(&claims.permissions)?;
 
   let result = {
     let gtin = gtin.clone();
@@ -137,12 +134,10 @@ pub(crate) async fn post_image(
   new_images_union: web::Json<NewProductToImageUnion>,
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
-    .with_or(vec![
-      ScopeRequirement::Scope(PermissionName::ReadAll),
-      ScopeRequirement::Scope(PermissionName::ReadProduct),
-    ])
-    .validate(&auth)?;
+  let claims = auth::get_claims(&auth)?;
+  ValidatorBuilder::new()
+    .with_or(vec![PermissionName::ReadAll, PermissionName::ReadProduct])
+    .validate(&claims.permissions)?;
 
   let new_images: Vec<NewProductToImage> = new_images_union.into_inner().into();
 

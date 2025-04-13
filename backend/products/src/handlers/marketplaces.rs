@@ -22,11 +22,11 @@ use actix_web::HttpResponse;
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use auth::errors::ServiceError;
 use auth::models::PermissionName;
-use auth::validator::ValidatorBuilder;
 use diesel::insert_into;
 use diesel::QueryDsl;
 use diesel::RunQueryDsl;
 use std::vec::Vec;
+use validator_rs::ValidatorBuilder;
 
 pub(crate) const V1_PATH: &str = "/api/v1/marketplaces";
 
@@ -62,9 +62,10 @@ pub(crate) async fn get_marketplace(
   db: web::Data<Pool>,
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
-    .with_scope(PermissionName::ReadAll)
-    .validate(&auth)?;
+  let claims = auth::get_claims(&auth)?;
+  ValidatorBuilder::new()
+    .with_or(vec![PermissionName::ReadAll, PermissionName::ReadMarketplace])
+    .validate(&claims.permissions)?;
 
   let result = { web::block(move || db_get_marketplace(db, &id)).await };
 
@@ -100,9 +101,10 @@ fn db_get_marketplaces(pool: web::Data<Pool>) -> anyhow::Result<Vec<MarketplaceR
 )]
 #[get("")]
 pub(crate) async fn get_marketplaces(db: web::Data<Pool>, auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
+  let claims = auth::get_claims(&auth)?;
+  ValidatorBuilder::new()
     .with_scope(PermissionName::ReadAll)
-    .validate(&auth)?;
+    .validate(&claims.permissions)?;
 
   let result = { web::block(move || db_get_marketplaces(db)).await };
 
@@ -151,9 +153,10 @@ pub(crate) async fn post_marketplace(
   new_marketplace: web::Json<NewMarketplace>,
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
+  let claims = auth::get_claims(&auth)?;
+  ValidatorBuilder::new()
     .with_scope(PermissionName::CreateAll)
-    .validate(&auth)?;
+    .validate(&claims.permissions)?;
 
   let result = web::block(move || db_insert_marketplace(pool, new_marketplace.into_inner())).await;
 

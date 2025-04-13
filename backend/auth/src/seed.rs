@@ -24,11 +24,12 @@
 use crate::errors::ServiceError;
 use crate::models::*;
 use crate::schema::*;
-use auth::TEST_USERNAME;
 use diesel::dsl::*;
 use diesel::query_dsl::methods::FilterDsl;
 use diesel::ExpressionMethods;
 use diesel::{insert_into, prelude::*};
+
+pub(crate) const TEST_USERNAME: &str = "test";
 
 pub(super) fn run(pool: crate::Pool) {
   let mut conn = pool.get().unwrap();

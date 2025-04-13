@@ -10,6 +10,7 @@
   - 2025-02-12 - Cody Duong - PoC of diesel backend w/ openapi/swaggerui
   - 2025-02-09 - Cody Duong - move file
   - 2025-02-16 - Cody Duong - add comments
+  - 2025-04-13 - @codyduong - extract to common_rs
 
   Preconditions: N/A
   Acceptable Inputs: N/A
@@ -21,42 +22,4 @@
   Invariants: N/A
 */
 
-// TODO this should be moved into a shared crate rather than in the auth crate.
-// It should probably be something like: grocerywise-web-errors, or something...
-// this is never going to get done. LOL!
-
-use actix_web::{error::ResponseError, HttpResponse};
-use derive_more::Display;
-
-#[derive(Debug, Display)]
-pub enum ServiceError {
-  #[display("Internal Server Error")]
-  InternalServerError,
-
-  #[display("Not Found")]
-  NotFound(Option<String>),
-
-  #[display("BadRequest: {}", _0)]
-  BadRequest(String),
-
-  // THIS ERROR should be returned on a permission failure, not on an unauthenticated users. Instead either
-  // return 404, 400, depending on your intent at the endpoint
-  Unauthorized,
-
-  Forbidden,
-}
-
-// impl ResponseError trait allows to convert our errors into http responses with appropriate data
-impl ResponseError for ServiceError {
-  fn error_response(&self) -> HttpResponse {
-    match self {
-      ServiceError::InternalServerError => {
-        HttpResponse::InternalServerError().json("Internal Server Error, Please try later")
-      }
-      ServiceError::NotFound(msg) => HttpResponse::NotFound().json(msg.as_ref().map_or("Not Found", |s| s)),
-      ServiceError::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
-      ServiceError::Unauthorized => HttpResponse::Unauthorized().json("Not allowed"),
-      ServiceError::Forbidden => HttpResponse::Forbidden().json("Not allowed"),
-    }
-  }
-}
+pub use common_rs::errors::*;

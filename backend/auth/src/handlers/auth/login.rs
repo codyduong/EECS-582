@@ -17,7 +17,6 @@
 */
 
 use crate::errors::ServiceError;
-use crate::handlers::auth::get_permissions;
 use crate::models::*;
 use crate::schema::*;
 use actix_web::http::header;
@@ -70,7 +69,7 @@ pub async fn login_route(
       }
     };
 
-    let perms = get_permissions(&mut conn, user.id).map_err(|err| {
+    let perms = auth::get_permissions(&mut conn, user.id).map_err(|err| {
       log::error!("Failed to get permissions: {}", err);
       ServiceError::InternalServerError
     })?;
@@ -83,7 +82,7 @@ pub async fn login_route(
 
   match verify(&credentials.password, &user.password_hash) {
     Ok(_) => {
-      let (access_token, refresh_token) = super::create_jwt()
+      let (access_token, refresh_token) = auth::create_jwt()
         .user_id(user.id)
         .permissions(perms)
         .email(user.email)

@@ -18,7 +18,6 @@
 use crate::errors::ServiceError;
 use crate::models::*;
 use crate::schema::*;
-use crate::RESERVED_TEST_USERNAMES;
 use actix_web::http::header;
 use actix_web::{post, web, HttpResponse};
 use bcrypt::hash;
@@ -41,14 +40,14 @@ pub(crate) async fn register_route(
   new_user: web::Json<RegisterRequest>,
 ) -> Result<HttpResponse, actix_web::Error> {
   // guard against registering reserved names
-  if new_user
-    .username
-    .as_ref()
-    .is_some_and(|n| RESERVED_TEST_USERNAMES.contains(&n.as_str()))
-  {
-    // todo better error here
-    return Err(ServiceError::InternalServerError)?;
-  }
+  // if new_user
+  //   .username
+  //   .as_ref()
+  //   .is_some_and(|n| RESERVED_TEST_USERNAMES.contains(&n.as_str()))
+  // {
+  //   // todo better error here
+  //   return Err(ServiceError::InternalServerError)?;
+  // }
 
   let hashed = hash(&new_user.password, 10).map_err(|err| {
     log::error!("Failed to hash: {}", err);
@@ -74,9 +73,9 @@ pub(crate) async fn register_route(
           .filter(users::email.eq(&new_user.email))
           .first::<User>(conn)?;
 
-        let perms = super::get_permissions(conn, user.id)?;
+        let perms = auth::get_permissions(conn, user.id)?;
 
-        let res = super::create_jwt()
+        let res = auth::create_jwt()
           .user_id(user.id)
           .permissions(perms)
           .email(user.email)

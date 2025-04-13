@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+common-rs = { path = "../../packages/common-rs/", features = ["all"] }
+validator-rs = { path = "../../packages/validator-rs/", features = ["actix-web"] }
+
 actix-rt = "2.10.0"
 actix-web = "4.9.0"
 chrono = { version = "0.4.39", features = ["serde"] }

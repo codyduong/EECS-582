@@ -42,6 +42,11 @@ services:
       SECRET_KEY: ${JWT_SECRET}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./backend/gateway/supergraph.graphql
+          target: /supergraph.graphql
 
   db:
     image: postgres:17

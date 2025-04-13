@@ -37,7 +37,8 @@ import UserProvider from "@/contexts/UserContext";
 import { Suspense } from "react";
 import AdminLink from "@/components/AdminLink";
 import { getClaimServer } from "@/server/utils";
-import { QueryProvider } from "@/contexts/QueryProvider";
+import { ApolloWrapper } from "@/lib/apollo-wrapper";
+// import { QueryProvider } from "@/contexts/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -67,7 +68,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen w-screen overflow-hidden flex flex-col`}
       >
-        <QueryProvider>
+        <ApolloWrapper>
           <MantineProvider>
             <UserProvider claimServer={await getClaimServer()}>
               <header className="flex justify-between items-center p-4 bg-white shadow-md z-50">
@@ -104,7 +105,7 @@ export default async function RootLayout({
               </Suspense>
             </UserProvider>
           </MantineProvider>
-        </QueryProvider>
+        </ApolloWrapper>
       </body>
     </html>
   );

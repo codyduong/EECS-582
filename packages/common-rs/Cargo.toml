@@ -1,0 +1,21 @@
+[package]
+name = "common-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = { version = "4.10.2", optional = true }
+chrono = { version = "0.4.40", optional = true }
+derive_more = { version = "2.0.1", optional = true }
+diesel = { version = "2.2.9", optional = true }
+serde = { version = "1.0.219", optional = true }
+utoipa = { version = "5.3.1", optional = true }
+
+[features]
+all = ["serde", "chrono", "actix-web", "utoipa", "diesel"]
+serde = ["dep:serde"]
+chrono = ["dep:chrono"]
+actix-web = ["dep:actix-web", "derive_more"]
+derive_more = ["dep:derive_more"]
+utoipa = ["dep:utoipa"]
+diesel = ["dep:diesel"]

@@ -5,6 +5,16 @@ FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
 ### PLANNER
 FROM chef AS planner
 
+# Prepare common-rs
+WORKDIR /packages/common-rs
+COPY /packages/common-rs .
+RUN cargo chef prepare --recipe-path recipe.json
+
+# Prepare validator-rs
+WORKDIR /packages/validator-rs
+COPY /packages/validator-rs .
+RUN cargo chef prepare --recipe-path recipe.json
+
 # Preprae for auth
 WORKDIR /backend/auth
 COPY /backend/auth .
@@ -19,6 +29,16 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 ### BUILDER
 FROM chef AS builder
+
+# Cook common-rs
+WORKDIR /packages/common-rs
+COPY --from=planner /packages/common-rs/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
+
+# Cook validator-rs
+WORKDIR /packages/validator-rs
+COPY --from=planner /packages/validator-rs/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
 
 # Cook auth
 WORKDIR /backend/auth

@@ -28,17 +28,22 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 use anyhow::anyhow;
 use auth::errors::ServiceError;
 use auth::models::PermissionName;
-use auth::validator::ScopeRequirement;
-use auth::validator::ValidatorBuilder;
+use common_rs::graphql::GraphConnection;
+use common_rs::graphql::Node;
+use common_rs::graphql::PageInfo;
+use common_rs::graphql::PaginationParams;
 use diesel::dsl::insert_into;
 use diesel::upsert::excluded;
 use diesel::Connection;
 use diesel::ExpressionMethods;
 use diesel::JoinOnDsl;
+use diesel::SelectableHelper;
 use diesel::{QueryDsl, RunQueryDsl};
 use itertools::Itertools;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::vec::Vec;
+use validator_rs::ValidatorBuilder;
 
 pub(crate) const V1_PATH: &str = "/api/v1/products";
 
@@ -122,23 +127,113 @@ pub(crate) async fn get_product(
   }
 }
 
-fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductResponse>> {
+#[derive(Debug, Deserialize)]
+struct GetProductsParams {
+  #[serde(flatten)]
+  pagination_params: PaginationParams<chrono::NaiveDateTime>,
+}
+
+fn db_get_all_products(
+  pool: web::Data<Pool>,
+  options: GetProductsParams,
+) -> anyhow::Result<GraphConnection<ProductResponse>> {
   let mut conn = pool.get()?;
 
-  let result = products::table
+  let mut query = products::table.into_boxed();
+  let params = options.pagination_params;
+  let id_column = products::updated_at;
+  let cursor_fn = |x: &ProductResponse| x.product.gtin.to_string();
+
+  // Validate pagination parameters
+  if params.first.is_some() && params.last.is_some() {
+    return Err(anyhow!("Can't have first and last pagination parameters"));
+  }
+
+  if params.after.is_some() && params.before.is_some() {
+    return Err(anyhow!("Can't have after and before pagination parameters"));
+  }
+
+  let limit = params.first.or(params.last).unwrap_or(20).clamp(1, 100);
+  let is_forward = params.first.is_some();
+
+  match (is_forward, params.after, params.before) {
+    // Forward pagination
+    (true, after, None) => {
+      if let Some(after_id) = after {
+        query = query.filter(id_column.gt(after_id));
+      }
+      query = query.order(id_column.asc()).limit(limit as i64 + 1);
+    }
+    // Backward pagination
+    (false, None, before) => {
+      if let Some(before_id) = before {
+        query = query.filter(id_column.lt(before_id));
+      }
+      query = query.order(id_column.desc()).limit(limit as i64 + 1);
+    }
+    _ => return Err(anyhow!("Failed to resolve pagination")),
+  }
+
+  let result = query
     .inner_join(products_to_measures::table.on(products_to_measures::gtin.eq(products::gtin)))
     .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
     .left_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
     .order((products::gtin.asc(), products_to_images::id.asc()))
+    .select((
+      Product::as_select(),
+      ProductToMeasure::as_select(),
+      Unit::as_select(),
+      Option::<ProductToImage>::as_select(),
+    ))
     .load::<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>(&mut conn)?;
 
-  Ok(fold_products_and_measures(result))
+  let mut product_respones = fold_products_and_measures(result);
+
+  let has_additional = product_respones.len() as i64 > limit.into();
+  if has_additional {
+    product_respones.pop();
+  }
+
+  // Get cursors without cloning items
+  let start_cursor = product_respones.first().map(cursor_fn);
+  let end_cursor = product_respones.last().map(cursor_fn);
+
+  // Determine page info
+  let has_next_page = if is_forward {
+    has_additional
+  } else {
+    params.before.is_some()
+  };
+
+  let has_previous_page = if is_forward {
+    params.after.is_some()
+  } else {
+    has_additional
+  };
+
+  let edges = product_respones
+    .into_iter()
+    .map(|item| Node {
+      cursor: cursor_fn(&item),
+      node: item,
+    })
+    .collect();
+
+  Ok(GraphConnection {
+    edges,
+    page_info: PageInfo {
+      has_next_page,
+      has_prev_page: has_previous_page,
+      start_cursor,
+      end_cursor,
+    },
+  })
 }
 
 #[utoipa::path(
   context_path = V1_PATH,
   responses(
-    (status = OK, body = Vec<ProductResponse>),
+    (status = OK, body = GraphConnection<ProductResponse>),
     (status = 401),
   ),
   // security(
@@ -146,7 +241,9 @@ fn db_get_all_products(pool: web::Data<Pool>) -> anyhow::Result<Vec<ProductRespo
   // )
 )]
 #[get("")]
-pub(crate) async fn get_products(db: web::Data<Pool>, // _auth: BearerAuth
+pub(crate) async fn get_products(
+  db: web::Data<Pool>,
+  query: web::Query<GetProductsParams>, // _auth: BearerAuth
 ) -> Result<HttpResponse, actix_web::Error> {
   // let _claims = ValidatorBuilder::new()
   //   .with_or(vec![
@@ -155,14 +252,10 @@ pub(crate) async fn get_products(db: web::Data<Pool>, // _auth: BearerAuth
   //   ])
   //   .validate(&auth)?;
 
-  let result = web::block(move || db_get_all_products(db)).await;
+  let result = web::block(move || db_get_all_products(db, query.into_inner())).await?;
 
   match result {
-    Ok(Ok(res)) => Ok(HttpResponse::Ok().json(res)),
-    Ok(Err(err)) => {
-      log::error!("{}", err);
-      Ok(Err(ServiceError::InternalServerError)?)
-    }
+    Ok(res) => Ok(HttpResponse::Ok().json(res)),
     Err(err) => {
       log::error!("{}", err);
       Ok(Err(ServiceError::InternalServerError)?)
@@ -326,12 +419,10 @@ pub(crate) async fn post_products(
   new_product_union: web::Json<NewProductPostUnion>,
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
-    .with_or(vec![
-      ScopeRequirement::Scope(PermissionName::CreateAll),
-      ScopeRequirement::Scope(PermissionName::CreateProduct),
-    ])
-    .validate(&auth)?;
+  let claims = auth::get_claims(&auth)?;
+  ValidatorBuilder::new()
+    .with_or(vec![PermissionName::CreateAll, PermissionName::CreateProduct])
+    .validate(&claims.permissions)?;
 
   let new_products: Vec<NewProductPost> = new_product_union.into_inner().into();
 
@@ -393,12 +484,10 @@ pub(crate) async fn delete_product(
   db: web::Data<Pool>,
   auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  let _claims = ValidatorBuilder::new()
-    .with_or(vec![
-      ScopeRequirement::Scope(PermissionName::DeleteAll),
-      ScopeRequirement::Scope(PermissionName::DeleteProduct),
-    ])
-    .validate(&auth)?;
+  let claims = auth::get_claims(&auth)?;
+  ValidatorBuilder::new()
+    .with_or(vec![PermissionName::DeleteAll, PermissionName::DeleteProduct])
+    .validate(&claims.permissions)?;
 
   let result = {
     let gtin = gtin.clone();

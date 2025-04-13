@@ -6,14 +6,15 @@ const schema = "../../backend/gateway/supergraph.graphql";
 
 const config: CodegenConfig = {
   schema,
-  documents: ["**/*.tsx", "./app/products/[id]/page.tsx"],
+  documents: ["**/*.tsx"],
   ignoreNoDocuments: true,
   generates: {
     "./graphql/": {
       preset: "client",
-      config: {
-        documentMode: "string",
-      },
+      config: {},
+    },
+    "./graphql/__generated__/types.ts": {
+      plugins: ["typescript", "typescript-operations"],
     },
     "./schema.graphql": {
       plugins: ["schema-ast"],

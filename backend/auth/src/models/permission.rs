@@ -83,6 +83,19 @@ pub enum PermissionName {
   #[serde(rename = "delete:product")]
   #[schema(rename = "delete:product")]
   DeleteProduct,
+
+  #[serde(rename = "create:user")]
+  #[schema(rename = "create:user")]
+  CreateUser,
+  #[serde(rename = "read:user")]
+  #[schema(rename = "read:user")]
+  ReadUser,
+  #[serde(rename = "update:user")]
+  #[schema(rename = "update:user")]
+  UpdateUser,
+  #[serde(rename = "delete:user")]
+  #[schema(rename = "delete:user")]
+  DeleteUser,
 }
 
 // todo im sure we can write a proc macro to impl this based on strum?
@@ -109,6 +122,11 @@ impl ToSql<diesel::sql_types::Text, Pg> for PermissionName {
       PermissionName::ReadPriceReport => out.write_all(b"read:price_report")?,
       PermissionName::UpdatePriceReport => out.write_all(b"update:price_report")?,
       PermissionName::DeletePriceReport => out.write_all(b"delete:price_report")?,
+
+      PermissionName::CreateUser => out.write_all(b"create:user")?,
+      PermissionName::ReadUser => out.write_all(b"read:user")?,
+      PermissionName::UpdateUser => out.write_all(b"update:user")?,
+      PermissionName::DeleteUser => out.write_all(b"delete:user")?,
     }
     Ok(IsNull::No)
   }
@@ -136,12 +154,18 @@ impl FromSql<diesel::sql_types::Text, Pg> for PermissionName {
       b"read:price_report" => Ok(PermissionName::ReadPriceReport),
       b"update:price_report" => Ok(PermissionName::UpdatePriceReport),
       b"delete:price_report" => Ok(PermissionName::DeletePriceReport),
+
+      b"create:user" => Ok(PermissionName::CreateUser),
+      b"read:user" => Ok(PermissionName::ReadUser),
+      b"update:user" => Ok(PermissionName::UpdateUser),
+      b"delete:user" => Ok(PermissionName::DeleteUser),
+
       _ => Err("Unrecognized enum variant".into()),
     }
   }
 }
 
-#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Clone, ToSchema)]
 #[diesel(table_name = crate::schema::permissions)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Permission {

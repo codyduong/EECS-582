@@ -47,7 +47,7 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { products } from "@/app/productsmock";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@apollo/client";
 import { graphql } from "@/graphql";
 import { execute } from "@/graphql/execute";
 
@@ -67,9 +67,10 @@ export default function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const { data } = useQuery({
-    queryKey: [`product_${id}`],
-    queryFn: () => execute(ProductQuery, { gtin: id }),
+  const { data } = useQuery(ProductQuery, {
+    variables: {
+      gtin: id,
+    },
   });
 
   const product = data?.get_product;

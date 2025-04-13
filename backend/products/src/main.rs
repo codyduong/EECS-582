@@ -38,6 +38,7 @@ const ALLOWED_ORIGINS: [&str; 1] = ["http://localhost:3000"];
 const API_URL: &str = "0.0.0.0";
 #[cfg(not(debug_assertions))]
 const ALLOWED_ORIGINS: [&str; 1] = ["http://localhost:3000"];
+const MIGRATIONS: diesel_migrations::EmbeddedMigrations = diesel_migrations::embed_migrations!("./migrations/");
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {

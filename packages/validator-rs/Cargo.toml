@@ -1,0 +1,16 @@
+[package]
+name = "validator-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = { version = "4.10.2", optional = true }
+anyhow = { version = "1.0.97", optional = true }
+bon = { version = "3.5.1", optional = true }
+thiserror = "2.0.12"
+
+[features]
+bon = ["dep:bon"]
+anyhow = ["dep:anyhow"]
+custom_recursion_limit = []
+actix-web = ["dep:actix-web"]

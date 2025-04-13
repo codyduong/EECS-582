@@ -28,6 +28,7 @@ use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 use utoipa_swagger_ui::{SwaggerUi, Url};
 
+mod handlers;
 mod seed;
 
 #[cfg(debug_assertions)]
@@ -38,6 +39,7 @@ const ALLOWED_ORIGINS: [&str; 2] = ["127.0.0.1", "http://localhost:3000"];
 const API_URL: &str = "0.0.0.0";
 #[cfg(not(debug_assertions))]
 const ALLOWED_ORIGINS: [&str; 1] = ["http://localhost:3000"];
+const MIGRATIONS: diesel_migrations::EmbeddedMigrations = diesel_migrations::embed_migrations!("./migrations/");
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -74,8 +76,12 @@ async fn main() -> std::io::Result<()> {
       handlers::auth::login_route,
       handlers::auth::refresh_route,
       handlers::auth::register_route,
-      handlers::users::get_user_route,
-      handlers::users::get_users_route
+      handlers::users::get_user,
+      handlers::users::get_users,
+      handlers::users::upsert_user,
+      handlers::users::create_users,
+      handlers::users::delete_user,
+      handlers::users::delete_users,
     )
   )]
   struct ApiDoc;
