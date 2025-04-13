@@ -141,11 +141,6 @@ scalar query_get_products_edges_items_node_allOf_0_gtin @length(subgraph: "Produ
 
 scalar query_get_products_edges_items_node_allOf_1_measures_items_allOf_0_gtin @length(subgraph: "Products", min: 8, max: 14)  @join__type(graph: PRODUCTS) 
 
-"""
-The `BigInt` scalar type represents non-fractional signed whole numeric values.
-"""
-scalar BigInt @join__type(graph: PRODUCTS) 
-
 scalar mutationInput_post_products_input_items_allOf_0_gtin @length(subgraph: "Products", min: 8, max: 14)  @join__type(graph: PRODUCTS) 
 
 type Query @extraSchemaDefinitionDirective(
@@ -434,7 +429,7 @@ type ProductToMeasureResponse @join__type(graph: PRODUCTS)  {
   amount: String!
   created_at: DateTime!
   gtin: query_get_products_edges_items_node_allOf_1_measures_items_allOf_0_gtin!
-  id: BigInt!
+  id: Int!
   is_converted: Boolean
   is_primary_measure: Boolean!
   raw_amount: Float!

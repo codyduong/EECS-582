@@ -67,6 +67,12 @@ fn db_get_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Result
     .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
     .left_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
     .filter(products::gtin.eq(gtin))
+    .select((
+      Product::as_select(),
+      ProductToMeasure::as_select(),
+      Unit::as_select(),
+      Option::<ProductToImage>::as_select(),
+    ))
     .load::<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>(&mut conn)?;
 
   fold_products_and_measures(result)
@@ -453,6 +459,12 @@ fn db_delete_product_by_gtin(pool: web::Data<Pool>, gtin: String) -> anyhow::Res
     .inner_join(units::table.on(units::id.eq(products_to_measures::unit_id)))
     .left_join(products_to_images::table.on(products_to_images::gtin.eq(products::gtin)))
     .filter(products::gtin.eq(&gtin))
+    .select((
+      Product::as_select(),
+      ProductToMeasure::as_select(),
+      Unit::as_select(),
+      Option::<ProductToImage>::as_select(),
+    ))
     .load::<(Product, ProductToMeasure, Unit, Option<ProductToImage>)>(&mut conn)?;
 
   let product_response = fold_products_and_measures(result)

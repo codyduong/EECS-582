@@ -42,7 +42,6 @@ diesel::table! {
 
 diesel::table! {
     products_to_measures (id) {
-        id -> Int8,
         gtin -> Text,
         created_at -> Timestamp,
         unit_id -> Int4,
@@ -50,6 +49,7 @@ diesel::table! {
         is_primary_measure -> Bool,
         is_converted -> Nullable<Bool>,
         raw_amount -> Nullable<Numeric>,
+        id -> Int4,
     }
 }
 
@@ -97,13 +97,13 @@ diesel::joinable!(shopping_list_items -> units (unit_id));
 diesel::joinable!(shopping_list_to_user -> shopping_list (shopping_list_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-  marketplaces,
-  physical_marketplaces,
-  products,
-  products_to_images,
-  products_to_measures,
-  shopping_list,
-  shopping_list_items,
-  shopping_list_to_user,
-  units,
+    marketplaces,
+    physical_marketplaces,
+    products,
+    products_to_images,
+    products_to_measures,
+    shopping_list,
+    shopping_list_items,
+    shopping_list_to_user,
+    units,
 );

@@ -29,7 +29,7 @@ use utoipa::ToSchema;
 #[diesel(table_name = crate::schema::products_to_measures)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct ProductToMeasure {
-  pub id: i64,
+  pub id: i32,
   #[schema(min_length = 8, max_length = 14)]
   pub gtin: String,
   pub created_at: chrono::NaiveDateTime,

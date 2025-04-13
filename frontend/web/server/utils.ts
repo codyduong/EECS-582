@@ -14,8 +14,8 @@ export const getClaimServer = async () => {
       Effect.flatMap(decodeAccessToken),
       Effect.map(([_token, claim]) => claim),
     ),
-  ).catch((e) => {
-    console.warn(`er: ${e}`);
+  ).catch((_e) => {
+    // console.warn(`er: ${e}`);
     return undefined;
   });
 

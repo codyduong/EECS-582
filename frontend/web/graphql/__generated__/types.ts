@@ -12,8 +12,6 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
-  /** The `BigInt` scalar type represents non-fractional signed whole numeric values. */
-  BigInt: { input: any; output: any; }
   /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
   DateTime: { input: any; output: any; }
   /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
@@ -268,7 +266,7 @@ export type ProductToMeasureResponse = {
   amount: Scalars['String']['output'];
   created_at: Scalars['DateTime']['output'];
   gtin: Scalars['query_get_products_edges_items_node_allOf_1_measures_items_allOf_0_gtin']['output'];
-  id: Scalars['BigInt']['output'];
+  id: Scalars['Int']['output'];
   is_converted?: Maybe<Scalars['Boolean']['output']>;
   is_primary_measure: Scalars['Boolean']['output'];
   raw_amount: Scalars['Float']['output'];

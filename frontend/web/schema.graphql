@@ -29,11 +29,6 @@ directive @resolveRoot(subgraph: String) repeatable on FIELD_DEFINITION
 
 directive @transport(headers: [[String]], kind: String, location: String, queryParams: [[String]], queryStringOptions: ObjMap, subgraph: String) repeatable on SCHEMA
 
-"""
-The `BigInt` scalar type represents non-fractional signed whole numeric values.
-"""
-scalar BigInt @join__type(graph: PRODUCTS)
-
 type Connection_ProductResponse @join__type(graph: PRODUCTS) {
   edges: [Node_ProductResponse]!
   page_info: PageInfo!
@@ -227,7 +222,7 @@ type ProductToMeasureResponse @join__type(graph: PRODUCTS) {
   amount: String!
   created_at: DateTime!
   gtin: query_get_products_edges_items_node_allOf_1_measures_items_allOf_0_gtin!
-  id: BigInt!
+  id: Int!
   is_converted: Boolean
   is_primary_measure: Boolean!
   raw_amount: Float!
