@@ -26,6 +26,7 @@ import {
   MantineProvider,
   mantineHtmlProps,
   Button,
+  Notification,
 } from "@mantine/core";
 import { UserButton } from "@/components/UserButton";
 import { IconBasket } from "@tabler/icons-react";
@@ -38,6 +39,7 @@ import { Suspense } from "react";
 import AdminLink from "@/components/AdminLink";
 import { getClaimServer } from "@/server/utils";
 import { ApolloWrapper } from "@/lib/apollo-wrapper";
+import { Notifications } from "@mantine/notifications";
 // import { QueryProvider } from "@/contexts/QueryProvider";
 
 const geistSans = Geist({
@@ -103,6 +105,7 @@ export default async function RootLayout({
               <Suspense>
                 <main className="flex-grow overflow-y-scroll">{children}</main>
               </Suspense>
+              <Notifications />
             </UserProvider>
           </MantineProvider>
         </ApolloWrapper>

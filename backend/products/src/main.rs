@@ -84,6 +84,8 @@ async fn main() -> std::io::Result<()> {
       handlers::shopping_lists::create_shopping_list,
       handlers::shopping_lists::update_shopping_list,
       handlers::shopping_lists::delete_shopping_list,
+      handlers::units::get_unit,
+      handlers::units::get_units,
     )
   )]
   struct ApiDoc;
@@ -123,6 +125,7 @@ async fn main() -> std::io::Result<()> {
       .configure(handlers::marketplaces::configure())
       .configure(handlers::products_to_images::configure())
       .configure(handlers::products::configure())
+      .configure(handlers::units::configure())
       .service(
         SwaggerUi::new("/swagger-ui/{_:.*}").urls(vec![(Url::new("api", "/api-docs/openapi.json"), ApiDoc::openapi())]),
       )

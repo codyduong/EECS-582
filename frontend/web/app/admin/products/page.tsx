@@ -45,8 +45,8 @@ export default function AdminProductsPage() {
 
         <Alert icon={<IconInfoCircle size={16} />} color="blue" mb="lg">
           <Text>
-            Manage your product catalog by adding new products individually or
-            in bulk.
+            Manage your product catalog by adding new products individually
+            {/* or in bulk */}.
           </Text>
         </Alert>
 
@@ -56,12 +56,12 @@ export default function AdminProductsPage() {
               <Tabs.Tab value="add" leftSection={<IconPlus size={16} />}>
                 Add Product
               </Tabs.Tab>
-              <Tabs.Tab value="bulk" leftSection={<IconUpload size={16} />}>
+              {/* <Tabs.Tab value="bulk" leftSection={<IconUpload size={16} />}>
                 Bulk Upload
               </Tabs.Tab>
               <Tabs.Tab value="list" leftSection={<IconList size={16} />}>
                 Product List
-              </Tabs.Tab>
+              </Tabs.Tab> */}
             </Tabs.List>
 
             <Tabs.Panel value="add" pt="md">

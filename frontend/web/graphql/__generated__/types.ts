@@ -281,6 +281,8 @@ export type Query = {
   get_marketplaces?: Maybe<Array<Maybe<Marketplace>>>;
   get_product?: Maybe<ProductResponse>;
   get_products?: Maybe<Connection_ProductResponse>;
+  get_unit?: Maybe<Unit>;
+  get_units?: Maybe<Array<Maybe<Unit>>>;
   get_user?: Maybe<UserResponse>;
   get_users?: Maybe<Connection_UserResponse>;
   post_image?: Maybe<Scalars['Boolean']['output']>;
@@ -299,6 +301,11 @@ export type QueryGet_MarketplaceArgs = {
 
 export type QueryGet_ProductArgs = {
   gtin: Scalars['String']['input'];
+};
+
+
+export type QueryGet_UnitArgs = {
+  id: Scalars['Int']['input'];
 };
 
 
@@ -431,3 +438,24 @@ export type ProductsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type ProductsQuery = { __typename?: 'Query', get_products?: { __typename?: 'Connection_ProductResponse', edges: Array<{ __typename?: 'Node_ProductResponse', node: { __typename?: 'query_get_products_edges_items_node', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } } | null> } | null };
+
+export type ProductForm_ProductQueryVariables = Exact<{
+  gtin: Scalars['String']['input'];
+}>;
+
+
+export type ProductForm_ProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any } | null };
+
+export type ProductForm_UnitsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ProductForm_UnitsQuery = { __typename?: 'Query', get_units?: Array<{ __typename?: 'Unit', id: number, symbol: UnitSymbol } | null> | null };
+
+export type ProductForm_PostProductMutationVariables = Exact<{
+  measures: Array<InputMaybe<NewProductToMeasurePartial_Input>> | InputMaybe<NewProductToMeasurePartial_Input>;
+  productname: Scalars['String']['input'];
+  gtin: Scalars['mutationInput_post_products_input_items_allOf_0_gtin']['input'];
+}>;
+
+
+export type ProductForm_PostProductMutation = { __typename?: 'Mutation', post_products?: boolean | null };

@@ -15,7 +15,7 @@ export const composeConfig = defineConfig({
       sourceHandler: loadOpenAPISubgraph("Auth", {
         // TODO allow dynamic generation inside docker -@codyduong
         // see: https://stackoverflow.com/questions/52788472/how-can-one-make-a-docker-compose-service-build-depend-on-another-service
-        source: "http://localhost:8081/api-docs/openapi.json",
+        source: "http://127.0.0.1:8081/api-docs/openapi.json",
         operationHeaders: {
           "Content-Type": "application/json",
           // todo we should probably use different headers for different apis? or well, this is fine for now
@@ -26,7 +26,7 @@ export const composeConfig = defineConfig({
     },
     {
       sourceHandler: loadOpenAPISubgraph("Products", {
-        source: "http://localhost:8082/api-docs/openapi.json",
+        source: "http://127.0.0.1:8082/api-docs/openapi.json",
         operationHeaders: {
           "Content-Type": "application/json",
           // todo we should probably use different headers for different apis? or well, this is fine for now

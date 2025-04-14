@@ -5,7 +5,7 @@
  *
  * This component provides a form for adding new products with:
  * - Field validation
- * - Real-time SKU uniqueness checking
+ * - Real-time GTIN uniqueness checking
  * - Image upload capability
  * - Price entry for multiple stores
  *
@@ -13,9 +13,10 @@
  * Date Created: 2025-03-05
  * Revision History:
  * - 2025-03-10 - @ehnuJ - added onSuccess callback
+ * - 2025-04-13 - @codyduong - improve gql linkage
  */
 
-import { useEffect, useState } from "react";
+import { ChangeEventHandler, useEffect, useState } from "react";
 import {
   TextInput,
   NumberInput,
@@ -24,12 +25,14 @@ import {
   Box,
   Text,
   Card,
-  Switch,
+  // Switch,
   FileInput,
   Textarea,
-  Accordion,
+  // Accordion,
   LoadingOverlay,
   Alert,
+  Select,
+  Checkbox,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
@@ -38,33 +41,54 @@ import {
   IconUpload,
   IconX,
   IconAlertCircle,
+  IconTrash,
+  IconPlus,
 } from "@tabler/icons-react";
 import { Effect } from "effect";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
+import { graphql } from "@/graphql";
+import { UnitSymbol } from "@/graphql/graphql";
 
-// Simulate checking SKU uniqueness with a delay
-const checkSkuUniqueness = (sku: string) =>
-  Effect.gen(function* (_) {
-    yield* _(Effect.sleep(800));
-    // Mock implementation - in a real app, this would call an API
-    const existingSkus = ["SKU12345", "SKU67890", "PROD12345"];
-    return !existingSkus.includes(sku);
-  });
+const QUERY_PRODUCT = graphql(`
+  query ProductForm_Product($gtin: String!) {
+    get_product(gtin: $gtin) {
+      gtin
+    }
+  }
+`);
 
-interface PriceByStore {
-  store: string;
-  price: number | undefined;
-  weightPrice: string;
-}
+const QUERY_UNIT = graphql(`
+  query ProductForm_Units {
+    get_units {
+      id
+      symbol
+    }
+  }
+`);
+
+const MUTATION_PRODUCT = graphql(`
+  mutation ProductForm_PostProduct(
+    $measures: [NewProductToMeasurePartial_Input]!
+    $productname: String!
+    $gtin: mutationInput_post_products_input_items_allOf_0_gtin!
+  ) {
+    post_products(
+      input: { gtin: $gtin, productname: $productname, measures: $measures }
+    )
+  }
+`);
 
 interface ProductFormValues {
   name: string;
-  sku: string;
+  gtin: string;
   description: string;
-  defaultPrice: number;
-  weightPrice: string;
   image: File | null;
-  pricesByStore: PriceByStore[];
   isActive: boolean;
+  measures: {
+    amount: number | null;
+    unit: UnitSymbol[keyof UnitSymbol];
+    isPrimary: boolean;
+  }[];
 }
 
 interface ProductFormProps {
@@ -73,60 +97,49 @@ interface ProductFormProps {
 
 export default function ProductForm({ onSuccess }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
-  const [skuCheckLoading, setSkuCheckLoading] = useState(false);
-  const [skuUnique, setSkuUnique] = useState<boolean | null>(null);
+  const { data: unitsData } = useQuery(QUERY_UNIT, {});
+  const [productMutation, { loading: productUploading }] =
+    useMutation(MUTATION_PRODUCT);
+  const [getGtin, { data: searchedData, loading: _gettingGtin }] =
+    useLazyQuery(QUERY_PRODUCT);
+  const gtinUnique = !searchedData?.get_product;
+
+  const units =
+    unitsData?.get_units?.filter((i): i is NonNullable<typeof i> => !!i) ?? [];
 
   const form = useForm<ProductFormValues>({
     initialValues: {
       name: "",
-      sku: "",
+      gtin: "",
       description: "",
-      defaultPrice: 0,
-      weightPrice: "",
       image: null,
-      pricesByStore: [
-        { store: "Walmart", price: undefined, weightPrice: "" },
-        { store: "Target", price: undefined, weightPrice: "" },
-        { store: "Dillons", price: undefined, weightPrice: "" },
-      ],
       isActive: true,
+      measures: [
+        {
+          amount: undefined!,
+          unit: units.length > 0 ? units[0].id : "",
+          isPrimary: true,
+        },
+      ],
     },
     validate: {
       name: (value) =>
         value.trim().length < 2
           ? "Product name must be at least 2 characters"
           : null,
-      sku: (value) =>
-        value.trim().length < 4 ? "SKU must be at least 4 characters" : null,
-      defaultPrice: (value) => (value < 0 ? "Price cannot be negative" : null),
+      gtin: (value) =>
+        value.trim().length < 4 ? "GTIN must be at least 8 characters" : null,
+      // defaultPrice: (value) => (value < 0 ? "Price cannot be negative" : null),
     },
   });
 
-  // SKU uniqueness validation effect
-  useEffect(() => {
-    const sku = form.values.sku.trim();
-    if (sku.length >= 4) {
-      const timeoutId = setTimeout(() => {
-        setSkuCheckLoading(true);
-        Effect.runPromise(checkSkuUniqueness(sku))
-          .then((isUnique) => {
-            setSkuUnique(isUnique);
-            if (!isUnique) {
-              form.setFieldError("sku", "This SKU already exists");
-            } else {
-              form.setFieldError("sku", null);
-            }
-          })
-          .finally(() => {
-            setSkuCheckLoading(false);
-          });
-      }, 500);
-
-      return () => clearTimeout(timeoutId);
-    } else {
-      setSkuUnique(null);
+  const onChangeGtin: ChangeEventHandler<HTMLInputElement> = (event) => {
+    const newGtin = event.currentTarget.value.trim();
+    if (newGtin.length >= 8) {
+      getGtin({ variables: { gtin: newGtin } });
     }
-  }, [form.values.sku, form]);
+    form.setFieldValue("gtin", newGtin);
+  };
 
   const handleSubmit = async (values: ProductFormValues) => {
     setLoading(true);
@@ -146,11 +159,8 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
       });
 
       form.reset();
-      setSkuUnique(null);
-      // Call onSuccess callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
+
+      onSuccess?.();
     } catch (_error) {
       notifications.show({
         title: "Error",
@@ -160,6 +170,52 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const addMeasure = () => {
+    if (form.values.measures.length < 4) {
+      form.insertListItem("measures", {
+        amount: undefined,
+        unit: units.length > 0 ? units[0].id : "",
+        isPrimary: false,
+      });
+    }
+  };
+
+  const removeMeasure = (index: number) => {
+    if (form.values.measures.length > 1) {
+      const wasPrimary = form.values.measures[index].isPrimary;
+      const newMeasures = [...form.values.measures];
+      newMeasures.splice(index, 1);
+
+      // If removing the primary measure, make the first remaining one primary
+      if (wasPrimary && newMeasures.length > 0) {
+        newMeasures[0].isPrimary = true;
+      }
+
+      form.setFieldValue("measures", newMeasures);
+    }
+  };
+
+  const setPrimaryMeasure = (index: number, isPrimary: boolean) => {
+    if (isPrimary) {
+      // Update all measures to set only the selected one as primary
+      const updatedMeasures = form.values.measures.map((m, i) => ({
+        ...m,
+        isPrimary: i === index,
+      }));
+      form.setFieldValue("measures", updatedMeasures);
+    } else {
+      // If trying to uncheck the only primary, prevent it
+      const hasAnotherPrimary = form.values.measures.some(
+        (m, i) => m.isPrimary && i !== index,
+      );
+      if (!hasAnotherPrimary) {
+        // Don't allow unchecking if this is the only primary
+        return;
+      }
+      form.setFieldValue(`measures.${index}.isPrimary`, false);
     }
   };
 
@@ -181,39 +237,18 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
             mb="md"
           />
 
-          <Group grow mb="md">
-            <TextInput
-              required
-              label="SKU (Stock Keeping Unit)"
-              placeholder="Enter unique SKU"
-              {...form.getInputProps("sku")}
-              rightSection={
-                skuCheckLoading ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-solid border-blue-400 border-t-transparent"></div>
-                ) : skuUnique === true ? (
-                  <IconCheck size={18} className="text-green-500" />
-                ) : skuUnique === false ? (
-                  <IconX size={18} className="text-red-500" />
-                ) : null
-              }
-            />
-
-            <NumberInput
-              required
-              label="Default Price ($)"
-              placeholder="0.00"
-              min={0}
-              step={0.01}
-              decimalScale={2}
-              fixedDecimalScale
-              {...form.getInputProps("defaultPrice")}
-            />
-          </Group>
-
           <TextInput
-            label="Weight Price (e.g., $2.99/lb)"
-            placeholder="Enter weight-based pricing"
-            {...form.getInputProps("weightPrice")}
+            required
+            label="Global Trade Identification Number (GTIN)"
+            placeholder="Enter unique GTIN"
+            onChange={onChangeGtin}
+            rightSection={
+              gtinUnique === true ? (
+                <IconCheck size={18} className="text-green-500" />
+              ) : gtinUnique === false ? (
+                <IconX size={18} className="text-red-500" />
+              ) : null
+            }
             mb="md"
           />
 
@@ -225,6 +260,69 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
             mb="md"
           />
 
+          <Box mb="md">
+            <Text fw={500} mb="sm">
+              Product Measures
+            </Text>
+
+            {form.values.measures.map((measure, index) => (
+              <Group key={index} mb="xs" align="flex-end">
+                <NumberInput
+                  label="Amount"
+                  placeholder="Enter amount"
+                  required
+                  min={0.01}
+                  step={0.01}
+                  {...form.getInputProps(`measures.${index}.amount`)}
+                />
+
+                <Select
+                  label="Unit"
+                  placeholder="Select unit"
+                  required
+                  data={units.map((unit) => ({
+                    value: `${unit.id}`,
+                    label: unit.symbol,
+                  }))}
+                  {...form.getInputProps(`measures.${index}.unit`)}
+                />
+
+                <Box className="mb-2">
+                  <Checkbox
+                    label="Primary Measure"
+                    checked={measure.isPrimary}
+                    onChange={(event) =>
+                      setPrimaryMeasure(index, event.currentTarget.checked)
+                    }
+                  />
+                </Box>
+
+                {form.values.measures.length > 1 && (
+                  <Button
+                    color="red"
+                    variant="subtle"
+                    onClick={() => removeMeasure(index)}
+                    title="Remove measure"
+                  >
+                    <IconTrash size={16} />
+                  </Button>
+                )}
+              </Group>
+            ))}
+
+            {form.values.measures.length < 4 && (
+              <Button
+                variant="outline"
+                size="sm"
+                mt="xs"
+                leftSection={<IconPlus size={16} />}
+                onClick={addMeasure}
+              >
+                Add Another Measure
+              </Button>
+            )}
+          </Box>
+
           <FileInput
             label="Product Image"
             placeholder="Upload product image"
@@ -232,15 +330,16 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
             leftSection={<IconUpload size={16} />}
             {...form.getInputProps("image")}
             mb="md"
+            disabled
           />
 
-          <Switch
+          {/* <Switch
             label="Product is active and available"
             {...form.getInputProps("isActive", { type: "checkbox" })}
-          />
+          /> */}
         </Card>
 
-        <Card withBorder shadow="sm" padding="lg" radius="md" mb="lg">
+        {/* <Card withBorder shadow="sm" padding="lg" radius="md" mb="lg">
           <Text fw={500} size="lg" mb="md">
             Store-Specific Pricing
           </Text>
@@ -286,7 +385,7 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
               </Accordion.Item>
             ))}
           </Accordion>
-        </Card>
+        </Card> */}
 
         <Group justify="flex-end" mt="xl">
           <Button variant="outline" onClick={() => form.reset()}>
@@ -294,7 +393,7 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
           </Button>
           <Button
             type="submit"
-            disabled={loading || skuUnique === false}
+            disabled={loading || gtinUnique === false}
             color="green"
           >
             Add Product
@@ -302,10 +401,10 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
         </Group>
       </form>
 
-      {skuUnique === false && (
+      {gtinUnique === false && (
         <Alert icon={<IconAlertCircle size={16} />} color="red" mt="md">
-          The SKU you entered already exists in the system. Please use a unique
-          SKU.
+          The GTIN you entered already exists in the system. Please use a unique
+          GTIN.
         </Alert>
       )}
     </Box>

@@ -141,12 +141,12 @@ export default function ProductsPage() {
               <Tabs.Tab value="add" leftSection={<IconPlus size={16} />}>
                 Add Product
               </Tabs.Tab>
-              <Tabs.Tab value="bulk" leftSection={<IconUpload size={16} />}>
+              {/* <Tabs.Tab value="bulk" leftSection={<IconUpload size={16} />}>
                 Bulk Upload
               </Tabs.Tab>
               <Tabs.Tab value="list" leftSection={<IconList size={16} />}>
                 Product List
-              </Tabs.Tab>
+              </Tabs.Tab> */}
             </Tabs.List>
 
             <Tabs.Panel value="add" pt="md">

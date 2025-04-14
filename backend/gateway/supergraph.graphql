@@ -242,6 +242,21 @@ type Query @extraSchemaDefinitionDirective(
     operationSpecificHeaders: [["accept", "application/json"]]
     httpMethod: GET
   ) @join__field(graph: PRODUCTS) 
+  get_units: [Unit] @httpOperation(
+    subgraph: "Products"
+    path: "/api/v1/units"
+    operationSpecificHeaders: [["accept", "application/json"]]
+    httpMethod: GET
+  ) @join__field(graph: PRODUCTS) 
+  get_unit("""
+  id
+  """
+  id: Int!) : Unit @httpOperation(
+    subgraph: "Products"
+    path: "/api/v1/units/{args.id}"
+    operationSpecificHeaders: [["accept", "application/json"]]
+    httpMethod: GET
+  ) @join__field(graph: PRODUCTS) 
 }
 
 type Connection_UserResponse @join__type(graph: AUTH)  {

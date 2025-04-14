@@ -283,6 +283,8 @@ export type Query = {
   get_marketplaces?: Maybe<Array<Maybe<Marketplace>>>;
   get_product?: Maybe<ProductResponse>;
   get_products?: Maybe<Connection_ProductResponse>;
+  get_unit?: Maybe<Unit>;
+  get_units?: Maybe<Array<Maybe<Unit>>>;
   get_user?: Maybe<UserResponse>;
   get_users?: Maybe<Connection_UserResponse>;
   post_image?: Maybe<Scalars['Boolean']['output']>;
@@ -301,6 +303,11 @@ export type QueryGet_MarketplaceArgs = {
 
 export type QueryGet_ProductArgs = {
   gtin: Scalars['String']['input'];
+};
+
+
+export type QueryGet_UnitArgs = {
+  id: Scalars['Int']['input'];
 };
 
 
@@ -434,6 +441,30 @@ export type ProductsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type ProductsQuery = { __typename?: 'Query', get_products?: { __typename?: 'Connection_ProductResponse', edges: Array<{ __typename?: 'Node_ProductResponse', node: { __typename?: 'query_get_products_edges_items_node', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } } | null> } | null };
 
+export type ProductForm_ProductQueryVariables = Exact<{
+  gtin: Scalars['String']['input'];
+}>;
+
+
+export type ProductForm_ProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any } | null };
+
+export type ProductForm_UnitsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ProductForm_UnitsQuery = { __typename?: 'Query', get_units?: Array<{ __typename?: 'Unit', id: number, symbol: UnitSymbol } | null> | null };
+
+export type ProductForm_PostProductMutationVariables = Exact<{
+  measures: Array<InputMaybe<NewProductToMeasurePartial_Input>> | InputMaybe<NewProductToMeasurePartial_Input>;
+  productname: Scalars['String']['input'];
+  gtin: Scalars['mutationInput_post_products_input_items_allOf_0_gtin']['input'];
+}>;
+
+
+export type ProductForm_PostProductMutation = { __typename?: 'Mutation', post_products?: boolean | null };
+
 
 export const ProductDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Product"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"gtin"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"get_product"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"gtin"},"value":{"kind":"Variable","name":{"kind":"Name","value":"gtin"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"gtin"}},{"kind":"Field","name":{"kind":"Name","value":"productname"}},{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"image_url"}}]}}]}}]}}]} as unknown as DocumentNode<ProductQuery, ProductQueryVariables>;
 export const ProductsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Products"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"get_products"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"node"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"gtin"}},{"kind":"Field","name":{"kind":"Name","value":"productname"}},{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"image_url"}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<ProductsQuery, ProductsQueryVariables>;
+export const ProductForm_ProductDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProductForm_Product"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"gtin"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"get_product"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"gtin"},"value":{"kind":"Variable","name":{"kind":"Name","value":"gtin"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"gtin"}}]}}]}}]} as unknown as DocumentNode<ProductForm_ProductQuery, ProductForm_ProductQueryVariables>;
+export const ProductForm_UnitsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProductForm_Units"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"get_units"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"symbol"}}]}}]}}]} as unknown as DocumentNode<ProductForm_UnitsQuery, ProductForm_UnitsQueryVariables>;
+export const ProductForm_PostProductDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ProductForm_PostProduct"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"measures"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NamedType","name":{"kind":"Name","value":"NewProductToMeasurePartial_Input"}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"productname"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"gtin"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"mutationInput_post_products_input_items_allOf_0_gtin"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"post_products"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"gtin"},"value":{"kind":"Variable","name":{"kind":"Name","value":"gtin"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"productname"},"value":{"kind":"Variable","name":{"kind":"Name","value":"productname"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"measures"},"value":{"kind":"Variable","name":{"kind":"Name","value":"measures"}}}]}}]}]}}]} as unknown as DocumentNode<ProductForm_PostProductMutation, ProductForm_PostProductMutationVariables>;
