@@ -30,6 +30,7 @@
     "effect": "^3.13.2",
     "framer-motion": "^12.4.7",
     "jsonwebtoken": "^9.0.2",
+    "markdown-to-jsx": "^7.7.4",
     "next": "15.1.7",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",

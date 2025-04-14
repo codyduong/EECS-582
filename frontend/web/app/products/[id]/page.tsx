@@ -27,6 +27,8 @@ import {
   NumberInput,
   Select,
   Notification,
+  Skeleton,
+  LoadingOverlay,
 } from "@mantine/core";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -49,8 +51,8 @@ import { products } from "@/app/productsmock";
 import Link from "next/link";
 import { useQuery } from "@apollo/client";
 import { graphql } from "@/graphql";
-import { execute } from "@/graphql/execute";
 import PriceComparisonReport from "./price-comparison/page";
+import Markdown from "markdown-to-jsx";
 
 const ProductQuery = graphql(`
   query Product($gtin: String!) {
@@ -60,6 +62,7 @@ const ProductQuery = graphql(`
       images {
         image_url
       }
+      description
     }
   }
 `);
@@ -68,7 +71,7 @@ export default function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const { data } = useQuery(ProductQuery, {
+  const { data, loading } = useQuery(ProductQuery, {
     variables: {
       gtin: id,
     },
@@ -172,7 +175,7 @@ export default function ProductDetailPage() {
   //   (page + 1) * productsPerPage,
   // );
 
-  if (!product) {
+  if (!product && !loading) {
     return (
       <Container size="md" py="xl">
         <Text>Product not found</Text>
@@ -215,7 +218,8 @@ export default function ProductDetailPage() {
           </div>
         )}
         <Group mb="xl" className="flex items-center justify-between">
-          <Title order={1}>{product.productname}</Title>
+          {product && <Title order={1}>{product.productname}</Title>}
+          {loading && <Skeleton height={"44.2px"} width={"80%"} />}
           <Button
             leftSection={<IconReportMoney size={18} />}
             onClick={() => setReportModalOpen(true)}
@@ -225,7 +229,17 @@ export default function ProductDetailPage() {
           </Button>
         </Group>
         {/*creates a new tabs one to view products, the other to scan QR code*/}
-        <Tabs value={activeTab} onChange={setActiveTab} className="mb-8">
+        <Tabs
+          value={activeTab}
+          onChange={setActiveTab}
+          className="mb-8 relative"
+        >
+          <LoadingOverlay
+            visible={loading}
+            zIndex={1000}
+            // hack to make invisible spinner
+            loaderProps={{ color: "rgba(0,0,0,0)" }}
+          />
           <Tabs.List>
             <Tabs.Tab
               value="details"
@@ -266,13 +280,16 @@ export default function ProductDetailPage() {
                 }}
                 className="w-full max-w-md"
               >
-                <Image
-                  src={product.images[0]?.image_url || "/placeholder.svg"}
-                  alt={product.productname}
-                  width={400}
-                  height={400}
-                  className="w-full aspect-square object-contain rounded-md"
-                />
+                {product && (
+                  <Image
+                    src={product.images[0]?.image_url || "/placeholder.svg"}
+                    alt={product.productname}
+                    width={400}
+                    height={400}
+                    className="w-full aspect-square object-contain rounded-md"
+                  />
+                )}
+                {loading && <Skeleton width={400} height={400} />}
               </motion.div>
             </div>
 
@@ -289,34 +306,74 @@ export default function ProductDetailPage() {
                 }}
               >
                 <Accordion defaultValue="description">
-                  <Accordion.Item value="description">
-                    <Accordion.Control>Product Description</Accordion.Control>
-                    <Accordion.Panel>
-                      <Text>
-                        {product.productname} is a fresh produce item available
-                        at various grocery stores.
-                        {/* TODO: @codyduong use description This product is priced{" "}
-                        {product.admonition
-                          ? `by ${product.admonition.toLowerCase()}`
-                          : "individually"}
-                        . Compare prices across different stores to find the
-                        best deal. */}
-                      </Text>
-                    </Accordion.Panel>
-                  </Accordion.Item>
+                  {product && (
+                    <>
+                      <Accordion.Item value="description">
+                        <Accordion.Control>
+                          Product Description
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                          <Markdown>
+                            {product?.description ??
+                              `There is no product description available for ${product?.productname}`}
+                          </Markdown>
+                        </Accordion.Panel>
+                      </Accordion.Item>
 
-                  <Accordion.Item value="nutrition">
-                    <Accordion.Control>Nutrition Information</Accordion.Control>
-                    <Accordion.Panel>
-                      <Text>
-                        Nutrition information for {product.productname} varies
-                        by size and weight. Please check the product packaging
-                        for specific nutritional details. Generally, fresh
-                        produce is a healthy choice rich in vitamins and
-                        minerals.
-                      </Text>
-                    </Accordion.Panel>
-                  </Accordion.Item>
+                      <Accordion.Item value="nutrition">
+                        <Accordion.Control>
+                          Nutrition Information
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                          <Text>
+                            Nutrition information for {product?.productname}{" "}
+                            varies by size and weight. Please check the product
+                            packaging for specific nutritional details.
+                            Generally, fresh produce is a healthy choice rich in
+                            vitamins and minerals.
+                          </Text>
+                        </Accordion.Panel>
+                      </Accordion.Item>
+                    </>
+                  )}
+                  {loading && (
+                    <>
+                      <Accordion.Item value="description">
+                        <Accordion.Control>
+                          <Skeleton width="10em" height="16px" />
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                          <Skeleton
+                            width="100%"
+                            height="75px"
+                            className="mb-2"
+                          />
+                          <Skeleton
+                            width="100%"
+                            height="75px"
+                            className="mb-2"
+                          />
+                        </Accordion.Panel>
+                      </Accordion.Item>
+                      <Accordion.Item value="nutrition">
+                        <Accordion.Control>
+                          <Skeleton width="10em" height="16px" />
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                          <Skeleton
+                            width="100%"
+                            height="75px"
+                            className="mb-2"
+                          />
+                          <Skeleton
+                            width="100%"
+                            height="75px"
+                            className="mb-2"
+                          />
+                        </Accordion.Panel>
+                      </Accordion.Item>
+                    </>
+                  )}
                 </Accordion>
               </motion.div>
             </div>
@@ -391,7 +448,7 @@ export default function ProductDetailPage() {
 
         {activeTab === "price-comparison" && <PriceComparisonReport embedded />}
 
-        {activeTab === "qrcode" && (
+        {activeTab === "qrcode" && product && (
           /* QR Code tab content */
           <div className="mb-12">
             <QRCodeGenerator
@@ -496,7 +553,7 @@ export default function ProductDetailPage() {
       <Modal
         opened={reportModalOpen}
         onClose={() => setReportModalOpen(false)}
-        title={`Report Price for ${product.productname}`}
+        title={`Report Price for ${product?.productname}`}
         size="md"
       >
         <div className="space-y-4">

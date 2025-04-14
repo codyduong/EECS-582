@@ -156,6 +156,7 @@ export type NewMarketplace_Input = {
 };
 
 export type NewProductPost_Input = {
+  description?: InputMaybe<Scalars['String']['input']>;
   gtin: Scalars['mutationInput_post_products_input_items_allOf_0_gtin']['input'];
   images?: InputMaybe<Array<InputMaybe<MutationInput_Post_Products_Input_Items_AllOf_1_Images_Input>>>;
   measures: Array<InputMaybe<NewProductToMeasurePartial_Input>>;
@@ -243,6 +244,7 @@ export enum PermissionName {
 export type ProductResponse = {
   __typename?: 'ProductResponse';
   created_at: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
   gtin: Scalars['query_get_products_edges_items_node_allOf_0_gtin']['output'];
   images: Array<Maybe<ProductToImage>>;
   measures: Array<Maybe<ProductToMeasureResponse>>;
@@ -406,6 +408,7 @@ export type MutationInput_Post_Products_Input_Items_AllOf_1_Images_Input = {
 export type Query_Get_Products_Edges_Items_Node = {
   __typename?: 'query_get_products_edges_items_node';
   created_at: Scalars['DateTime']['output'];
+  description?: Maybe<Scalars['String']['output']>;
   gtin: Scalars['query_get_products_edges_items_node_allOf_0_gtin']['output'];
   images: Array<Maybe<ProductToImage>>;
   measures: Array<Maybe<ProductToMeasureResponse>>;
@@ -432,7 +435,7 @@ export type ProductQueryVariables = Exact<{
 }>;
 
 
-export type ProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } | null };
+export type ProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any, productname: string, description?: string | null, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } | null };
 
 export type PriceComparison_GetProductQueryVariables = Exact<{
   gtin: Scalars['String']['input'];

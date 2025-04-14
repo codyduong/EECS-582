@@ -117,6 +117,7 @@ input NewMarketplace_Input @join__type(graph: PRODUCTS) {
 }
 
 input NewProductPost_Input @join__type(graph: PRODUCTS) {
+  description: String
   gtin: mutationInput_post_products_input_items_allOf_0_gtin!
   images: [mutationInput_post_products_input_items_allOf_1_images_Input]
   measures: [NewProductToMeasurePartial_Input]!
@@ -201,6 +202,7 @@ enum PermissionName @join__type(graph: AUTH) {
 
 type ProductResponse @join__type(graph: PRODUCTS) {
   created_at: DateTime!
+  description: String
   gtin: query_get_products_edges_items_node_allOf_0_gtin!
   images: [ProductToImage]!
   measures: [ProductToMeasureResponse]!
@@ -362,6 +364,7 @@ scalar query_get_image_oneOf_1_gtin @length(subgraph: "Products", min: 8, max: 1
 
 type query_get_products_edges_items_node @join__type(graph: PRODUCTS) {
   created_at: DateTime!
+  description: String
   gtin: query_get_products_edges_items_node_allOf_0_gtin!
   images: [ProductToImage]!
   measures: [ProductToMeasureResponse]!

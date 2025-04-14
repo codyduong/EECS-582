@@ -14,7 +14,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-    "\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n": typeof types.ProductDocument,
+    "\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n      description\n    }\n  }\n": typeof types.ProductDocument,
     "\n  query PriceComparison_GetProduct($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n": typeof types.PriceComparison_GetProductDocument,
     "\n  query Products {\n    get_products {\n      edges {\n        node {\n          gtin\n          productname\n          images {\n            image_url\n          }\n        }\n      }\n    }\n  }\n": typeof types.ProductsDocument,
     "\n  query ProductForm_Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n    }\n  }\n": typeof types.ProductForm_ProductDocument,
@@ -22,7 +22,7 @@ type Documents = {
     "\n  mutation ProductForm_PostProduct(\n    $measures: [NewProductToMeasurePartial_Input]!\n    $productname: String!\n    $gtin: mutationInput_post_products_input_items_allOf_0_gtin!\n  ) {\n    post_products(\n      input: { gtin: $gtin, productname: $productname, measures: $measures }\n    )\n  }\n": typeof types.ProductForm_PostProductDocument,
 };
 const documents: Documents = {
-    "\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n": types.ProductDocument,
+    "\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n      description\n    }\n  }\n": types.ProductDocument,
     "\n  query PriceComparison_GetProduct($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n": types.PriceComparison_GetProductDocument,
     "\n  query Products {\n    get_products {\n      edges {\n        node {\n          gtin\n          productname\n          images {\n            image_url\n          }\n        }\n      }\n    }\n  }\n": types.ProductsDocument,
     "\n  query ProductForm_Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n    }\n  }\n": types.ProductForm_ProductDocument,
@@ -47,7 +47,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n"): (typeof documents)["\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n      description\n    }\n  }\n"): (typeof documents)["\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n      description\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

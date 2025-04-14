@@ -21,6 +21,7 @@
         "effect": "^3.13.2",
         "framer-motion": "^12.4.7",
         "jsonwebtoken": "^9.0.2",
+        "markdown-to-jsx": "^7.7.4",
         "next": "15.1.7",
         "qrcode.react": "^4.2.0",
         "react": "^19.0.0",
@@ -1337,6 +1338,8 @@
     "makeerror": ["makeerror@1.0.12", "", { "dependencies": { "tmpl": "1.0.5" } }, "sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg=="],
 
     "map-cache": ["map-cache@0.2.2", "", {}, "sha512-8y/eV9QQZCiyn1SprXSrCmqJN0yNRATe+PO8ztwqrvrbdRLA3eYJF0yaR0YayLWkMbsQSKWS9N2gPcGEc4UsZg=="],
+
+    "markdown-to-jsx": ["markdown-to-jsx@7.7.4", "", { "peerDependencies": { "react": ">= 0.14.0" } }, "sha512-1bSfXyBKi+EYS3YY+e0Csuxf8oZ3decdfhOav/Z7Wrk89tjudyL5FOmwZQUoy0/qVXGUl+6Q3s2SWtpDEWITfQ=="],
 
     "math-intrinsics": ["math-intrinsics@1.1.0", "", {}, "sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g=="],
 

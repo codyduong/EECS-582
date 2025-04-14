@@ -35,6 +35,7 @@ pub struct Product {
   pub sku: Option<String>,
   pub productname: String,
   pub sellsinraw: bool,
+  pub description: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, ToSchema, Clone)]
@@ -52,6 +53,7 @@ pub struct NewProduct {
   pub gtin: String,
   pub sku: Option<String>,
   pub productname: String,
+  pub description: Option<String>,
 }
 
 #[derive(Deserialize, ToSchema, Clone)]

@@ -43,6 +43,23 @@ pub(super) fn run(pool: crate::Pool) {
           gtin: "009800124015".to_string(),
           sku: Some("10311201".to_string()),
           productname: "Ferrero Rocher, 24 Count, Premium Milk Chocolate Hazelnut, 10.6oz".to_string(),
+          description: Some(
+            "\
+<li>GOURMET CHOCOLATE GIFT BOX: Share the indulgent taste of Ferrero Rocher with this 24-countbox \
+of individually wrapped chocolates for gifting</li> \
+<li>MILK CHOCOLATE HAZELNUT: A tempting combination made with a whole crunchy hazelnut dipped in \
+delicious creamy  chocolate hazelnut filling and covered with milk chocolate, crispy wafers and \
+gently roasted hazelnut pieces</li> \
+<li>CELEBRATE THE MOMENT: Share special moments with your family and friends, or take a moment \
+just for you. Ferrero chocolates make indulgent treats that are great for unwinding after a long \
+day</li> \
+<li>PREMIUM CHOCOLATE: Expertly crafted from premium gourmet chocolate, these timeless classics \
+deliver decadent taste one exquisite bite at a time</li> \
+<li>ELEGANT HAZELNUT DELIGHT: Experience the iconic taste of FERRERO ROCHER with creamy milk \
+chocolate, a crisp wafer shell, and a whole hazelnut</li>
+"
+            .to_string(),
+          ),
         },
         measures: vec![
           NewProductToMeasurePartial {
@@ -73,6 +90,7 @@ pub(super) fn run(pool: crate::Pool) {
           gtin: "044700361146".to_string(),
           sku: Some("13908431".to_string()),
           productname: "Lunchables Extra Cheese Pizza Kids Lunch Meal Kit, 10.6 oz Box".to_string(),
+          description: None,
         },
         measures: NewProductToMeasurePartial {
           unit: UnitSymbol::Ounce,
@@ -100,6 +118,7 @@ pub(super) fn run(pool: crate::Pool) {
           sku: Some("5512318310".to_string()),
           productname: "Tropicana Pure Premium 100% Orange Juice Original, No Pulp, No Sugar Added, 46 fl oz"
             .to_string(),
+          description: None,
         },
         measures: NewProductToMeasurePartial {
           unit: UnitSymbol::FluidOunce,
@@ -121,6 +140,7 @@ pub(super) fn run(pool: crate::Pool) {
           gtin: "078742046105".to_string(),
           sku: Some("34788345".to_string()),
           productname: "Great Value Light Greek Yogurt, Blueberry Nonfat Yogurt, 5.3 oz, 4 Count".to_string(),
+          description: None,
         },
         measures: vec![
           NewProductToMeasurePartial {
