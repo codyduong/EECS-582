@@ -16,7 +16,7 @@
  * - 2025-04-13 - @codyduong - improve gql linkage
  */
 
-import { ChangeEventHandler, useEffect, useState } from "react";
+import { ChangeEventHandler, useState } from "react";
 import {
   TextInput,
   NumberInput,
@@ -44,7 +44,6 @@ import {
   IconTrash,
   IconPlus,
 } from "@tabler/icons-react";
-import { Effect } from "effect";
 import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { graphql } from "@/graphql";
 import { UnitSymbol } from "@/graphql/graphql";
@@ -85,8 +84,8 @@ interface ProductFormValues {
   image: File | null;
   isActive: boolean;
   measures: {
-    amount: number | null;
-    unit: UnitSymbol[keyof UnitSymbol];
+    amount: number;
+    unit: UnitSymbol;
     isPrimary: boolean;
   }[];
 }
@@ -98,7 +97,7 @@ interface ProductFormProps {
 export default function ProductForm({ onSuccess }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const { data: unitsData } = useQuery(QUERY_UNIT, {});
-  const [productMutation, { loading: productUploading }] =
+  const [productMutation, { loading: _productUploading }] =
     useMutation(MUTATION_PRODUCT);
   const [getGtin, { data: searchedData, loading: _gettingGtin }] =
     useLazyQuery(QUERY_PRODUCT);
@@ -117,7 +116,7 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
       measures: [
         {
           amount: undefined!,
-          unit: units.length > 0 ? units[0].id : "",
+          unit: undefined!,
           isPrimary: true,
         },
       ],
@@ -145,11 +144,23 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
     setLoading(true);
 
     try {
-      // This would be an API call in a real application
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const result = await productMutation({
+        variables: {
+          productname: values.name,
+          gtin: values.gtin,
+          measures: values.measures.map((measure) => ({
+            amount: measure.amount,
+            is_converted: false,
+            is_primary_measure: measure.isPrimary,
+            raw_amount: null,
+            unit: measure.unit,
+          })),
+        },
+      });
 
-      // Simulate successful product creation
-      console.log("Product created:", values);
+      if (!result.data?.post_products) {
+        throw false;
+      }
 
       notifications.show({
         title: "Product added",
@@ -177,7 +188,7 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
     if (form.values.measures.length < 4) {
       form.insertListItem("measures", {
         amount: undefined,
-        unit: units.length > 0 ? units[0].id : "",
+        unit: undefined!,
         isPrimary: false,
       });
     }
@@ -281,7 +292,7 @@ export default function ProductForm({ onSuccess }: ProductFormProps) {
                   placeholder="Select unit"
                   required
                   data={units.map((unit) => ({
-                    value: `${unit.id}`,
+                    value: unit.symbol,
                     label: unit.symbol,
                   }))}
                   {...form.getInputProps(`measures.${index}.unit`)}

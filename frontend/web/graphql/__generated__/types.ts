@@ -176,7 +176,7 @@ export type NewProductToMeasurePartial_Input = {
   amount: Scalars['Float']['input'];
   is_converted?: InputMaybe<Scalars['Boolean']['input']>;
   is_primary_measure: Scalars['Boolean']['input'];
-  raw_amount: Scalars['Float']['input'];
+  raw_amount?: InputMaybe<Scalars['Float']['input']>;
   unit: UnitSymbol;
 };
 

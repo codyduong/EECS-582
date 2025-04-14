@@ -19,8 +19,8 @@ import { Tabs, Title, Container, Paper, Text, Alert } from "@mantine/core";
 import {
   IconInfoCircle,
   IconPlus,
-  IconUpload,
-  IconList,
+  // IconUpload,
+  // IconList,
 } from "@tabler/icons-react";
 import ProtectedPage from "@/components/ProtectedPage";
 import { PermissionValidator } from "@/lib/permissions";

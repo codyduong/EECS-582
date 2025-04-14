@@ -137,7 +137,7 @@ input NewProductToMeasurePartial_Input @join__type(graph: PRODUCTS) {
   amount: Float!
   is_converted: Boolean
   is_primary_measure: Boolean!
-  raw_amount: Float!
+  raw_amount: Float
   unit: UnitSymbol!
 }
 

@@ -66,7 +66,7 @@ pub struct NewProductToMeasurePartial {
   pub amount: bigdecimal::BigDecimal,
   pub is_primary_measure: bool,
   pub is_converted: Option<bool>,
-  #[schema(value_type = f64)]
+  #[schema(value_type = Option<f64>)]
   pub raw_amount: Option<bigdecimal::BigDecimal>,
   pub unit: super::UnitSymbol,
 }
