@@ -5,7 +5,7 @@ use actix_web::get;
 use actix_web::web;
 use actix_web::web::ServiceConfig;
 use actix_web::HttpResponse;
-use actix_web_httpauth::extractors::bearer::BearerAuth;
+// use actix_web_httpauth::extractors::bearer::BearerAuth;
 use auth::errors::ServiceError;
 use diesel::QueryDsl;
 use diesel::RunQueryDsl;
