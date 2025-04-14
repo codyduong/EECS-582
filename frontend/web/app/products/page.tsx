@@ -29,8 +29,8 @@ import { ProductCard } from "@/components/ProductCard";
 import {
   IconSearch,
   IconPlus,
-  IconUpload,
-  IconList,
+  // IconUpload,
+  // IconList,
   IconAdjustmentsHorizontal,
 } from "@tabler/icons-react";
 import { useUser } from "@/contexts/UserContext";

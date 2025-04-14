@@ -26,7 +26,6 @@ import {
   MantineProvider,
   mantineHtmlProps,
   Button,
-  Notification,
 } from "@mantine/core";
 import { UserButton } from "@/components/UserButton";
 import { IconBasket } from "@tabler/icons-react";
