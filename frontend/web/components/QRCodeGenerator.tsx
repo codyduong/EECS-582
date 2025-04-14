@@ -1,17 +1,25 @@
-"use client"
+"use client";
 /*
-* Author: @Tyler51235
-* This component generates QR codes for price reports with price comparisons and specific stores
-* 
-* Date Created: 3/11/25
-* Revison history:
-* - @Tyler51235: Created QR generator
-* 
-* 
-*/
+ * Author: @Tyler51235
+ * This component generates QR codes for price reports with price comparisons and specific stores
+ *
+ * Date Created: 3/11/25
+ * Revison history:
+ * - @Tyler51235: Created QR generator
+ *
+ *
+ */
 import { useState } from "react";
-import { QRCodeSVG } from "qrcode.react"
-import { Button, Card, Text, Group, Select, ActionIcon, Tooltip } from "@mantine/core";
+import { QRCodeSVG } from "qrcode.react";
+import {
+  Button,
+  Card,
+  Text,
+  Group,
+  Select,
+  ActionIcon,
+  Tooltip,
+} from "@mantine/core";
 import { IconDownload, IconShare, IconCopy } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 
@@ -21,34 +29,38 @@ interface QRCodeGeneratorProps {
   baseUrl?: string;
 }
 
-export function QRCodeGenerator({ 
-    productId,
-    productName, 
-    baseUrl = "localhost:3000" }:
-    QRCodeGeneratorProps) {
+export function QRCodeGenerator({
+  productId,
+  productName,
+  baseUrl = "localhost:3000",
+}: QRCodeGeneratorProps) {
   const [qrType, setQrType] = useState<string>("product");
   const [storeFilter, setStoreFilter] = useState<string | null>(null);
 
   // Generate the URL based on the QR type and filters
   const generateQrUrl = () => {
-    let url = `${baseUrl}/products/${productId}`
+    let url = `${baseUrl}/products/${productId}`;
 
     if (qrType === "price-comparison") {
       url += "/price-comparison";
     } else if (qrType === "store-specific" && storeFilter) {
       url += `/store/${storeFilter}`;
-    } 
+    }
 
     return url;
-  }
+  };
 
   const qrUrl = generateQrUrl();
 
   // Download QR code as PNG
   const downloadQrCode = () => {
-    const canvas = document.getElementById("qr-code-canvas") as HTMLCanvasElement;
+    const canvas = document.getElementById(
+      "qr-code-canvas",
+    ) as HTMLCanvasElement;
     if (canvas) {
-      const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+      const pngUrl = canvas
+        .toDataURL("image/png")
+        .replace("image/png", "image/octet-stream");
 
       const downloadLink = document.createElement("a");
       downloadLink.href = pngUrl;
@@ -61,9 +73,9 @@ export function QRCodeGenerator({
         title: "QR Code Downloaded",
         message: "The QR code has been downloaded successfully",
         color: "green",
-      })
+      });
     }
-  }
+  };
 
   // Copy QR code URL to clipboard
   const copyQrUrl = () => {
@@ -72,8 +84,8 @@ export function QRCodeGenerator({
       title: "URL Copied",
       message: "The QR code URL has been copied to clipboard",
       color: "blue",
-    })
-  }
+    });
+  };
 
   // Share QR code (if Web Share API is available)
   const shareQrCode = async () => {
@@ -83,22 +95,28 @@ export function QRCodeGenerator({
           title: `${productName} Price Report`,
           text: `Check out the price report for ${productName}`,
           url: qrUrl,
-        })
+        });
         notifications.show({
           title: "Shared Successfully",
           message: "The QR code has been shared",
           color: "green",
-        })
+        });
       } catch (error) {
-        console.error("Error sharing:", error)
+        console.error("Error sharing:", error);
       }
     } else {
-      copyQrUrl()
+      copyQrUrl();
     }
-  }
+  };
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder className="max-w-md mx-auto">
+    <Card
+      shadow="sm"
+      padding="lg"
+      radius="md"
+      withBorder
+      className="max-w-md mx-auto"
+    >
       <Text fw={500} size="lg" className="mb-4">
         Price Report QR Code
       </Text>
@@ -180,10 +198,15 @@ export function QRCodeGenerator({
         </Tooltip>
       </Group>
 
-      <Button fullWidth variant="light" color="blue" className="mt-4" onClick={downloadQrCode}>
+      <Button
+        fullWidth
+        variant="light"
+        color="blue"
+        className="mt-4"
+        onClick={downloadQrCode}
+      >
         Download QR Code
       </Button>
     </Card>
-  )
+  );
 }
-

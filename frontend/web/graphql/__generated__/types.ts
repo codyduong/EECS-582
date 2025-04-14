@@ -434,6 +434,13 @@ export type ProductQueryVariables = Exact<{
 
 export type ProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } | null };
 
+export type PriceComparison_GetProductQueryVariables = Exact<{
+  gtin: Scalars['String']['input'];
+}>;
+
+
+export type PriceComparison_GetProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } | null };
+
 export type ProductsQueryVariables = Exact<{ [key: string]: never; }>;
 
 

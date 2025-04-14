@@ -35,30 +35,62 @@ import {
   Paper,
   Button,
 } from "@mantine/core";
-import { IconArrowBack, IconShoppingCart, IconShare } from "@tabler/icons-react";
+import {
+  IconArrowBack,
+  IconShoppingCart,
+  IconShare,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { notifications } from "@mantine/notifications";
+import { useQuery } from "@apollo/client";
+import { graphql } from "@/graphql";
 
-export default function PriceComparisonReport() {
+const PRODUCT_QUERY = graphql(`
+  query PriceComparison_GetProduct($gtin: String!) {
+    get_product(gtin: $gtin) {
+      gtin
+      productname
+      images {
+        image_url
+      }
+    }
+  }
+`);
+
+interface PriceComparisonProps {
+  embedded?: boolean;
+}
+
+export default function PriceComparisonReport(
+  props: PriceComparisonProps,
+): React.JSX.Element {
+  const { embedded = false } = props;
+
   const params = useParams();
   const id = params.id as string;
-  
-  // Find the current product
-  const product = products.find((p) => p.id === id);
-  
+
+  const { data } = useQuery(PRODUCT_QUERY, { variables: { gtin: id } });
+
+  const product = data?.get_product;
+
+  const oldProduct = products[0];
+
   // Get product-specific price history data
   const [priceHistory] = useState(() => getPriceHistory(id));
-  
+
   // Calculate savings compared to highest price
   const calculateSavings = () => {
-    if (!product || !product.otherPrices) return { amount: 0, percentage: 0, bestStore: "" };
-    
+    // return { amount: 0, percentage: 0, bestStore: "" };
+
+    if (!oldProduct || !oldProduct.otherPrices)
+      return { amount: 0, percentage: 0, bestStore: "" };
+
     let highestPrice = 0;
     let lowestPrice = Infinity;
     let bestStore = "";
-    
-    Object.entries(product.otherPrices).forEach(([store, details]) => {
+
+    Object.entries(oldProduct.otherPrices).forEach(([store, details]) => {
       if (details.price) {
         if (details.price > highestPrice) {
           highestPrice = details.price;
@@ -69,27 +101,31 @@ export default function PriceComparisonReport() {
         }
       }
     });
-    
+
     const savingsAmount = highestPrice - lowestPrice;
     const savingsPercentage = (savingsAmount / highestPrice) * 100;
-    
+
     return {
       amount: savingsAmount,
       percentage: savingsPercentage,
       bestStore,
     };
   };
-  
+
   const savings = calculateSavings();
-  
+
   // Share price report
   const shareReport = async () => {
+    const fixedUrl = embedded
+      ? `${window.location.href}/price-comparison`
+      : window.location.href;
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Price Comparison for ${product?.name}`,
-          text: `Check out the best prices for ${product?.name}`,
-          url: window.location.href,
+          title: `Price Comparison for ${product?.productname}`,
+          text: `Check out the best prices for ${product?.productname}`,
+          url: fixedUrl,
         });
         notifications.show({
           title: "Shared Successfully",
@@ -101,7 +137,7 @@ export default function PriceComparisonReport() {
       }
     } else {
       // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(fixedUrl);
       notifications.show({
         title: "Link Copied",
         message: "The price report link has been copied to clipboard",
@@ -109,7 +145,7 @@ export default function PriceComparisonReport() {
       });
     }
   };
-  
+
   if (!product) {
     return (
       <Container size="md" py="xl">
@@ -132,23 +168,32 @@ export default function PriceComparisonReport() {
     >
       <Container size="md" py="xl">
         {/* Header with back button */}
-        <Group mb="md">
-          <Link href={`/products/${id}`}>
-            <Button variant="subtle" leftSection={<IconArrowBack size={16} />}>
-              Back to Product
+        {!embedded && (
+          <Group mb="md">
+            <Link href={`/products/${id}`}>
+              <Button
+                variant="subtle"
+                leftSection={<IconArrowBack size={16} />}
+              >
+                Back to Product
+              </Button>
+            </Link>
+            <Button
+              variant="subtle"
+              leftSection={<IconShare size={16} />}
+              onClick={shareReport}
+            >
+              Share Report
             </Button>
-          </Link>
-          <Button variant="subtle" leftSection={<IconShare size={16} />} onClick={shareReport}>
-            Share Report
-          </Button>
-        </Group>
+          </Group>
+        )}
 
         {/* Title section */}
         <Title order={1} mb="sm">
           Price Comparison Report
         </Title>
         <Text size="lg" mb="xl" c="dimmed">
-          {product.name}
+          {product.productname}
         </Text>
 
         {/* Savings highlight card */}
@@ -159,13 +204,13 @@ export default function PriceComparisonReport() {
               Best Deal
             </Badge>
           </Group>
-          
+
           <Group>
             <RingProgress
               size={120}
               thickness={12}
               roundCaps
-              sections={[{ value: savings.percentage, color: 'green' }]}
+              sections={[{ value: savings.percentage, color: "green" }]}
               label={
                 <Center>
                   <Text fw={700} ta="center" size="xl">
@@ -174,11 +219,17 @@ export default function PriceComparisonReport() {
                 </Center>
               }
             />
-            
+
             <Stack gap="xs">
               <Text>
-                Save up to <Text span fw={700} c="green">${savings.amount.toFixed(2)}</Text> by shopping at{" "}
-                <Text span fw={700}>{savings.bestStore}</Text>
+                Save up to{" "}
+                <Text span fw={700} c="green">
+                  ${savings.amount.toFixed(2)}
+                </Text>{" "}
+                by shopping at{" "}
+                <Text span fw={700}>
+                  {savings.bestStore}
+                </Text>
               </Text>
               <Text size="sm" c="dimmed">
                 Compared to the highest price available
@@ -202,42 +253,52 @@ export default function PriceComparisonReport() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {product.otherPrices && Object.entries(product.otherPrices).map(([store, details]) => {
-                if (!details.price) return null;
-                
-                const isBestPrice = store === savings.bestStore;
-                const savingsAmount = product.otherPrices ? 
-                  Math.max(...Object.values(product.otherPrices)
-                    .map(d => d.price || 0)) - details.price : 0;
-                
-                return (
-                  <Table.Tr key={store}>
-                    <Table.Td>
-                      <Group gap="xs">
-                        {store}
-                        {isBestPrice && (
-                          <Badge color="green" size="xs">
-                            Best
-                          </Badge>
-                        )}
-                      </Group>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text fw={isBestPrice ? 700 : 400} c={isBestPrice ? "green" : "inherit"}>
-                        ${details.price.toFixed(2)}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>{details.weightPrice || "N/A"}</Table.Td>
-                    <Table.Td>
-                      {savingsAmount > 0 ? (
-                        <Text c="green">${savingsAmount.toFixed(2)}</Text>
-                      ) : (
-                        <Text c="dimmed">-</Text>
-                      )}
-                    </Table.Td>
-                  </Table.Tr>
-                );
-              })}
+              {oldProduct.otherPrices &&
+                Object.entries(oldProduct.otherPrices).map(
+                  ([store, details]) => {
+                    if (!details.price) return null;
+
+                    const isBestPrice = store === savings.bestStore;
+                    const savingsAmount = oldProduct.otherPrices
+                      ? Math.max(
+                          ...Object.values(oldProduct.otherPrices).map(
+                            (d) => d.price || 0,
+                          ),
+                        ) - details.price
+                      : 0;
+
+                    return (
+                      <Table.Tr key={store}>
+                        <Table.Td>
+                          <Group gap="xs">
+                            {store}
+                            {isBestPrice && (
+                              <Badge color="green" size="xs">
+                                Best
+                              </Badge>
+                            )}
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text
+                            fw={isBestPrice ? 700 : 400}
+                            c={isBestPrice ? "green" : "inherit"}
+                          >
+                            ${details.price.toFixed(2)}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>{details.weightPrice || "N/A"}</Table.Td>
+                        <Table.Td>
+                          {savingsAmount > 0 ? (
+                            <Text c="green">${savingsAmount.toFixed(2)}</Text>
+                          ) : (
+                            <Text c="dimmed">-</Text>
+                          )}
+                        </Table.Td>
+                      </Table.Tr>
+                    );
+                  },
+                )}
             </Table.Tbody>
           </Table>
         </Paper>
@@ -278,20 +339,38 @@ export default function PriceComparisonReport() {
             Price Trend Analysis
           </Text>
           <Text mb="md">
-            {product.name} prices have {priceHistory[0].dillons > priceHistory[priceHistory.length - 1].dillons ? "decreased" : "increased"} by {Math.abs((priceHistory[0].dillons - priceHistory[priceHistory.length - 1].dillons) / priceHistory[0].dillons * 100).toFixed(1)}% at Dillons over the past week.
+            {product.productname} prices have{" "}
+            {priceHistory[0].dillons >
+            priceHistory[priceHistory.length - 1].dillons
+              ? "decreased"
+              : "increased"}{" "}
+            by{" "}
+            {Math.abs(
+              ((priceHistory[0].dillons -
+                priceHistory[priceHistory.length - 1].dillons) /
+                priceHistory[0].dillons) *
+                100,
+            ).toFixed(1)}
+            % at Dillons over the past week.
           </Text>
           <Text mb="md">
-            {savings.bestStore} consistently offers the best price for this product.
+            {savings.bestStore} consistently offers the best price for this
+            product.
           </Text>
           <Divider my="md" />
           <Text fw={500} mb="md">
             Shopping Recommendations
           </Text>
           <Text>
-            For the best deal on {product.name}, we recommend purchasing at {savings.bestStore} for ${
-              savings.bestStore && product.otherPrices && 
-              Object.entries(product.otherPrices).find(([store]) => store === savings.bestStore)?.[1]?.price?.toFixed(2) || "N/A"
-            }.
+            For the best deal on {oldProduct.name}, we recommend purchasing at{" "}
+            {savings.bestStore} for $
+            {(savings.bestStore &&
+              oldProduct.otherPrices &&
+              Object.entries(oldProduct.otherPrices)
+                .find(([store]) => store === savings.bestStore)?.[1]
+                ?.price?.toFixed(2)) ||
+              "N/A"}
+            .
           </Text>
         </Card>
 
@@ -300,7 +379,11 @@ export default function PriceComparisonReport() {
           <Button leftSection={<IconShoppingCart size={16} />} color="blue">
             Add to Shopping List
           </Button>
-          <Button variant="outline" leftSection={<IconShare size={16} />} onClick={shareReport}>
+          <Button
+            variant="outline"
+            leftSection={<IconShare size={16} />}
+            onClick={shareReport}
+          >
             Share This Report
           </Button>
         </Group>

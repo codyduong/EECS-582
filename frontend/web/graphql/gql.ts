@@ -15,6 +15,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 type Documents = {
     "\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n": typeof types.ProductDocument,
+    "\n  query PriceComparison_GetProduct($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n": typeof types.PriceComparison_GetProductDocument,
     "\n  query Products {\n    get_products {\n      edges {\n        node {\n          gtin\n          productname\n          images {\n            image_url\n          }\n        }\n      }\n    }\n  }\n": typeof types.ProductsDocument,
     "\n  query ProductForm_Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n    }\n  }\n": typeof types.ProductForm_ProductDocument,
     "\n  query ProductForm_Units {\n    get_units {\n      id\n      symbol\n    }\n  }\n": typeof types.ProductForm_UnitsDocument,
@@ -22,6 +23,7 @@ type Documents = {
 };
 const documents: Documents = {
     "\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n": types.ProductDocument,
+    "\n  query PriceComparison_GetProduct($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n": types.PriceComparison_GetProductDocument,
     "\n  query Products {\n    get_products {\n      edges {\n        node {\n          gtin\n          productname\n          images {\n            image_url\n          }\n        }\n      }\n    }\n  }\n": types.ProductsDocument,
     "\n  query ProductForm_Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n    }\n  }\n": types.ProductForm_ProductDocument,
     "\n  query ProductForm_Units {\n    get_units {\n      id\n      symbol\n    }\n  }\n": types.ProductForm_UnitsDocument,
@@ -46,6 +48,10 @@ export function graphql(source: string): unknown;
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n"): (typeof documents)["\n  query Product($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query PriceComparison_GetProduct($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n"): (typeof documents)["\n  query PriceComparison_GetProduct($gtin: String!) {\n    get_product(gtin: $gtin) {\n      gtin\n      productname\n      images {\n        image_url\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

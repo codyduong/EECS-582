@@ -50,6 +50,7 @@ import Link from "next/link";
 import { useQuery } from "@apollo/client";
 import { graphql } from "@/graphql";
 import { execute } from "@/graphql/execute";
+import PriceComparisonReport from "./price-comparison/page";
 
 const ProductQuery = graphql(`
   query Product($gtin: String!) {
@@ -213,7 +214,6 @@ export default function ProductDetailPage() {
             </Notification>
           </div>
         )}
-
         <Group mb="xl" className="flex items-center justify-between">
           <Title order={1}>{product.productname}</Title>
           <Button
@@ -224,7 +224,6 @@ export default function ProductDetailPage() {
             Report Price
           </Button>
         </Group>
-
         {/*creates a new tabs one to view products, the other to scan QR code*/}
         <Tabs value={activeTab} onChange={setActiveTab} className="mb-8">
           <Tabs.List>
@@ -234,13 +233,18 @@ export default function ProductDetailPage() {
             >
               Product Details
             </Tabs.Tab>
-            <Tabs.Tab value="qrcode" leftSection={<IconQrcode size="0.8rem" />}>
+            <Tabs.Tab
+              value="price-comparison"
+              leftSection={<IconQrcode size="0.8rem" />}
+            >
               Price Comparison
+            </Tabs.Tab>
+            <Tabs.Tab value="qrcode" leftSection={<IconQrcode size="0.8rem" />}>
+              QR Code
             </Tabs.Tab>
           </Tabs.List>
         </Tabs>
-
-        {activeTab === "details" ? (
+        {activeTab === "details" && (
           /* Main product section - 3 column layout on large screens */
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
             {/* Left column - Product image */}
@@ -383,7 +387,11 @@ export default function ProductDetailPage() {
               </motion.div>
             </div>
           </div>
-        ) : (
+        )}
+
+        {activeTab === "price-comparison" && <PriceComparisonReport embedded />}
+
+        {activeTab === "qrcode" && (
           /* QR Code tab content */
           <div className="mb-12">
             <QRCodeGenerator
