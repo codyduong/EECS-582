@@ -46,7 +46,11 @@ pub(crate) async fn get_company(
   let result = web::block(move || {
     let mut conn = pool.get()?;
 
-    Ok::<CompanyResponse, anyhow::Error>(companies::table.find(id.into_inner()).get_result::<CompanyResponse>(&mut conn)?)
+    Ok::<CompanyResponse, anyhow::Error>(
+      companies::table
+        .find(id.into_inner())
+        .get_result::<CompanyResponse>(&mut conn)?,
+    )
   })
   .await;
 

@@ -21,7 +21,7 @@
 pub mod companies;
 pub mod marketplaces;
 pub mod price_reports;
-pub mod products_to_images;
 pub mod products;
+pub mod products_to_images;
 pub mod shopping_lists;
 pub mod units;
