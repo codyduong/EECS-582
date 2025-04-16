@@ -1,0 +1,47 @@
+# Author: @codyduong
+# Purpose: platform agnostic build or development startup
+# Creation Date: 2025-04-12
+# Revisions: N/A
+
+# Stage 1: Build the application
+FROM oven/bun:1.1-alpine AS builder
+
+WORKDIR /app
+
+# Copy files needed for installation
+COPY package.json bun.lockb ./
+COPY . .
+
+# Install dependencies and build
+RUN bun install --frozen-lockfile
+RUN bun run build
+
+# Stage 2: Production image
+FROM oven/bun:1.1-alpine AS production
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Copy only production necessary files
+COPY --from=builder /app/package.json /app/bun.lockb ./
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules ./node_modules
+
+EXPOSE 3000
+
+CMD ["bun", "start"]
+
+# Stage 3: Development image
+FROM oven/bun:1.1-alpine AS development
+
+WORKDIR /app
+
+ENV NODE_ENV=development
+ENV BUN_INSTALL=/app/.bun-cache
+
+EXPOSE 3000
+
+# Default command (overridden in compose for live-reload)
+CMD ["bun", "run", "dev"]

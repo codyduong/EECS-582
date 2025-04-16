@@ -1,0 +1,29 @@
+# Author: @codyduong
+# Purpose: platform agnostic startup for the frontend
+# Creation Date: 2025-04-12
+# Revisions: N/A
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./frontend/web/Dockerfile.local
+      # use development for now
+      target: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/web:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    networks:
+      - frontend-network
+
+networks:
+  frontend-network:
+    driver: bridge
