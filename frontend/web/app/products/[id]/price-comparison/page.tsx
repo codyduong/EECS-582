@@ -86,14 +86,8 @@ const PRODUCT_QUERY = graphql(`
   }
 `);
 
-interface PriceComparisonProps {
-  embedded?: boolean;
-}
-
-export default function PriceComparisonReport(
-  props: PriceComparisonProps,
-): React.JSX.Element {
-  const { embedded = false } = props;
+export default function PriceComparisonReport(): React.JSX.Element {
+  const embedded = true;
 
   const params = useParams();
   const id = params.id as string;

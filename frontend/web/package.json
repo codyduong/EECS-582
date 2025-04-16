@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -p \"[{name}]\" -n \"next,gqlc\" -c \"bgBlue.bold,bgCyan.bold\" \"next dev --turbopack\" \"npm run codegen:watch\"",
+    "dev2": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

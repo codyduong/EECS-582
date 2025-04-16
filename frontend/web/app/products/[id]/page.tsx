@@ -632,7 +632,7 @@ export default function ProductDetailPage() {
           </div>
         )}
 
-        {activeTab === "price-comparison" && <PriceComparisonReport embedded />}
+        {activeTab === "price-comparison" && <PriceComparisonReport />}
 
         {activeTab === "qrcode" && product && (
           /* QR Code tab content */
