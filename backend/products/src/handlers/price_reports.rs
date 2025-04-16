@@ -16,7 +16,6 @@ use common_rs::graphql::GraphConnection;
 use common_rs::graphql::Node;
 use common_rs::graphql::PageInfo;
 use common_rs::graphql::PaginationParams;
-use diesel::connection;
 use diesel::Connection;
 use diesel::ExpressionMethods;
 use diesel::JoinOnDsl;
