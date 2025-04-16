@@ -50,6 +50,32 @@ const ProductsQuery = graphql(`
           images {
             image_url
           }
+          price_reports {
+            edges {
+              node {
+                id
+                reported_at
+                price
+                company {
+                  name
+                }
+                # marketplace {
+                #   id
+                #   physical_marketplace {
+                #     ... on PhysicalMarketplace {
+                #       id
+                #       adr_address
+                #     }
+                #   }
+                #   online_marketplace {
+                #     ... on OnlineMarketplace {
+                #       id
+                #     }
+                #   }
+                # }
+              }
+            }
+          }
         }
       }
     }
@@ -108,6 +134,7 @@ export default function ProductsPage() {
           className="w-full max-w-lg"
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
+          disabled
         />
       </Group>
 

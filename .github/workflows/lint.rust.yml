@@ -77,6 +77,8 @@ jobs:
                 project:
                     - backend/auth
                     - backend/products
+                    - packages/common-rs
+                    - packages/validator-rs
                 rust: [stable]
                 os: [ubuntu-latest]
         defaults:

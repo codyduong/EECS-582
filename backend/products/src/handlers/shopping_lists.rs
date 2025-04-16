@@ -15,17 +15,21 @@ use crate::models::*;
 use crate::schema::*;
 use crate::Pool;
 use actix_web::delete;
+use actix_web::get;
+use actix_web::patch;
 use actix_web::post;
-use actix_web::put;
 use actix_web::web;
 use actix_web::web::ServiceConfig;
 use actix_web::HttpResponse;
+use actix_web_httpauth::extractors::bearer::BearerAuth;
 use auth::errors::ServiceError;
 use diesel::dsl::insert_into;
 use diesel::Connection;
 use diesel::ExpressionMethods;
+use diesel::OptionalExtension;
 use diesel::{QueryDsl, RunQueryDsl};
 use serde::Deserialize;
+use serde::Serialize;
 use std::vec::Vec;
 use utoipa::ToSchema;
 
@@ -36,16 +40,19 @@ pub fn configure() -> impl FnOnce(&mut ServiceConfig) {
     config.service(
       web::scope(V1_PATH)
         .service(create_shopping_list)
-        .service(update_shopping_list)
-        .service(delete_shopping_list),
+        .service(patch_shopping_list)
+        .service(delete_shopping_list)
+        .service(get_shopping_list)
+        .service(get_shopping_lists),
     );
   }
 }
 
 #[derive(Deserialize, ToSchema)]
 pub struct NewShoppingListRequest {
-  pub user_ids: Vec<i32>,
+  pub user_ids: Option<Vec<i32>>,
   pub items: Vec<ShoppingListItemRequest>,
+  pub name: Option<String>,
 }
 
 #[derive(Deserialize, ToSchema)]
@@ -56,17 +63,37 @@ pub struct ShoppingListItemRequest {
   pub unit_id: Option<i32>,
 }
 
-#[derive(Deserialize, ToSchema)]
-pub struct UpdateShoppingListRequest {
-  pub user_ids: Option<Vec<i32>>,
-  pub items: Option<Vec<ShoppingListItemRequest>>,
+#[derive(Serialize, ToSchema)]
+pub struct ShoppingListResponse {
+  pub list: ShoppingList,
+  pub users: Vec<ShoppingListToUser>,
+  pub items: Vec<ShoppingListItem>,
+}
+
+fn get_full_shopping_list(
+  conn: &mut diesel::PgConnection,
+  shopping_list_id: i32,
+) -> Result<ShoppingListResponse, diesel::result::Error> {
+  let list = shopping_list::table
+    .find(shopping_list_id)
+    .first::<ShoppingList>(conn)?;
+
+  let users = shopping_list_to_user::table
+    .filter(shopping_list_to_user::shopping_list_id.eq(shopping_list_id))
+    .load::<ShoppingListToUser>(conn)?;
+
+  let items = shopping_list_items::table
+    .filter(shopping_list_items::shopping_list_id.eq(shopping_list_id))
+    .load::<ShoppingListItem>(conn)?;
+
+  Ok(ShoppingListResponse { list, users, items })
 }
 
 #[utoipa::path(
     context_path = V1_PATH,
     request_body = NewShoppingListRequest,
     responses(
-        (status = 201, description = "Shopping list created"),
+        (status = 201, description = "Shopping list created", body = ShoppingListResponse),
         (status = 400, description = "Bad request"),
         (status = 500, description = "Internal server error"),
     ),
@@ -75,137 +102,182 @@ pub struct UpdateShoppingListRequest {
 pub async fn create_shopping_list(
   data: web::Json<NewShoppingListRequest>,
   db: web::Data<Pool>,
-  // auth: BearerAuth, // Uncomment if auth is needed
+  auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  // let _claims = ValidatorBuilder::new().with_scope(PermissionName::Create).validate(&auth)?; // Uncomment if auth is needed
+  let claims = auth::get_claims(&auth)?;
+  let user_id = claims.sub;
+
+  // Ensure the creator is included in the user_ids
+  let mut user_ids = data.user_ids.clone().unwrap_or_default();
+  if !user_ids.contains(&user_id) {
+    user_ids.push(user_id);
+  }
 
   let mut conn = db.get().map_err(|e| {
-    log::error!("Error: {}", e);
+    log::error!("Error getting DB connection: {}", e);
     ServiceError::InternalServerError
   })?;
 
-  conn
+  let response = conn
     .transaction(|conn| {
-      let now = chrono::Utc::now().naive_utc();
       let new_shopping_list = NewShoppingList {
-        created_at: now,
-        updated_at: now,
+        name: data.name.clone(),
       };
 
       let shopping_list: ShoppingList = insert_into(shopping_list::table)
         .values(&new_shopping_list)
         .get_result(conn)?;
 
-      for user_id in &data.user_ids {
-        let new_user_association = NewShoppingListToUser {
+      // Bulk insert user associations
+      let user_associations: Vec<NewShoppingListToUser> = user_ids
+        .iter()
+        .map(|user_id| NewShoppingListToUser {
           shopping_list_id: shopping_list.id,
           user_id: *user_id,
-        };
-        insert_into(shopping_list_to_user::table)
-          .values(&new_user_association)
-          .execute(conn)?;
-      }
+        })
+        .collect();
 
-      for item in &data.items {
-        let new_item = NewShoppingListItem {
+      insert_into(shopping_list_to_user::table)
+        .values(&user_associations)
+        .execute(conn)?;
+
+      // Bulk insert items
+      let items: Vec<NewShoppingListItem> = data
+        .items
+        .iter()
+        .map(|item| NewShoppingListItem {
           shopping_list_id: shopping_list.id,
           gtin: item.gtin.clone(),
           amount: item.amount.clone(),
           unit_id: item.unit_id,
-          created_at: now,
-          updated_at: now,
-        };
-        insert_into(shopping_list_items::table)
-          .values(&new_item)
-          .execute(conn)?;
-      }
+          created_at: None,
+          updated_at: None,
+        })
+        .collect();
 
-      Ok::<_, diesel::result::Error>(())
+      insert_into(shopping_list_items::table).values(&items).execute(conn)?;
+
+      get_full_shopping_list(conn, shopping_list.id)
     })
     .map_err(|e| {
-      log::error!("Error: {}", e);
+      log::error!("Transaction error: {}", e);
       ServiceError::InternalServerError
     })?;
 
-  Ok(HttpResponse::Created().finish())
+  Ok(HttpResponse::Created().json(response))
+}
+
+#[derive(Deserialize, ToSchema)]
+#[serde(tag = "action")]
+pub enum ItemPatchAction {
+  #[serde(rename = "add")]
+  Add(ShoppingListItemRequest),
+  #[serde(rename = "remove")]
+  Remove { gtin: String },
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct PatchShoppingListRequest {
+  pub items: Option<Vec<ItemPatchAction>>,
 }
 
 #[utoipa::path(
-    context_path = V1_PATH,
-    params(
-        ("id", description = "Shopping list ID"),
-    ),
-    request_body = UpdateShoppingListRequest,
-    responses(
-        (status = 200, description = "Shopping list updated"),
-        (status = 400, description = "Bad request"),
-        (status = 404, description = "Shopping list not found"),
-        (status = 500, description = "Internal server error"),
-    ),
+  context_path = V1_PATH,
+  params(
+      ("id", description = "Shopping list ID"),
+  ),
+  request_body = PatchShoppingListRequest,
+  responses(
+      (status = 200, description = "Shopping list updated", body = ShoppingListResponse),
+      (status = 400, description = "Bad request"),
+      (status = 403, description = "Forbidden - not owner of shopping list"),
+      (status = 404, description = "Shopping list not found"),
+      (status = 500, description = "Internal server error"),
+  ),
 )]
-#[put("/{id}")]
-pub async fn update_shopping_list(
+#[patch("/{id}")]
+pub async fn patch_shopping_list(
   id: web::Path<i32>,
-  data: web::Json<UpdateShoppingListRequest>,
+  data: web::Json<PatchShoppingListRequest>,
   db: web::Data<Pool>,
-  // auth: BearerAuth, // Uncomment if auth is needed
+  auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  // let _claims = ValidatorBuilder::new().with_scope(PermissionName::Update).validate(&auth)?; // Uncomment if auth is needed
+  let claims = auth::get_claims(&auth)?;
+  let user_id = claims.sub;
+  let shopping_list_id = id.into_inner();
 
   let mut conn = db.get().map_err(|e| {
-    log::error!("Error: {}", e);
+    log::error!("Error getting DB connection: {}", e);
     ServiceError::InternalServerError
   })?;
 
-  let shopping_list_id = id.into_inner();
-
-  conn
-    .transaction(|conn| {
-      if let Some(user_ids) = &data.user_ids {
-        diesel::delete(
-          shopping_list_to_user::table.filter(shopping_list_to_user::shopping_list_id.eq(shopping_list_id)),
-        )
-        .execute(conn)?;
-
-        for user_id in user_ids {
-          let new_user_association = NewShoppingListToUser {
-            shopping_list_id,
-            user_id: *user_id,
-          };
-          insert_into(shopping_list_to_user::table)
-            .values(&new_user_association)
-            .execute(conn)?;
-        }
-      }
-
-      if let Some(items) = &data.items {
-        diesel::delete(shopping_list_items::table.filter(shopping_list_items::shopping_list_id.eq(shopping_list_id)))
-          .execute(conn)?;
-
-        let now = chrono::Utc::now().naive_utc();
-        for item in items {
-          let new_item = NewShoppingListItem {
-            shopping_list_id,
-            gtin: item.gtin.clone(),
-            amount: item.amount.clone(),
-            unit_id: item.unit_id,
-            created_at: now,
-            updated_at: now,
-          };
-          insert_into(shopping_list_items::table)
-            .values(&new_item)
-            .execute(conn)?;
-        }
-      }
-
-      Ok::<_, diesel::result::Error>(())
-    })
+  // Verify user owns the shopping list
+  let exists = shopping_list_to_user::table
+    .filter(shopping_list_to_user::shopping_list_id.eq(shopping_list_id))
+    .filter(shopping_list_to_user::user_id.eq(user_id))
+    .first::<ShoppingListToUser>(&mut conn)
+    .optional()
     .map_err(|e| {
-      log::error!("Error: {}", e);
+      log::error!("Error checking ownership: {}", e);
       ServiceError::InternalServerError
     })?;
 
-  Ok(HttpResponse::Ok().finish())
+  if exists.is_none() {
+    return Err(ServiceError::Forbidden.into());
+  }
+
+  let response = conn
+    .transaction(|conn| {
+      if let Some(item_actions) = &data.items {
+        let now = chrono::Utc::now().naive_utc();
+
+        for action in item_actions {
+          match action {
+            ItemPatchAction::Add(item) => {
+              // Upsert item - update if exists, insert if new
+              diesel::insert_into(shopping_list_items::table)
+                .values(NewShoppingListItem {
+                  shopping_list_id,
+                  gtin: item.gtin.clone(),
+                  amount: item.amount.clone(),
+                  unit_id: item.unit_id,
+                  created_at: None,
+                  updated_at: None,
+                })
+                .on_conflict((shopping_list_items::shopping_list_id, shopping_list_items::gtin))
+                .do_update()
+                .set((
+                  shopping_list_items::amount.eq(&item.amount),
+                  shopping_list_items::unit_id.eq(item.unit_id),
+                  shopping_list_items::updated_at.eq(now),
+                ))
+                .execute(conn)?;
+            }
+            ItemPatchAction::Remove { gtin } => {
+              diesel::delete(
+                shopping_list_items::table
+                  .filter(shopping_list_items::shopping_list_id.eq(shopping_list_id))
+                  .filter(shopping_list_items::gtin.eq(gtin)),
+              )
+              .execute(conn)?;
+            }
+          }
+        }
+      }
+
+      // Update the shopping list's updated_at timestamp
+      diesel::update(shopping_list::table.find(shopping_list_id))
+        .set(shopping_list::updated_at.eq(chrono::Utc::now().naive_utc()))
+        .execute(conn)?;
+
+      get_full_shopping_list(conn, shopping_list_id)
+    })
+    .map_err(|e| {
+      log::error!("Transaction error: {}", e);
+      ServiceError::InternalServerError
+    })?;
+
+  Ok(HttpResponse::Ok().json(response))
 }
 
 #[utoipa::path(
@@ -214,7 +286,8 @@ pub async fn update_shopping_list(
         ("id", description = "Shopping list ID"),
     ),
     responses(
-        (status = 204, description = "Shopping list deleted"),
+        (status = 200, description = "Shopping list deleted", body = ShoppingListResponse),
+        (status = 403, description = "Forbidden - not owner of shopping list"),
         (status = 404, description = "Shopping list not found"),
         (status = 500, description = "Internal server error"),
     ),
@@ -223,23 +296,164 @@ pub async fn update_shopping_list(
 pub async fn delete_shopping_list(
   id: web::Path<i32>,
   db: web::Data<Pool>,
-  // auth: BearerAuth, // Uncomment if auth is needed
+  auth: BearerAuth,
 ) -> Result<HttpResponse, actix_web::Error> {
-  // let _claims = ValidatorBuilder::new().with_scope(PermissionName::Delete).validate(&auth)?; // Uncomment if auth is needed
+  let claims = auth::get_claims(&auth)?;
+  let user_id = claims.sub;
+  let shopping_list_id = id.into_inner();
 
   let mut conn = db.get().map_err(|e| {
-    log::error!("Error: {}", e);
+    log::error!("Error getting DB connection: {}", e);
     ServiceError::InternalServerError
   })?;
 
-  let shopping_list_id = id.into_inner();
+  // First get the full shopping list before deletion
+  let response = get_full_shopping_list(&mut conn, shopping_list_id).map_err(|e| match e {
+    diesel::result::Error::NotFound => ServiceError::NotFound(Some("Shopping list not found".to_string())),
+    _ => {
+      log::error!("Error fetching shopping list: {}", e);
+      ServiceError::InternalServerError
+    }
+  })?;
 
-  diesel::delete(shopping_list::table.find(shopping_list_id))
-    .execute(&mut conn)
-    .map_err(|e| match e {
-      diesel::result::Error::NotFound => ServiceError::NotFound(Some("Shopping list not found".to_string())),
-      _ => ServiceError::InternalServerError,
+  // Verify user owns the shopping list
+  let exists = shopping_list_to_user::table
+    .filter(shopping_list_to_user::shopping_list_id.eq(shopping_list_id))
+    .filter(shopping_list_to_user::user_id.eq(user_id))
+    .first::<ShoppingListToUser>(&mut conn)
+    .optional()
+    .map_err(|e| {
+      log::error!("Error checking ownership: {}", e);
+      ServiceError::InternalServerError
     })?;
 
-  Ok(HttpResponse::NoContent().finish())
+  if exists.is_none() {
+    return Err(ServiceError::Forbidden.into());
+  }
+
+  conn
+    .transaction(|conn| {
+      // Delete all associated records first
+      diesel::delete(shopping_list_items::table.filter(shopping_list_items::shopping_list_id.eq(shopping_list_id)))
+        .execute(conn)?;
+
+      diesel::delete(shopping_list_to_user::table.filter(shopping_list_to_user::shopping_list_id.eq(shopping_list_id)))
+        .execute(conn)?;
+
+      // Finally delete the shopping list itself
+      diesel::delete(shopping_list::table.find(shopping_list_id)).execute(conn)?;
+
+      Ok::<_, diesel::result::Error>(())
+    })
+    .map_err(|e| {
+      log::error!("Transaction error: {}", e);
+      ServiceError::InternalServerError
+    })?;
+
+  Ok(HttpResponse::Ok().json(response))
+}
+
+#[utoipa::path(
+  context_path = V1_PATH,
+  params(
+      ("id", description = "Shopping list ID"),
+  ),
+  responses(
+      (status = 200, description = "Shopping list details", body = ShoppingListResponse),
+      (status = 403, description = "Forbidden - not owner of shopping list"),
+      (status = 404, description = "Shopping list not found"),
+      (status = 500, description = "Internal server error"),
+  ),
+)]
+#[get("/{id}")]
+pub async fn get_shopping_list(
+  id: web::Path<i32>,
+  db: web::Data<Pool>,
+  auth: BearerAuth,
+) -> Result<HttpResponse, actix_web::Error> {
+  let claims = auth::get_claims(&auth)?;
+  let user_id = claims.sub;
+  let shopping_list_id = id.into_inner();
+
+  let mut conn = db.get().map_err(|e| {
+    log::error!("Error getting DB connection: {}", e);
+    ServiceError::InternalServerError
+  })?;
+
+  // Verify user has access to the shopping list
+  let exists = shopping_list_to_user::table
+    .filter(shopping_list_to_user::shopping_list_id.eq(shopping_list_id))
+    .filter(shopping_list_to_user::user_id.eq(user_id))
+    .first::<ShoppingListToUser>(&mut conn)
+    .optional()
+    .map_err(|e| {
+      log::error!("Error checking access: {}", e);
+      ServiceError::InternalServerError
+    })?;
+
+  if exists.is_none() {
+    return Err(ServiceError::Forbidden.into());
+  }
+
+  let response = get_full_shopping_list(&mut conn, shopping_list_id).map_err(|e| match e {
+    diesel::result::Error::NotFound => ServiceError::NotFound(Some("Shopping list not found".to_string())),
+    _ => {
+      log::error!("Error fetching shopping list: {}", e);
+      ServiceError::InternalServerError
+    }
+  })?;
+
+  Ok(HttpResponse::Ok().json(response))
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct ShoppingListsResponse {
+  pub lists: Vec<ShoppingListResponse>,
+}
+
+#[utoipa::path(
+  context_path = V1_PATH,
+  responses(
+      (status = 200, description = "List of shopping lists belonging to user", body = ShoppingListsResponse),
+      (status = 500, description = "Internal server error"),
+  ),
+)]
+#[get("/")]
+pub async fn get_shopping_lists(db: web::Data<Pool>, auth: BearerAuth) -> Result<HttpResponse, actix_web::Error> {
+  let claims = auth::get_claims(&auth)?;
+  let user_id = claims.sub;
+
+  let mut conn = db.get().map_err(|e| {
+    log::error!("Error getting DB connection: {}", e);
+    ServiceError::InternalServerError
+  })?;
+
+  let lists = conn
+    .transaction(|conn| {
+      // Get all shopping list IDs for this user
+      let list_ids: Vec<i32> = shopping_list_to_user::table
+        .filter(shopping_list_to_user::user_id.eq(user_id))
+        .select(shopping_list_to_user::shopping_list_id)
+        .load(conn)?;
+
+      // Get full details for each shopping list
+      let mut result = Vec::new();
+      for list_id in list_ids {
+        match get_full_shopping_list(conn, list_id) {
+          Ok(details) => result.push(details),
+          Err(e) => {
+            log::warn!("Error fetching shopping list {}: {}", list_id, e);
+            // Continue with other lists even if one fails
+          }
+        }
+      }
+
+      Ok::<_, diesel::result::Error>(result)
+    })
+    .map_err(|e| {
+      log::error!("Transaction error: {}", e);
+      ServiceError::InternalServerError
+    })?;
+
+  Ok(HttpResponse::Ok().json(ShoppingListsResponse { lists }))
 }

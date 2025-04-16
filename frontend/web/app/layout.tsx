@@ -83,7 +83,7 @@ export default async function RootLayout({
                       className="hidden sm:flex items-center gap-2 border-green-600 text-green-600 hover:bg-green-50"
                       leftSection={<IconBasket className="w-4 h-4" />}
                     >
-                      Grocery List
+                      Shopping Lists
                     </Button>
                   </Link>
                   {/* Product page button */}

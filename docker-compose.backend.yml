@@ -47,6 +47,9 @@ services:
         - action: sync+restart
           path: ./backend/gateway/supergraph.graphql
           target: /supergraph.graphql
+        - action: sync+restart
+          path: ./backend/gateway/mesh.config.ts
+          target: /gateway.config.ts
 
   db:
     image: timescale/timescaledb:latest-pg17
