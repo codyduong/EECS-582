@@ -242,6 +242,12 @@ fn db_get_all_products(
     (status = OK, body = GraphConnection<ProductResponse>),
     (status = 401),
   ),
+  params(
+    ("first" = Option<i32>, Query, description = "Number of items after cursor"),
+    ("after" = Option<i32>, Query, description = "Cursor for forward pagination"),
+    ("last" = Option<i32>, Query, description = "Number of items before cursor"),
+    ("before" = Option<i32>, Query, description = "Cursor for backward pagination"),
+  ),
   // security(
   //   ("http" = [])
   // )

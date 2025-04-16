@@ -29,13 +29,25 @@ use utoipa::ToSchema;
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Marketplace {
   pub id: i32,
-  pub name: String,
+  pub company_id: i32,
+  pub created_at: chrono::DateTime<chrono::Utc>,
+  pub updated_at: chrono::DateTime<chrono::Utc>,
+  pub deleted: bool,
+  pub deleted_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
-pub type MarketplaceResponse = Marketplace;
+#[derive(Debug, ToSchema, Serialize)]
+pub struct MarketplaceResponse {
+  #[serde(flatten)]
+  pub marketplace: Marketplace,
+  pub company: super::Company,
+  pub physical_marketplace: Option<super::PhysicalMarketplaceResponse>,
+  pub online_marketplace: Option<super::OnlineMarketplaceResponse>,
+}
 
 #[derive(Deserialize, Insertable, ToSchema, Clone, Debug)]
 #[diesel(table_name = crate::schema::marketplaces)]
 pub struct NewMarketplace {
-  pub name: String,
+  pub id: Option<i32>,
+  pub company_id: i32,
 }

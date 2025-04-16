@@ -64,6 +64,7 @@ async fn main() -> std::io::Result<()> {
   let pool = r2d2::Pool::builder().build(manager).expect("Failed to create pool.");
 
   let mut conn = pool.get().unwrap();
+
   conn.run_pending_migrations(MIGRATIONS).unwrap();
 
   seed::run(pool.clone());
@@ -72,9 +73,14 @@ async fn main() -> std::io::Result<()> {
   #[openapi(
     modifiers(&SecurityAddon),
     paths(
+      handlers::companies::get_company,
+      handlers::companies::get_companies,
       handlers::marketplaces::get_marketplace,
       handlers::marketplaces::get_marketplaces,
       handlers::marketplaces::post_marketplace,
+      handlers::price_reports::get_price_reports_for_gtin,
+      handlers::price_reports::get_price_reports_for_gtins,
+      handlers::price_reports::post_price_report,
       handlers::products_to_images::get_image,
       handlers::products_to_images::post_image,
       handlers::products::get_product,
@@ -126,6 +132,8 @@ async fn main() -> std::io::Result<()> {
       .configure(handlers::products_to_images::configure())
       .configure(handlers::products::configure())
       .configure(handlers::units::configure())
+      .configure(handlers::price_reports::configure())
+      .configure(handlers::companies::configure())
       .service(
         SwaggerUi::new("/swagger-ui/{_:.*}").urls(vec![(Url::new("api", "/api-docs/openapi.json"), ApiDoc::openapi())]),
       )

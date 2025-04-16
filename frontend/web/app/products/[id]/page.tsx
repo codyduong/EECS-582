@@ -29,6 +29,11 @@ import {
   Notification,
   Skeleton,
   LoadingOverlay,
+  ComboboxItem,
+  SelectProps,
+  Box,
+  NavLink,
+  Anchor,
 } from "@mantine/core";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -49,13 +54,16 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { products } from "@/app/productsmock";
 import Link from "next/link";
-import { useQuery } from "@apollo/client";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { graphql } from "@/graphql";
 import PriceComparisonReport from "./price-comparison/page";
 import Markdown from "markdown-to-jsx";
+import { notifications } from "@mantine/notifications";
+import { useUser } from "@/contexts/UserContext";
+import { PermissionValidator } from "@/lib/permissions";
 
-const ProductQuery = graphql(`
-  query Product($gtin: String!) {
+const PRODUCTS_PAGE_QUERIES = graphql(`
+  query ProductsPage_Queries($gtin: String!) {
     get_product(gtin: $gtin) {
       gtin
       productname
@@ -63,24 +71,124 @@ const ProductQuery = graphql(`
         image_url
       }
       description
+      price_reports {
+        edges {
+          node {
+            id
+            reported_at
+            price
+            company {
+              name
+            }
+            # marketplace {
+            #   id
+            #   physical_marketplace {
+            #     ... on PhysicalMarketplace {
+            #       id
+            #       adr_address
+            #     }
+            #   }
+            #   online_marketplace {
+            #     ... on OnlineMarketplace {
+            #       id
+            #     }
+            #   }
+            # }
+          }
+        }
+      }
     }
+    get_companies {
+      id
+      name
+    }
+  }
+`);
+
+const PRODUCTS_PAGE_MARKETPLACES = graphql(`
+  query ProductsPage_Marketplaces($company_id: Int!) {
+    get_marketplaces(company_id: $company_id) {
+      id
+      physical_marketplace {
+        ... on PhysicalMarketplace {
+          id
+          adr_address
+          open_location_code
+          place_id
+        }
+      }
+      online_marketplace {
+        ... on OnlineMarketplace {
+          id
+        }
+      }
+    }
+  }
+`);
+
+const PRICE_REPORT = graphql(`
+  mutation ProductsPage_PriceReport(
+    $currency: mutationInput_post_price_report_input_items_allOf_0_currency!
+    $gtin: mutationInput_post_price_report_input_items_allOf_0_gtin!
+    $marketplace_id: Int!
+    $price: Float!
+  ) {
+    post_price_report(
+      input: {
+        currency: $currency
+        gtin: $gtin
+        price: $price
+        marketplace_id: $marketplace_id
+      }
+    )
   }
 `);
 
 export default function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const { user } = useUser();
 
-  const { data, loading } = useQuery(ProductQuery, {
+  const canReportPrice = user?.permissions
+    ? PermissionValidator.new()
+        .or("create:all", "create:price_report")
+        .validate(user.permissions)
+    : false;
+
+  const { data, loading } = useQuery(PRODUCTS_PAGE_QUERIES, {
     variables: {
       gtin: id,
     },
   });
 
-  const product = data?.get_product;
+  const [
+    getMarketplaces,
+    { data: marketplaceData, loading: marketplaceLoading },
+  ] = useLazyQuery(PRODUCTS_PAGE_MARKETPLACES);
 
-  // TODO: @codyduong remove
-  const oldProduct = products[0];
+  const [priceReport, {}] = useMutation(PRICE_REPORT, {
+    refetchQueries: ["ProductsPage_Queries"],
+  });
+
+  const product = data?.get_product;
+  const prices =
+    product?.price_reports.edges?.filter((i) => !!i).map(({ node }) => node) ??
+    [];
+  const companies =
+    data?.get_companies
+      ?.filter((i) => !!i)
+      .map((i): ComboboxItem => ({ value: `${i.id}`, label: i.name })) ?? [];
+  const marketplaces = marketplaceData?.get_marketplaces
+    ?.filter((i) => !!i)
+    .map(
+      (i): ComboboxItem => ({
+        value: `${i.id}`,
+        // @ts-expect-error: yada void container
+        // eslint-disable-next-line prettier/prettier
+        label: i.physical_marketplace?.adr_address ?? i.online_marketplace?.uri ?? null,
+      }),
+    )
+    .filter((i) => i.value !== null);
 
   // Get related products (excluding current product)
   const relatedProducts = products.filter((p) => p.id !== id);
@@ -93,67 +201,81 @@ export default function ProductDetailPage() {
 
   // Price reporting state
   const [reportModalOpen, setReportModalOpen] = useState(false);
-  const [reportedPrice, setReportedPrice] = useState("");
-  const [reportedLocation, setReportedLocation] = useState("");
-  const [notification, setNotification] = useState({
-    show: false,
-    message: "",
-    type: "",
-  });
+  const [reportedPrice, setReportedPrice] = useState<number>();
+  const [reportedCompanyId, setReportedCompanyId] = useState<
+    `${number}` | null
+  >(null);
+  const [reportedMarketplaceId, setReportedMarketplaceId] = useState<
+    `${number}` | null
+  >(null);
+
+  const handleChangeCompany: SelectProps["onChange"] = (value) => {
+    if (reportedCompanyId !== value) {
+      setReportedMarketplaceId(null);
+    }
+
+    setReportedCompanyId(value as `${number}`);
+    if (value) {
+      getMarketplaces({
+        variables: {
+          company_id: Number(value),
+        },
+      });
+    }
+  };
 
   // Function to handle price report submission
   const handlePriceReport = async () => {
     try {
       // Validate inputs
-      if (!reportedPrice || !reportedLocation) {
-        setNotification({
-          show: true,
-          message: "Please fill in all fields",
-          type: "error",
+      if (!reportedPrice || !reportedCompanyId || !reportedMarketplaceId) {
+        notifications.show({
+          title: "Product added",
+          message: `Please fill in all fields`,
+          color: "red",
+          icon: <IconCheck size={16} />,
         });
         return;
       }
 
-      // Send data to API endpoint
-      const response = await fetch("/api/report-price", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          productId: id,
+      const marketplace_id = Number(reportedMarketplaceId);
+
+      if (Number.isNaN(marketplace_id)) {
+        throw false;
+      }
+
+      const result = await priceReport({
+        variables: {
+          currency: "USD",
+          gtin: id,
           price: reportedPrice,
-          location: reportedLocation,
-          timestamp: new Date().toISOString(),
-        }),
+          marketplace_id,
+        },
       });
 
-      if (!response.ok) {
+      if (result.errors) {
         throw new Error("Failed to report price");
       }
 
       // Show success notification
-      setNotification({
-        show: true,
-        message: "Price reported successfully!",
-        type: "success",
+      notifications.show({
+        title: "Product added",
+        message: `Price of ${reportedPrice} reported at ${marketplaces?.find((m) => m.value === `${marketplace_id}`)?.label}`,
+        color: "green",
+        icon: <IconCheck size={16} />,
       });
 
       // Reset form and close modal
-      setReportedPrice("");
-      setReportedLocation("");
+      setReportedPrice(undefined);
+      setReportedCompanyId(null);
+      setReportedMarketplaceId(null);
       setReportModalOpen(false);
-
-      // Hide notification after 3 seconds
-      setTimeout(() => {
-        setNotification({ show: false, message: "", type: "" });
-      }, 3000);
     } catch (error) {
-      console.error("Error reporting price:", error);
-      setNotification({
-        show: true,
-        message: "Failed to report price. Please try again.",
-        type: "error",
+      notifications.show({
+        title: "Error",
+        message: "Failed to add product. Please try again.",
+        color: "red",
+        icon: <IconX size={16} />,
       });
     }
   };
@@ -197,7 +319,7 @@ export default function ProductDetailPage() {
     >
       <Container size="xl" py="xl">
         {/* Notification for success/error messages */}
-        {notification.show && (
+        {/* {notification.show && (
           <div className="mb-4">
             <Notification
               icon={
@@ -216,17 +338,20 @@ export default function ProductDetailPage() {
               {notification.message}
             </Notification>
           </div>
-        )}
+        )} */}
         <Group mb="xl" className="flex items-center justify-between">
           {product && <Title order={1}>{product.productname}</Title>}
           {loading && <Skeleton height={"44.2px"} width={"80%"} />}
-          <Button
-            leftSection={<IconReportMoney size={18} />}
-            onClick={() => setReportModalOpen(true)}
-            variant="light"
-          >
-            Report Price
-          </Button>
+          {/* only authenticated users allowed to report prices */}
+          {canReportPrice && (
+            <Button
+              leftSection={<IconReportMoney size={18} />}
+              onClick={() => setReportModalOpen(true)}
+              variant="light"
+            >
+              Report Price
+            </Button>
+          )}
         </Group>
         {/*creates a new tabs one to view products, the other to scan QR code*/}
         <Tabs
@@ -326,11 +451,13 @@ export default function ProductDetailPage() {
                         </Accordion.Control>
                         <Accordion.Panel>
                           <Text>
-                            Nutrition information for {product?.productname}{" "}
-                            varies by size and weight. Please check the product
-                            packaging for specific nutritional details.
-                            Generally, fresh produce is a healthy choice rich in
-                            vitamins and minerals.
+                            View{" "}
+                            <Anchor
+                              href={`https://world.openfoodfacts.org/product/${id}/`}
+                              rel="noopener noreferrer"
+                            >
+                              OpenFoodFacts
+                            </Anchor>
                           </Text>
                         </Accordion.Panel>
                       </Accordion.Item>
@@ -392,54 +519,31 @@ export default function ProductDetailPage() {
                 className="border rounded-md p-4"
               >
                 <Title order={3} mb="md">
-                  Price Comparison
+                  Price Reports (last 30 days)
                 </Title>
 
                 <div className="space-y-4">
-                  {oldProduct.otherPrices &&
-                    Object.entries(oldProduct.otherPrices).map(
-                      ([store, details]) => (
-                        <div
-                          key={store}
-                          className="flex justify-between items-center border-b pb-2"
-                        >
-                          <Text size="lg" fw={600}>
-                            {store}
-                          </Text>
-                          <div className="text-right">
-                            {details.price ? (
-                              <Text size="lg" c="blue" fw={700}>
-                                ${details.price.toFixed(2)}
-                              </Text>
-                            ) : (
-                              <Text c="dimmed">Price unavailable</Text>
-                            )}
-                            {details.weightPrice && (
-                              <Text size="sm" c="dimmed">
-                                {details.weightPrice}
-                              </Text>
-                            )}
-                          </div>
+                  {prices.slice(0, 3).map((report) => (
+                    <div key={report.id} className="border-b pb-2">
+                      <div className="flex justify-between items-center ">
+                        <Text size="lg" fw={600}>
+                          {report.company.name}
+                        </Text>
+                        <div className="text-right">
+                          {report.price ? (
+                            <Text size="lg" c="blue" fw={700}>
+                              ${report.price.toFixed(2)}
+                            </Text>
+                          ) : (
+                            <Text c="dimmed">Price unavailable</Text>
+                          )}
                         </div>
-                      ),
-                    )}
-                </div>
-
-                <div className="pt-4">
-                  <Text fw={500} mb="xs">
-                    Current Best Price:
-                  </Text>
-                  <Group className="flex-row flex-nowrap justify-between">
-                    <Text size="xl" fw={700} c="blue">
-                      ${oldProduct.price.toFixed(2)}
-                    </Text>
-                    <Text c="dimmed">{oldProduct.weightPrice}</Text>
-                  </Group>
-                  {oldProduct.priceAdmonition && (
-                    <Text size="sm" c="dimmed" mt="xs">
-                      {oldProduct.priceAdmonition}
-                    </Text>
-                  )}
+                      </div>
+                      <Text size="md">
+                        {new Date(report.reported_at).toLocaleString("en-US")}
+                      </Text>
+                    </div>
+                  ))}
                 </div>
               </motion.div>
             </div>
@@ -563,11 +667,16 @@ export default function ProductDetailPage() {
             </Text>
             <NumberInput
               value={reportedPrice}
-              // @ts-expect-error: todo fix -codyduong
-              onChange={(val) => setReportedPrice(val)}
+              onChange={(val) => {
+                const coerced = Number(val);
+                if (!Number.isNaN(coerced)) {
+                  setReportedPrice(coerced);
+                }
+              }}
               placeholder="Enter price"
               leftSection={<IconCoin size={16} />}
               decimalScale={2}
+              fixedDecimalScale
               min={0}
               required
             />
@@ -575,28 +684,45 @@ export default function ProductDetailPage() {
 
           <div>
             <Text size="sm" mb={4}>
-              Store
+              Company
             </Text>
             <Select
-              value={reportedLocation}
-              onChange={(val) => val && setReportedLocation(val)}
-              placeholder="Select store location"
+              value={reportedCompanyId}
+              onChange={handleChangeCompany}
+              placeholder="Select company"
               leftSection={<IconMapPin size={16} />}
-              data={[
-                { value: "walmart", label: "Walmart" },
-                { value: "target", label: "Target" },
-                { value: "dillons", label: "Dillons" },
-                { value: "other", label: "Other Location" },
-              ]}
+              data={companies}
               required
             />
+          </div>
+
+          <div>
+            <Text size="sm" mb={4}>
+              Location
+            </Text>
+            <Box pos="relative">
+              <LoadingOverlay visible={marketplaceLoading} zIndex={1000} />
+              <Select
+                disabled={reportedCompanyId === null}
+                value={reportedMarketplaceId}
+                onChange={(v) =>
+                  v && setReportedMarketplaceId(v as `${number}`)
+                }
+                placeholder="Select location"
+                leftSection={<IconMapPin size={16} />}
+                data={marketplaces}
+                required
+              />
+            </Box>
           </div>
 
           <Group mt="md">
             <Button variant="outline" onClick={() => setReportModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handlePriceReport}>Submit</Button>
+            <Button type="submit" onClick={handlePriceReport}>
+              Submit
+            </Button>
           </Group>
         </div>
       </Modal>

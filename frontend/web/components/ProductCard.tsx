@@ -35,8 +35,10 @@ import { ProductsQuery } from "@/graphql/graphql";
 //   >;
 // }
 
+type NN<T> = NonNullable<T>;
+
 interface ProductCardProps {
-  product: NonNullable<NonNullable<ProductsQuery["get_products"]>[number]>;
+  product: NN<NN<NN<ProductsQuery["get_products"]>["edges"]>[number]>["node"];
   isInCarousel?: boolean;
   inMain?: boolean;
 }
@@ -61,25 +63,26 @@ export function ProductCard({
     productname: name,
   } = product;
 
+  const prices = product.price_reports.edges
+    .filter((i) => !!i)
+    .map(({ node }) => node)
+    .slice(0, 3);
+  const lowest =
+    prices.length > 0
+      ? prices.reduce((prev, curr) => {
+          const currentPrice = curr.price;
+          const lowestPrice = prev ? prev.price : Number.POSITIVE_INFINITY;
+
+          if (currentPrice < lowestPrice) {
+            return curr;
+          }
+          return prev;
+        })
+      : undefined;
+  const lowestPrice = lowest?.price;
+
   // TODO: all
   const image = images[0]?.image_url;
-  const price = 1.25;
-  const priceAdmonition = "each (est.)";
-  const weightPrice = "2.49/oz";
-  const otherPrices = {
-    Dillons: {
-      price: 1.25,
-      weightPrice: "$2.49/lb",
-    },
-    Walmart: {
-      price: 1.47,
-      weightPrice: "$2.79/lb",
-    },
-    Target: {
-      price: 1.59,
-      weightPrice: "$3.99/lb",
-    },
-  };
 
   const router = useRouter();
 
@@ -133,51 +136,47 @@ export function ProductCard({
         )}
       </Card.Section>
 
-      <Group mt="md" className="flex-row flex-nowrap justify-between">
+      <Group mt="md" mb="md" className="flex-row flex-nowrap justify-between">
         <Group className="flex-row flex-nowrap max-w-[60%] flex-grow flex-shrink gap-2">
           <Text c="blue" className="text-xl font-bold">
-            ${price.toFixed(2)}
+            {lowestPrice ? `$${lowestPrice.toFixed(2)}` : "N/A"}
           </Text>
-          {priceAdmonition && (
-            <Text c="grey" className="">
-              {priceAdmonition}
-            </Text>
-          )}
         </Group>
-        <Text c="gray" className="max-w-[40%]">
+        {!lowestPrice && (
+          <Text c="gray" className="max-w-[60%]">
+            No reported price
+          </Text>
+        )}
+        {/* <Text c="gray" className="max-w-[40%]">
           {weightPrice}
-        </Text>
+        </Text> */}
       </Group>
 
       <Group mb="xs" className="flex-row flex-nowrap">
-        <Text className="text-nowrap text-ellipsis max-w-[80%] overflow-hidden">
+        <Text className="text-wrap text-ellipsis max-w-[100%] h-12 overflow-hidden line-clamp-2">
           {name}
         </Text>
       </Group>
 
-      {otherPrices && (
-        <Card.Section className="border-t border-b flex-grow flex-col p-4 pt-2 pb-2">
-          {Object.entries(otherPrices).map(
-            ([place, { price, weightPrice }]) => (
-              <Group
-                key={place}
-                className="flex-row flex-nowrap justify-between"
-              >
-                <Text className="text-nowrap text-ellipsis max-w-[50%] flex-grow overflow-hidden">
-                  {place}
-                </Text>
-                <Group
-                  key={place}
-                  className="flex-row flex-nowrap max-w-[50%] flex-grow justify-end"
-                >
-                  {price && <Text>${price.toFixed(2)}</Text>}
-                  <Text c="gray">{weightPrice ?? "Unknown"}</Text>
-                </Group>
+      <Card.Section className="border-t border-b flex-grow flex-col p-4 pt-2 pb-2">
+        {prices
+          .slice(0, 3)
+          .filter((i) => !!i)
+          .map((report) => (
+            <Group
+              key={report.id}
+              className="flex-row flex-nowrap justify-between"
+            >
+              <Text className="text-nowrap text-ellipsis max-w-[50%] flex-grow overflow-hidden">
+                {report.company.name}
+              </Text>
+              <Group className="flex-row flex-nowrap max-w-[50%] flex-grow justify-end">
+                {report.price && <Text>${report.price.toFixed(2)}</Text>}
+                {/* <Text c="gray">{weightPrice ?? "Unknown"}</Text> */}
               </Group>
-            ),
-          )}
-        </Card.Section>
-      )}
+            </Group>
+          ))}
+      </Card.Section>
 
       <Button
         color="blue"

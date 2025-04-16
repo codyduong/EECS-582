@@ -4,7 +4,11 @@ pub mod graphql;
 #[cfg(all(feature = "serde", feature = "chrono"))]
 pub mod to_rfc3339 {
   use chrono::{DateTime, NaiveDateTime, Utc};
-  use serde::{self, Deserialize, Deserializer, Serializer};
+  use serde::{self, Serializer};
+
+  // pub(crate) fn private_deserialize(s: &str) -> Result<NaiveDateTime, chrono::ParseError> {
+  //   DateTime::parse_from_rfc3339(s).map(|dt| dt.naive_utc())
+  // }
 
   pub fn serialize<S>(dt: &NaiveDateTime, serializer: S) -> Result<S::Ok, S::Error>
   where
@@ -14,15 +18,13 @@ pub mod to_rfc3339 {
     serializer.serialize_str(&dt_utc.to_rfc3339())
   }
 
-  pub fn deserialize<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    let s = String::deserialize(deserializer)?;
-    DateTime::parse_from_rfc3339(&s)
-      .map(|dt| dt.naive_utc())
-      .map_err(serde::de::Error::custom)
-  }
+  // pub fn deserialize<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
+  // where
+  //   D: Deserializer<'de>,
+  // {
+  //   let s = String::deserialize(deserializer)?;
+  //   private_deserialize(&s).map_err(serde::de::Error::custom)
+  // }
 
   pub mod option {
     use super::*;
@@ -37,12 +39,17 @@ pub mod to_rfc3339 {
       }
     }
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<NaiveDateTime>, D::Error>
-    where
-      D: Deserializer<'de>,
-    {
-      Ok(Some(super::deserialize(deserializer)?))
-    }
+    // pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<NaiveDateTime>, D::Error>
+    // where
+    //   D: Deserializer<'de>,
+    // {
+    //   let res = Option::<String>::deserialize(deserializer)?;
+
+    //   match res {
+    //     Some(s) => Ok(Some(super::private_deserialize(&s).map_err(serde::de::Error::custom)?)),
+    //     None => Ok(None),
+    //   }
+    // }
   }
 }
 

@@ -12,6 +12,8 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  /** The `BigInt` scalar type represents non-fractional signed whole numeric values. */
+  BigInt: { input: any; output: any; }
   /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
   DateTime: { input: any; output: any; }
   /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
@@ -22,11 +24,39 @@ export type Scalars = {
   _DirectiveExtensions: { input: any; output: any; }
   join__FieldSet: { input: any; output: any; }
   link__Import: { input: any; output: any; }
+  mutationInput_post_price_report_input_items_allOf_0_currency: { input: any; output: any; }
+  mutationInput_post_price_report_input_items_allOf_0_gtin: { input: any; output: any; }
   mutationInput_post_products_input_items_allOf_0_gtin: { input: any; output: any; }
   queryInput_post_image_input_items_gtin: { input: any; output: any; }
   query_get_image_oneOf_1_gtin: { input: any; output: any; }
+  query_get_price_reports_for_gtin_edges_items_node_allOf_0_currency: { input: any; output: any; }
+  query_get_price_reports_for_gtin_edges_items_node_allOf_0_gtin: { input: any; output: any; }
   query_get_products_edges_items_node_allOf_0_gtin: { input: any; output: any; }
   query_get_products_edges_items_node_allOf_1_measures_items_allOf_0_gtin: { input: any; output: any; }
+};
+
+export type Company = {
+  __typename?: 'Company';
+  id: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type Connection_PriceResponse = {
+  __typename?: 'Connection_PriceResponse';
+  edges: Array<Maybe<Node_PriceResponse>>;
+  page_info: PageInfo;
+};
+
+export type Connection_PriceResponse2 = {
+  __typename?: 'Connection_PriceResponse2';
+  edges: Array<Maybe<Node_PriceResponse>>;
+  page_info: PageInfo;
+};
+
+export type Connection_PriceResponse2_Entry = {
+  __typename?: 'Connection_PriceResponse2_entry';
+  key: Scalars['ID']['output'];
+  value?: Maybe<Connection_PriceResponse2>;
 };
 
 export type Connection_ProductResponse = {
@@ -43,6 +73,10 @@ export type Connection_UserResponse = {
 
 export type DeleteUsersRequest_Input = {
   ids: Array<InputMaybe<Scalars['Int']['input']>>;
+};
+
+export type GtinsRequest_Input = {
+  gtins: Array<InputMaybe<Scalars['String']['input']>>;
 };
 
 export enum HttpMethod {
@@ -64,10 +98,17 @@ export type LoginRequest_Input = {
   username?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type Marketplace = {
-  __typename?: 'Marketplace';
+export type MarketplaceResponse = {
+  __typename?: 'MarketplaceResponse';
+  company: Company;
+  company_id: Scalars['Int']['output'];
+  created_at: Scalars['DateTime']['output'];
+  deleted: Scalars['Boolean']['output'];
+  deleted_at?: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['Int']['output'];
-  name: Scalars['String']['output'];
+  online_marketplace?: Maybe<Query_Get_Marketplaces_Items_AllOf_1_Online_Marketplace>;
+  physical_marketplace?: Maybe<Query_Get_Marketplaces_Items_AllOf_1_Physical_Marketplace>;
+  updated_at: Scalars['DateTime']['output'];
 };
 
 export type Mutation = {
@@ -78,8 +119,10 @@ export type Mutation = {
   delete_shopping_list?: Maybe<Scalars['Void']['output']>;
   delete_user?: Maybe<Scalars['Void']['output']>;
   delete_users?: Maybe<Scalars['Void']['output']>;
+  get_price_reports_for_gtins?: Maybe<PriceResponses>;
   login_route?: Maybe<Scalars['JSON']['output']>;
-  post_marketplace?: Maybe<Marketplace>;
+  post_marketplace?: Maybe<MarketplaceResponse>;
+  post_price_report?: Maybe<Scalars['Boolean']['output']>;
   post_products?: Maybe<Scalars['Boolean']['output']>;
   refresh_route?: Maybe<Scalars['JSON']['output']>;
   register_route?: Maybe<Scalars['JSON']['output']>;
@@ -119,6 +162,16 @@ export type MutationDelete_UsersArgs = {
 };
 
 
+export type MutationGet_Price_Reports_For_GtinsArgs = {
+  after?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['Int']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  input?: InputMaybe<GtinsRequest_Input>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  marketplace_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationLogin_RouteArgs = {
   input?: InputMaybe<LoginRequest_Input>;
 };
@@ -126,6 +179,11 @@ export type MutationLogin_RouteArgs = {
 
 export type MutationPost_MarketplaceArgs = {
   input?: InputMaybe<NewMarketplace_Input>;
+};
+
+
+export type MutationPost_Price_ReportArgs = {
+  input?: InputMaybe<Array<InputMaybe<NewPriceReportDsl_Input>>>;
 };
 
 
@@ -152,7 +210,16 @@ export type MutationUpsert_UserArgs = {
 };
 
 export type NewMarketplace_Input = {
-  name: Scalars['String']['input'];
+  company_id: Scalars['Int']['input'];
+  id?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type NewPriceReportDsl_Input = {
+  currency: Scalars['mutationInput_post_price_report_input_items_allOf_0_currency']['input'];
+  gtin: Scalars['mutationInput_post_price_report_input_items_allOf_0_gtin']['input'];
+  marketplace_id: Scalars['Int']['input'];
+  price: Scalars['Float']['input'];
+  reported_at?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
 export type NewProductPost_Input = {
@@ -192,16 +259,28 @@ export type NewUserDto_Input = {
   username: Scalars['String']['input'];
 };
 
+export type Node_PriceResponse = {
+  __typename?: 'Node_PriceResponse';
+  cursor: Scalars['String']['output'];
+  node: Query_Get_Price_Reports_For_Gtin_Edges_Items_Node;
+};
+
 export type Node_ProductResponse = {
   __typename?: 'Node_ProductResponse';
   cursor: Scalars['String']['output'];
-  node: Query_Get_Products_Edges_Items_Node;
+  node: ProductResponse;
 };
 
 export type Node_UserResponse = {
   __typename?: 'Node_UserResponse';
   cursor: Scalars['String']['output'];
   node: Query_Get_Users_Edges_Items_Node;
+};
+
+export type OnlineMarketplace = {
+  __typename?: 'OnlineMarketplace';
+  id: Scalars['Int']['output'];
+  uri: Scalars['String']['output'];
 };
 
 export type PageInfo = {
@@ -241,6 +320,19 @@ export enum PermissionName {
   UpdateUser = 'update_user'
 }
 
+export type PhysicalMarketplace = {
+  __typename?: 'PhysicalMarketplace';
+  adr_address: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  open_location_code: Scalars['String']['output'];
+  place_id?: Maybe<Scalars['String']['output']>;
+};
+
+export type PriceResponses = {
+  __typename?: 'PriceResponses';
+  additionalProperties?: Maybe<Array<Maybe<Connection_PriceResponse2_Entry>>>;
+};
+
 export type ProductResponse = {
   __typename?: 'ProductResponse';
   created_at: Scalars['DateTime']['output'];
@@ -248,10 +340,20 @@ export type ProductResponse = {
   gtin: Scalars['query_get_products_edges_items_node_allOf_0_gtin']['output'];
   images: Array<Maybe<ProductToImage>>;
   measures: Array<Maybe<ProductToMeasureResponse>>;
+  price_reports: Connection_PriceResponse;
   productname: Scalars['String']['output'];
   sellsinraw: Scalars['Boolean']['output'];
   sku?: Maybe<Scalars['String']['output']>;
   updated_at: Scalars['DateTime']['output'];
+};
+
+
+export type ProductResponsePrice_ReportsArgs = {
+  after?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['Int']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  marketplace_id?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ProductToImage = {
@@ -278,9 +380,12 @@ export type ProductToMeasureResponse = {
 
 export type Query = {
   __typename?: 'Query';
+  get_companies?: Maybe<Array<Maybe<Company>>>;
+  get_company?: Maybe<Company>;
   get_image?: Maybe<Get_Image_200_Response>;
-  get_marketplace?: Maybe<Marketplace>;
-  get_marketplaces?: Maybe<Array<Maybe<Marketplace>>>;
+  get_marketplace?: Maybe<MarketplaceResponse>;
+  get_marketplaces?: Maybe<Array<Maybe<MarketplaceResponse>>>;
+  get_price_reports_for_gtin?: Maybe<Connection_PriceResponse>;
   get_product?: Maybe<ProductResponse>;
   get_products?: Maybe<Connection_ProductResponse>;
   get_unit?: Maybe<Unit>;
@@ -291,18 +396,49 @@ export type Query = {
 };
 
 
+export type QueryGet_CompanyArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
 export type QueryGet_ImageArgs = {
   id: Scalars['String']['input'];
 };
 
 
 export type QueryGet_MarketplaceArgs = {
+  company_id?: InputMaybe<Scalars['Int']['input']>;
+  company_name?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['Int']['input'];
+};
+
+
+export type QueryGet_MarketplacesArgs = {
+  company_id?: InputMaybe<Scalars['Int']['input']>;
+  company_name?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryGet_Price_Reports_For_GtinArgs = {
+  after?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['Int']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  gtin: Scalars['String']['input'];
+  last?: InputMaybe<Scalars['Int']['input']>;
+  marketplace_id?: InputMaybe<Scalars['String']['input']>;
 };
 
 
 export type QueryGet_ProductArgs = {
   gtin: Scalars['String']['input'];
+};
+
+
+export type QueryGet_ProductsArgs = {
+  after?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['Int']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -405,16 +541,21 @@ export type MutationInput_Post_Products_Input_Items_AllOf_1_Images_Input = {
   Void?: InputMaybe<Scalars['Void']['input']>;
 };
 
-export type Query_Get_Products_Edges_Items_Node = {
-  __typename?: 'query_get_products_edges_items_node';
+export type Query_Get_Marketplaces_Items_AllOf_1_Online_Marketplace = OnlineMarketplace | Void_Container;
+
+export type Query_Get_Marketplaces_Items_AllOf_1_Physical_Marketplace = PhysicalMarketplace | Void_Container;
+
+export type Query_Get_Price_Reports_For_Gtin_Edges_Items_Node = {
+  __typename?: 'query_get_price_reports_for_gtin_edges_items_node';
+  company: Company;
   created_at: Scalars['DateTime']['output'];
-  description?: Maybe<Scalars['String']['output']>;
-  gtin: Scalars['query_get_products_edges_items_node_allOf_0_gtin']['output'];
-  images: Array<Maybe<ProductToImage>>;
-  measures: Array<Maybe<ProductToMeasureResponse>>;
-  productname: Scalars['String']['output'];
-  sellsinraw: Scalars['Boolean']['output'];
-  sku?: Maybe<Scalars['String']['output']>;
+  created_by: Scalars['Int']['output'];
+  currency: Scalars['query_get_price_reports_for_gtin_edges_items_node_allOf_0_currency']['output'];
+  gtin: Scalars['query_get_price_reports_for_gtin_edges_items_node_allOf_0_gtin']['output'];
+  id: Scalars['BigInt']['output'];
+  marketplace: MarketplaceResponse;
+  price: Scalars['Float']['output'];
+  reported_at: Scalars['DateTime']['output'];
   updated_at: Scalars['DateTime']['output'];
 };
 
@@ -430,24 +571,41 @@ export type Query_Get_Users_Edges_Items_Node = {
   username?: Maybe<Scalars['String']['output']>;
 };
 
-export type ProductQueryVariables = Exact<{
+export type ProductsPage_QueriesQueryVariables = Exact<{
   gtin: Scalars['String']['input'];
 }>;
 
 
-export type ProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any, productname: string, description?: string | null, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } | null };
+export type ProductsPage_QueriesQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any, productname: string, description?: string | null, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null>, price_reports: { __typename?: 'Connection_PriceResponse', edges: Array<{ __typename?: 'Node_PriceResponse', node: { __typename?: 'query_get_price_reports_for_gtin_edges_items_node', id: any, reported_at: any, price: number, company: { __typename?: 'Company', name: string } } } | null> } } | null, get_companies?: Array<{ __typename?: 'Company', id: number, name: string } | null> | null };
+
+export type ProductsPage_MarketplacesQueryVariables = Exact<{
+  company_id: Scalars['Int']['input'];
+}>;
+
+
+export type ProductsPage_MarketplacesQuery = { __typename?: 'Query', get_marketplaces?: Array<{ __typename?: 'MarketplaceResponse', id: number, physical_marketplace?: { __typename?: 'PhysicalMarketplace', id: number, adr_address: string, open_location_code: string, place_id?: string | null } | { __typename?: 'Void_container' } | null, online_marketplace?: { __typename?: 'OnlineMarketplace', id: number } | { __typename?: 'Void_container' } | null } | null> | null };
+
+export type ProductsPage_PriceReportMutationVariables = Exact<{
+  currency: Scalars['mutationInput_post_price_report_input_items_allOf_0_currency']['input'];
+  gtin: Scalars['mutationInput_post_price_report_input_items_allOf_0_gtin']['input'];
+  marketplace_id: Scalars['Int']['input'];
+  price: Scalars['Float']['input'];
+}>;
+
+
+export type ProductsPage_PriceReportMutation = { __typename?: 'Mutation', post_price_report?: boolean | null };
 
 export type PriceComparison_GetProductQueryVariables = Exact<{
   gtin: Scalars['String']['input'];
 }>;
 
 
-export type PriceComparison_GetProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } | null };
+export type PriceComparison_GetProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any, productname: string, description?: string | null, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null>, price_reports: { __typename?: 'Connection_PriceResponse', edges: Array<{ __typename?: 'Node_PriceResponse', node: { __typename?: 'query_get_price_reports_for_gtin_edges_items_node', id: any, reported_at: any, price: number, company: { __typename?: 'Company', name: string } } } | null> } } | null };
 
 export type ProductsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ProductsQuery = { __typename?: 'Query', get_products?: { __typename?: 'Connection_ProductResponse', edges: Array<{ __typename?: 'Node_ProductResponse', node: { __typename?: 'query_get_products_edges_items_node', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null> } } | null> } | null };
+export type ProductsQuery = { __typename?: 'Query', get_products?: { __typename?: 'Connection_ProductResponse', edges: Array<{ __typename?: 'Node_ProductResponse', node: { __typename?: 'ProductResponse', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null>, price_reports: { __typename?: 'Connection_PriceResponse', edges: Array<{ __typename?: 'Node_PriceResponse', node: { __typename?: 'query_get_price_reports_for_gtin_edges_items_node', id: any, reported_at: any, price: number, company: { __typename?: 'Company', name: string } } } | null> } } } | null> } | null };
 
 export type ProductForm_ProductQueryVariables = Exact<{
   gtin: Scalars['String']['input'];

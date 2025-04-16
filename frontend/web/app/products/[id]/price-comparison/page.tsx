@@ -34,6 +34,7 @@ import {
   Stack,
   Paper,
   Button,
+  Overlay,
 } from "@mantine/core";
 import {
   IconArrowBack,
@@ -54,6 +55,33 @@ const PRODUCT_QUERY = graphql(`
       images {
         image_url
       }
+      description
+      price_reports {
+        edges {
+          node {
+            id
+            reported_at
+            price
+            company {
+              name
+            }
+            # marketplace {
+            #   id
+            #   physical_marketplace {
+            #     ... on PhysicalMarketplace {
+            #       id
+            #       adr_address
+            #     }
+            #   }
+            #   online_marketplace {
+            #     ... on OnlineMarketplace {
+            #       id
+            #     }
+            #   }
+            # }
+          }
+        }
+      }
     }
   }
 `);
@@ -73,6 +101,9 @@ export default function PriceComparisonReport(
   const { data } = useQuery(PRODUCT_QUERY, { variables: { gtin: id } });
 
   const product = data?.get_product;
+  const price_reports = product?.price_reports.edges
+    .filter((i) => !!i)
+    .map(({ node }) => node);
 
   const oldProduct = products[0];
 
@@ -197,7 +228,32 @@ export default function PriceComparisonReport(
         </Text>
 
         {/* Savings highlight card */}
-        <Card shadow="sm" padding="lg" radius="md" withBorder mb="xl">
+        <Card
+          shadow="sm"
+          padding="lg"
+          radius="md"
+          withBorder
+          mb="xl"
+          className="relative"
+        >
+          <Paper
+            shadow="xs"
+            p="xl"
+            withBorder
+            className="opacity-100 absolute z-10 right-[50%] translate-x-[50%] top-[50%] translate-y-[-50%]"
+          >
+            <Text fw={600} fz="h4">
+              Under Construction
+            </Text>
+          </Paper>
+          <Overlay
+            zIndex={5}
+            color="#eee"
+            opacity={0.9}
+            blur={15}
+            className="flex align-middle justify-center"
+          />
+
           <Group justify="space-between" mb="xs">
             <Text fw={500}>Potential Savings</Text>
             <Badge color="green" variant="light">
@@ -242,7 +298,25 @@ export default function PriceComparisonReport(
         <Title order={2} mb="md">
           Current Prices
         </Title>
-        <Paper shadow="xs" p="md" withBorder mb="xl">
+        <Paper shadow="xs" p="m" withBorder mb="xl" className="relative">
+          <Paper
+            shadow="xs"
+            p="xl"
+            withBorder
+            className="opacity-100 absolute z-10 right-[50%] translate-x-[50%] top-[50%] translate-y-[-50%]"
+          >
+            <Text fw={600} fz="h4">
+              Under Construction
+            </Text>
+          </Paper>
+          <Overlay
+            zIndex={5}
+            color="#eee"
+            opacity={0.9}
+            blur={15}
+            className="flex align-middle justify-center"
+          />
+
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
@@ -312,18 +386,19 @@ export default function PriceComparisonReport(
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Date</Table.Th>
-                <Table.Th>Walmart</Table.Th>
-                <Table.Th>Target</Table.Th>
-                <Table.Th>Dillons</Table.Th>
+                <Table.Th>Company</Table.Th>
+                {/* <Table.Th>Location</Table.Th> */}
+                <Table.Th>Price</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {priceHistory.map((entry, index) => (
-                <Table.Tr key={index}>
-                  <Table.Td>{entry.date}</Table.Td>
-                  <Table.Td>${entry.walmart.toFixed(2)}</Table.Td>
-                  <Table.Td>${entry.target.toFixed(2)}</Table.Td>
-                  <Table.Td>${entry.dillons.toFixed(2)}</Table.Td>
+              {price_reports?.map((report) => (
+                <Table.Tr key={report.id}>
+                  <Table.Td>
+                    {new Date(report.reported_at).toLocaleString("en-US")}
+                  </Table.Td>
+                  <Table.Td>{report.company.name}</Table.Td>
+                  <Table.Td>${report.price.toFixed(2)}</Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -334,7 +409,32 @@ export default function PriceComparisonReport(
         <Title order={2} mb="md">
           Price Insights
         </Title>
-        <Card shadow="sm" padding="lg" radius="md" withBorder mb="xl">
+        <Card
+          shadow="sm"
+          padding="lg"
+          radius="md"
+          withBorder
+          mb="xl"
+          className="relative"
+        >
+          <Paper
+            shadow="xs"
+            p="xl"
+            withBorder
+            className="opacity-100 absolute z-10 right-[50%] translate-x-[50%] top-[50%] translate-y-[-50%]"
+          >
+            <Text fw={600} fz="h4">
+              Under Construction
+            </Text>
+          </Paper>
+          <Overlay
+            zIndex={5}
+            color="#eee"
+            opacity={0.9}
+            blur={15}
+            className="flex align-middle justify-center"
+          />
+
           <Text fw={500} mb="md">
             Price Trend Analysis
           </Text>

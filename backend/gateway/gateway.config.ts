@@ -3,6 +3,7 @@ import {
   defineConfig,
   extractFromHeader,
 } from "@graphql-hive/gateway";
+import DataLoader from "dataloader";
 
 if (process.env.SECRET_KEY === undefined) {
   throw Error("Failed to find SECRET_KEY, was it set?");
@@ -60,5 +61,101 @@ export const gatewayConfig = defineConfig({
       return ctx.jwt?.payload;
     },
     rejectUnauthenticated: false,
+  },
+  additionalResolvers: {
+    ProductResponse: {
+      price_reports: {
+        requires: "gtin",
+        // resolve: async (root: { gtin: string }, args, context) => {
+        resolve: async (root, args, context) => {
+          // Initialize DataLoader
+          if (!context.priceReportsLoader) {
+            context.priceReportsLoader = new DataLoader<string, any>(
+              async (gtins) => {
+                // console.log(gtins);
+                // console.log(JSON.stringify(root, undefined, 2));
+                // console.log(JSON.stringify(args, undefined, 2));
+                // console.log(JSON.stringify(context, undefined, 2));
+
+                const cookies =
+                  context.headers.cookie
+                    ?.split(";")
+                    .map((v) => v.split("="))
+                    .reduce((acc, v) => {
+                      acc[decodeURIComponent(v[0].trim())] = decodeURIComponent(
+                        v[1].trim(),
+                      );
+                      return acc;
+                    }, {}) ?? {};
+
+                const authorization =
+                  context.headers["authorization"] ||
+                  context.headers["Authorization"] ||
+                  cookies["authorization"] ||
+                  cookies["Authorization"] ||
+                  "";
+
+                const baseUrl =
+                  context.Products.rawSource.schema.extensions.directives
+                    .transport[0].location;
+                const url = new URL("/api/v1/price_report/by-gtins", baseUrl);
+
+                console.log(url.toString(), JSON.stringify({ gtins }));
+
+                // 2. Dynamically append query params (only if they exist)
+                Object.entries(args).forEach(([key, value]) => {
+                  if (value !== undefined && value !== null && value !== "") {
+                    url.searchParams.append(key, String(value));
+                  }
+                });
+
+                // Make the batch request manually
+                const response = await fetch(url.toString(), {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: authorization,
+                  },
+                  body: JSON.stringify({ gtins }),
+                });
+
+                if (!response.ok) {
+                  throw new Error(
+                    `Price reports batch request failed: ${response.statusText}`,
+                  );
+                }
+
+                const data = await response.json();
+
+                console.log(data);
+
+                // Map results back to each GTIN
+                return gtins.map(
+                  (gtin) =>
+                    data[gtin] || {
+                      edges: [],
+                      page_info: {
+                        has_next_page: false,
+                        has_prev_page: false,
+                      },
+                    },
+                );
+              },
+              {
+                // Include pagination in cache key
+                cacheKeyFn: (gtin) =>
+                  JSON.stringify({
+                    gtin,
+                    ...args,
+                  }),
+                // eslint-disable-next-line prettier/prettier
+              }
+            );
+          }
+
+          return context.priceReportsLoader.load(root.gtin);
+        },
+      },
+    },
   },
 });

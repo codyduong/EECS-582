@@ -30,3 +30,4 @@ bigdecimal = { version = "0.4.7", features = ["serde", "serde-json"] }
 anyhow = "1.0.95"
 itertools = "0.14.0"
 actix-cors = "0.7.0"
+serde_with = { version = "3.12.0", features = ["chrono"] }

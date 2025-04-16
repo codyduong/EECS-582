@@ -2,7 +2,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use utoipa::ToSchema;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema, Clone)]
 pub struct PaginationParams<T> {
   #[serde(default)]
   pub first: Option<i32>,

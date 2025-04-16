@@ -1,7 +1,11 @@
-schema @link(url: "https://specs.apollo.dev/link/v1.0") @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) @link(url: "https://the-guild.dev/graphql/mesh/spec/v1.0", import: ["@enum", "@httpOperation", "@transport", "@extraSchemaDefinitionDirective", "@length", "@resolveRoot"]) {
+schema @link(url: "https://specs.apollo.dev/link/v1.0") @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) @link(url: "https://the-guild.dev/graphql/mesh/spec/v1.0", import: ["@enum", "@httpOperation", "@transport", "@extraSchemaDefinitionDirective", "@resolveRoot", "@length", "@dictionary", "@source"]) {
   query: Query
   mutation: Mutation
 }
+
+directive @additionalField on FIELD_DEFINITION
+
+directive @dictionary(subgraph: String) repeatable on FIELD_DEFINITION
 
 directive @enum(subgraph: String, value: String) repeatable on ENUM_VALUE
 
@@ -27,7 +31,34 @@ directive @link(as: String, for: link__Purpose, import: [link__Import], url: Str
 
 directive @resolveRoot(subgraph: String) repeatable on FIELD_DEFINITION
 
+directive @source(name: String!, subgraph: String!, type: String) repeatable on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION
+
 directive @transport(headers: [[String]], kind: String, location: String, queryParams: [[String]], queryStringOptions: ObjMap, subgraph: String) repeatable on SCHEMA
+
+"""
+The `BigInt` scalar type represents non-fractional signed whole numeric values.
+"""
+scalar BigInt @join__type(graph: PRODUCTS)
+
+type Company @join__type(graph: PRODUCTS) {
+  id: Int!
+  name: String!
+}
+
+type Connection_PriceResponse @join__type(graph: PRODUCTS) {
+  edges: [Node_PriceResponse]!
+  page_info: PageInfo!
+}
+
+type Connection_PriceResponse2 @join__type(graph: PRODUCTS) {
+  edges: [Node_PriceResponse]!
+  page_info: PageInfo!
+}
+
+type Connection_PriceResponse2_entry @join__type(graph: PRODUCTS) {
+  key: ID!
+  value: Connection_PriceResponse2
+}
 
 type Connection_ProductResponse @join__type(graph: PRODUCTS) {
   edges: [Node_ProductResponse]!
@@ -46,6 +77,10 @@ scalar DateTime @join__type(graph: AUTH) @join__type(graph: PRODUCTS)
 
 input DeleteUsersRequest_Input @join__type(graph: AUTH) {
   ids: [Int]!
+}
+
+input GtinsRequest_Input @join__type(graph: PRODUCTS) {
+  gtins: [String]!
 }
 
 enum HTTPMethod @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
@@ -72,9 +107,16 @@ input LoginRequest_Input @join__type(graph: AUTH) {
   username: String
 }
 
-type Marketplace @join__type(graph: PRODUCTS) {
+type MarketplaceResponse @join__type(graph: PRODUCTS) {
+  company: Company!
+  company_id: Int!
+  created_at: DateTime!
+  deleted: Boolean!
+  deleted_at: DateTime
   id: Int!
-  name: String!
+  online_marketplace: query_get_marketplaces_items_allOf_1_online_marketplace
+  physical_marketplace: query_get_marketplaces_items_allOf_1_physical_marketplace
+  updated_at: DateTime!
 }
 
 type Mutation @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
@@ -94,8 +136,21 @@ type Mutation @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
   ): Void @httpOperation(subgraph: "Products", path: "/api/v1/shopping_lists/{args.id}", httpMethod: DELETE) @join__field(graph: PRODUCTS)
   delete_user(id: Int!): Void @httpOperation(subgraph: "Auth", path: "/api/v1/users/{args.id}", httpMethod: DELETE) @join__field(graph: AUTH)
   delete_users(input: DeleteUsersRequest_Input): Void @httpOperation(subgraph: "Auth", path: "/api/v1//delete-users", operationSpecificHeaders: [["Content-Type", "application/json"]], httpMethod: POST) @join__field(graph: AUTH)
+  get_price_reports_for_gtins(
+    """Cursor for forward pagination"""
+    after: Int
+    """Cursor for backward pagination"""
+    before: Int
+    """Number of items after cursor"""
+    first: Int
+    input: GtinsRequest_Input
+    """Number of items before cursor"""
+    last: Int
+    marketplace_id: String
+  ): PriceResponses @httpOperation(subgraph: "Products", path: "/api/v1/price_report/by-gtins", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST, queryParamArgMap: "{\"marketplace_id\":\"marketplace_id\",\"first\":\"first\",\"after\":\"after\",\"last\":\"last\",\"before\":\"before\"}") @join__field(graph: PRODUCTS)
   login_route(input: LoginRequest_Input): JSON @httpOperation(subgraph: "Auth", path: "/api/v1/auth/login", operationSpecificHeaders: [["Content-Type", "application/json"]], httpMethod: POST) @join__field(graph: AUTH)
-  post_marketplace(input: NewMarketplace_Input): Marketplace @httpOperation(subgraph: "Products", path: "/api/v1/marketplaces", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST) @join__field(graph: PRODUCTS)
+  post_marketplace(input: NewMarketplace_Input): MarketplaceResponse @httpOperation(subgraph: "Products", path: "/api/v1/marketplaces", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST) @join__field(graph: PRODUCTS)
+  post_price_report(input: [NewPriceReportDSL_Input]): Boolean @httpOperation(subgraph: "Products", path: "/api/v1/price_report", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "text/plain"]], httpMethod: POST) @join__field(graph: PRODUCTS)
   post_products(input: [NewProductPost_Input]): Boolean @httpOperation(subgraph: "Products", path: "/api/v1/products", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "text/plain"]], httpMethod: POST) @join__field(graph: PRODUCTS)
   refresh_route: JSON @httpOperation(subgraph: "Auth", path: "/api/v1/auth/refresh", httpMethod: POST) @join__field(graph: AUTH)
   register_route(input: RegisterRequest_Input): JSON @httpOperation(subgraph: "Auth", path: "/api/v1/auth/register", operationSpecificHeaders: [["Content-Type", "application/json"]], httpMethod: POST) @join__field(graph: AUTH)
@@ -113,7 +168,16 @@ type Mutation @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
 }
 
 input NewMarketplace_Input @join__type(graph: PRODUCTS) {
-  name: String!
+  company_id: Int!
+  id: Int
+}
+
+input NewPriceReportDSL_Input @join__type(graph: PRODUCTS) {
+  currency: mutationInput_post_price_report_input_items_allOf_0_currency!
+  gtin: mutationInput_post_price_report_input_items_allOf_0_gtin!
+  marketplace_id: Int!
+  price: Float!
+  reported_at: DateTime
 }
 
 input NewProductPost_Input @join__type(graph: PRODUCTS) {
@@ -153,9 +217,14 @@ input NewUserDTO_Input @join__type(graph: AUTH) {
   username: String!
 }
 
+type Node_PriceResponse @join__type(graph: PRODUCTS) {
+  cursor: String!
+  node: query_get_price_reports_for_gtin_edges_items_node!
+}
+
 type Node_ProductResponse @join__type(graph: PRODUCTS) {
   cursor: String!
-  node: query_get_products_edges_items_node!
+  node: ProductResponse! @source(name: "node", type: "query_get_products_edges_items_node!", subgraph: "Products")
 }
 
 type Node_UserResponse @join__type(graph: AUTH) {
@@ -164,6 +233,11 @@ type Node_UserResponse @join__type(graph: AUTH) {
 }
 
 scalar ObjMap @join__type(graph: AUTH) @join__type(graph: PRODUCTS)
+
+type OnlineMarketplace @join__type(graph: PRODUCTS) {
+  id: Int!
+  uri: String!
+}
 
 type PageInfo @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
   end_cursor: String
@@ -200,12 +274,34 @@ enum PermissionName @join__type(graph: AUTH) {
   update_user @enum(subgraph: "Auth", value: "\"update:user\"") @join__enumValue(graph: AUTH)
 }
 
-type ProductResponse @join__type(graph: PRODUCTS) {
+type PhysicalMarketplace @join__type(graph: PRODUCTS) {
+  adr_address: String!
+  id: Int!
+  open_location_code: String!
+  place_id: String
+}
+
+type PriceResponses @join__type(graph: PRODUCTS) {
+  additionalProperties: [Connection_PriceResponse2_entry] @dictionary(subgraph: "Products")
+}
+
+type ProductResponse @source(name: "query_get_products_edges_items_node", subgraph: "Products") @join__type(graph: PRODUCTS) {
   created_at: DateTime!
   description: String
   gtin: query_get_products_edges_items_node_allOf_0_gtin!
   images: [ProductToImage]!
   measures: [ProductToMeasureResponse]!
+  price_reports(
+    """Cursor for forward pagination"""
+    after: Int
+    """Cursor for backward pagination"""
+    before: Int
+    """Number of items after cursor"""
+    first: Int
+    """Number of items before cursor"""
+    last: Int
+    marketplace_id: String
+  ): Connection_PriceResponse! @resolve(field: "get_price_reports_for_gtin", arguments: {gtin: "{root.gtin}", first: "{args.first}", after: "{args.after}", last: "{args.last}", before: "{args.before}", marketplace_id: "{args.marketplace_id}"}, sourceTypeName: "Query", sourceName: "Products") @additionalField
   productname: String!
   sellsinraw: Boolean!
   sku: String
@@ -233,17 +329,53 @@ type ProductToMeasureResponse @join__type(graph: PRODUCTS) {
 }
 
 type Query @extraSchemaDefinitionDirective(directives: {transport: [{subgraph: "Auth", kind: "rest", headers: [["Content-Type", "application/json"], ["authorization", "Bearer {context.headers[\"authorization\"]}"]]}]}) @extraSchemaDefinitionDirective(directives: {transport: [{subgraph: "Products", kind: "rest", headers: [["Content-Type", "application/json"], ["authorization", "Bearer {context.headers[\"authorization\"]}"]]}]}) @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
-  get_image(id: String!): get_image_200_response @httpOperation(subgraph: "Products", path: "/api/v1/product_to_image/{args.id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
-  get_marketplace(
+  get_companies: [Company] @httpOperation(subgraph: "Products", path: "/api/v1/companies", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
+  get_company(
     """id"""
     id: Int!
-  ): Marketplace @httpOperation(subgraph: "Products", path: "/api/v1/marketplaces/{args.id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
-  get_marketplaces: [Marketplace] @httpOperation(subgraph: "Products", path: "/api/v1/marketplaces", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
+  ): Company @httpOperation(subgraph: "Products", path: "/api/v1/companies/{args.id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
+  get_image(id: String!): get_image_200_response @httpOperation(subgraph: "Products", path: "/api/v1/product_to_image/{args.id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
+  get_marketplace(
+    """Filter by specific company id"""
+    company_id: Int
+    """Filter by specific company name"""
+    company_name: String
+    """id of the marketplace"""
+    id: Int!
+  ): MarketplaceResponse @httpOperation(subgraph: "Products", path: "/api/v1/marketplaces/{args.id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"company_id\":\"company_id\",\"company_name\":\"company_name\"}") @join__field(graph: PRODUCTS)
+  get_marketplaces(
+    """Filter by specific company id"""
+    company_id: Int
+    """Filter by specific company name"""
+    company_name: String
+  ): [MarketplaceResponse] @httpOperation(subgraph: "Products", path: "/api/v1/marketplaces", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"company_id\":\"company_id\",\"company_name\":\"company_name\"}") @join__field(graph: PRODUCTS)
+  get_price_reports_for_gtin(
+    """Cursor for forward pagination"""
+    after: Int
+    """Cursor for backward pagination"""
+    before: Int
+    """Number of items after cursor"""
+    first: Int
+    """gtin"""
+    gtin: String!
+    """Number of items before cursor"""
+    last: Int
+    marketplace_id: String
+  ): Connection_PriceResponse @httpOperation(subgraph: "Products", path: "/api/v1/price_report/by-gtin/{args.gtin}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"marketplace_id\":\"marketplace_id\",\"first\":\"first\",\"after\":\"after\",\"last\":\"last\",\"before\":\"before\"}") @join__field(graph: PRODUCTS)
   get_product(
     """Global Trade Item Number (gtin)"""
     gtin: String!
   ): ProductResponse @httpOperation(subgraph: "Products", path: "/api/v1/products/{args.gtin}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
-  get_products: Connection_ProductResponse @httpOperation(subgraph: "Products", path: "/api/v1/products", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
+  get_products(
+    """Cursor for forward pagination"""
+    after: Int
+    """Cursor for backward pagination"""
+    before: Int
+    """Number of items after cursor"""
+    first: Int
+    """Number of items before cursor"""
+    last: Int
+  ): Connection_ProductResponse @httpOperation(subgraph: "Products", path: "/api/v1/products", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"first\":\"first\",\"after\":\"after\",\"last\":\"last\",\"before\":\"before\"}") @join__field(graph: PRODUCTS)
   get_unit(
     """id"""
     id: Int!
@@ -351,6 +483,10 @@ enum link__Purpose {
   SECURITY
 }
 
+scalar mutationInput_post_price_report_input_items_allOf_0_currency @length(subgraph: "Products", min: 3, max: 3) @join__type(graph: PRODUCTS)
+
+scalar mutationInput_post_price_report_input_items_allOf_0_gtin @length(subgraph: "Products", min: 8, max: 14) @join__type(graph: PRODUCTS)
+
 scalar mutationInput_post_products_input_items_allOf_0_gtin @length(subgraph: "Products", min: 8, max: 14) @join__type(graph: PRODUCTS)
 
 input mutationInput_post_products_input_items_allOf_1_images_Input @join__type(graph: PRODUCTS) {
@@ -362,17 +498,26 @@ scalar queryInput_post_image_input_items_gtin @length(subgraph: "Products", min:
 
 scalar query_get_image_oneOf_1_gtin @length(subgraph: "Products", min: 8, max: 14) @join__type(graph: PRODUCTS)
 
-type query_get_products_edges_items_node @join__type(graph: PRODUCTS) {
+union query_get_marketplaces_items_allOf_1_online_marketplace @join__type(graph: PRODUCTS) @join__unionMember(graph: PRODUCTS, member: "Void_container") @join__unionMember(graph: PRODUCTS, member: "OnlineMarketplace") = OnlineMarketplace | Void_container
+
+union query_get_marketplaces_items_allOf_1_physical_marketplace @join__type(graph: PRODUCTS) @join__unionMember(graph: PRODUCTS, member: "Void_container") @join__unionMember(graph: PRODUCTS, member: "PhysicalMarketplace") = PhysicalMarketplace | Void_container
+
+type query_get_price_reports_for_gtin_edges_items_node @join__type(graph: PRODUCTS) {
+  company: Company!
   created_at: DateTime!
-  description: String
-  gtin: query_get_products_edges_items_node_allOf_0_gtin!
-  images: [ProductToImage]!
-  measures: [ProductToMeasureResponse]!
-  productname: String!
-  sellsinraw: Boolean!
-  sku: String
+  created_by: Int!
+  currency: query_get_price_reports_for_gtin_edges_items_node_allOf_0_currency!
+  gtin: query_get_price_reports_for_gtin_edges_items_node_allOf_0_gtin!
+  id: BigInt!
+  marketplace: MarketplaceResponse!
+  price: Float!
+  reported_at: DateTime!
   updated_at: DateTime!
 }
+
+scalar query_get_price_reports_for_gtin_edges_items_node_allOf_0_currency @length(subgraph: "Products", min: 3, max: 3) @join__type(graph: PRODUCTS)
+
+scalar query_get_price_reports_for_gtin_edges_items_node_allOf_0_gtin @length(subgraph: "Products", min: 8, max: 14) @join__type(graph: PRODUCTS)
 
 scalar query_get_products_edges_items_node_allOf_0_gtin @length(subgraph: "Products", min: 8, max: 14) @join__type(graph: PRODUCTS)
 
