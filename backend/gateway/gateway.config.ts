@@ -100,7 +100,7 @@ export const gatewayConfig = defineConfig({
                     .transport[0].location;
                 const url = new URL("/api/v1/price_report/by-gtins", baseUrl);
 
-                console.log(url.toString(), JSON.stringify({ gtins }));
+                // console.log(url.toString(), JSON.stringify({ gtins }));
 
                 // 2. Dynamically append query params (only if they exist)
                 Object.entries(args).forEach(([key, value]) => {
@@ -127,7 +127,7 @@ export const gatewayConfig = defineConfig({
 
                 const data = await response.json();
 
-                console.log(data);
+                // console.log(data);
 
                 // Map results back to each GTIN
                 return gtins.map(

@@ -38,7 +38,7 @@ import {
 } from "@mantine/core";
 import {
   IconArrowBack,
-  IconShoppingCart,
+  // IconShoppingCart,
   IconShare,
 } from "@tabler/icons-react";
 import Link from "next/link";
@@ -475,7 +475,7 @@ export default function PriceComparisonReport(
         </Card>
 
         {/* Action buttons */}
-        <Group justify="center" mt="xl">
+        {/* <Group justify="center" mt="xl">
           <Button leftSection={<IconShoppingCart size={16} />} color="blue">
             Add to Shopping List
           </Button>
@@ -486,7 +486,7 @@ export default function PriceComparisonReport(
           >
             Share This Report
           </Button>
-        </Group>
+        </Group> */}
       </Container>
     </motion.div>
   );

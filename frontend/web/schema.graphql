@@ -98,7 +98,7 @@ enum HTTPMethod @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
-scalar JSON @join__type(graph: AUTH) @join__type(graph: PRODUCTS) @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+scalar JSON @join__type(graph: AUTH) @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 """Login request. Either `email` or `username` must be provided."""
 input LoginRequest_Input @join__type(graph: AUTH) {
@@ -114,13 +114,14 @@ type MarketplaceResponse @join__type(graph: PRODUCTS) {
   deleted: Boolean!
   deleted_at: DateTime
   id: Int!
+  name: String!
   online_marketplace: query_get_marketplaces_items_allOf_1_online_marketplace
   physical_marketplace: query_get_marketplaces_items_allOf_1_physical_marketplace
   updated_at: DateTime!
 }
 
 type Mutation @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
-  create_shopping_list(input: NewShoppingListRequest_Input): JSON @httpOperation(subgraph: "Products", path: "/api/v1/shopping_lists/", operationSpecificHeaders: [["Content-Type", "application/json"]], httpMethod: POST) @join__field(graph: PRODUCTS)
+  create_shopping_list(input: NewShoppingListRequest_Input): ShoppingListResponse @httpOperation(subgraph: "Products", path: "/api/v1/shopping_lists/", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST) @join__field(graph: PRODUCTS)
   create_users(
     input: [NewUserDTO_Input]
     """Allow upsert if user exists"""
@@ -133,7 +134,7 @@ type Mutation @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
   delete_shopping_list(
     """Shopping list ID"""
     id: Int!
-  ): Void @httpOperation(subgraph: "Products", path: "/api/v1/shopping_lists/{args.id}", httpMethod: DELETE) @join__field(graph: PRODUCTS)
+  ): ShoppingListResponse @httpOperation(subgraph: "Products", path: "/api/v1/shopping_lists/{args.id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: DELETE) @join__field(graph: PRODUCTS)
   delete_user(id: Int!): Void @httpOperation(subgraph: "Auth", path: "/api/v1/users/{args.id}", httpMethod: DELETE) @join__field(graph: AUTH)
   delete_users(input: DeleteUsersRequest_Input): Void @httpOperation(subgraph: "Auth", path: "/api/v1//delete-users", operationSpecificHeaders: [["Content-Type", "application/json"]], httpMethod: POST) @join__field(graph: AUTH)
   get_price_reports_for_gtins(
@@ -149,16 +150,16 @@ type Mutation @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
     marketplace_id: String
   ): PriceResponses @httpOperation(subgraph: "Products", path: "/api/v1/price_report/by-gtins", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST, queryParamArgMap: "{\"marketplace_id\":\"marketplace_id\",\"first\":\"first\",\"after\":\"after\",\"last\":\"last\",\"before\":\"before\"}") @join__field(graph: PRODUCTS)
   login_route(input: LoginRequest_Input): JSON @httpOperation(subgraph: "Auth", path: "/api/v1/auth/login", operationSpecificHeaders: [["Content-Type", "application/json"]], httpMethod: POST) @join__field(graph: AUTH)
+  patch_shopping_list(
+    """Shopping list ID"""
+    id: Int!
+    input: PatchShoppingListRequest_Input
+  ): ShoppingListResponse @httpOperation(subgraph: "Products", path: "/api/v1/shopping_lists/{args.id}", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: PATCH) @join__field(graph: PRODUCTS)
   post_marketplace(input: NewMarketplace_Input): MarketplaceResponse @httpOperation(subgraph: "Products", path: "/api/v1/marketplaces", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "application/json"]], httpMethod: POST) @join__field(graph: PRODUCTS)
   post_price_report(input: [NewPriceReportDSL_Input]): Boolean @httpOperation(subgraph: "Products", path: "/api/v1/price_report", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "text/plain"]], httpMethod: POST) @join__field(graph: PRODUCTS)
   post_products(input: [NewProductPost_Input]): Boolean @httpOperation(subgraph: "Products", path: "/api/v1/products", operationSpecificHeaders: [["Content-Type", "application/json"], ["accept", "text/plain"]], httpMethod: POST) @join__field(graph: PRODUCTS)
   refresh_route: JSON @httpOperation(subgraph: "Auth", path: "/api/v1/auth/refresh", httpMethod: POST) @join__field(graph: AUTH)
   register_route(input: RegisterRequest_Input): JSON @httpOperation(subgraph: "Auth", path: "/api/v1/auth/register", operationSpecificHeaders: [["Content-Type", "application/json"]], httpMethod: POST) @join__field(graph: AUTH)
-  update_shopping_list(
-    """Shopping list ID"""
-    id: Int!
-    input: UpdateShoppingListRequest_Input
-  ): JSON @httpOperation(subgraph: "Products", path: "/api/v1/shopping_lists/{args.id}", operationSpecificHeaders: [["Content-Type", "application/json"]], httpMethod: PUT) @join__field(graph: PRODUCTS)
   upsert_user(
     id: Int!
     input: NewUserDTO_Input
@@ -170,6 +171,7 @@ type Mutation @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
 input NewMarketplace_Input @join__type(graph: PRODUCTS) {
   company_id: Int!
   id: Int
+  name: String!
 }
 
 input NewPriceReportDSL_Input @join__type(graph: PRODUCTS) {
@@ -208,6 +210,7 @@ input NewProductToMeasurePartial_Input @join__type(graph: PRODUCTS) {
 
 input NewShoppingListRequest_Input @join__type(graph: PRODUCTS) {
   items: [ShoppingListItemRequest_Input]!
+  name: String
   user_ids: [Int]!
 }
 
@@ -244,6 +247,11 @@ type PageInfo @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
   has_next_page: Boolean!
   has_prev_page: Boolean!
   start_cursor: String
+}
+
+input PatchShoppingListRequest_Input @join__type(graph: PRODUCTS) {
+  items: [ShoppingListItemRequest_Input]
+  user_ids: [Int]
 }
 
 type Permission @join__type(graph: AUTH) {
@@ -376,6 +384,11 @@ type Query @extraSchemaDefinitionDirective(directives: {transport: [{subgraph: "
     """Number of items before cursor"""
     last: Int
   ): Connection_ProductResponse @httpOperation(subgraph: "Products", path: "/api/v1/products", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"first\":\"first\",\"after\":\"after\",\"last\":\"last\",\"before\":\"before\"}") @join__field(graph: PRODUCTS)
+  get_shopping_list(
+    """Shopping list ID"""
+    id: Int!
+  ): ShoppingListResponse @httpOperation(subgraph: "Products", path: "/api/v1/shopping_lists/{args.id}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
+  get_shopping_lists: ShoppingListsResponse @httpOperation(subgraph: "Products", path: "/api/v1/shopping_lists/", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
   get_unit(
     """id"""
     id: Int!
@@ -417,10 +430,41 @@ type Role @join__type(graph: AUTH) {
   name: String!
 }
 
+type ShoppingList @join__type(graph: PRODUCTS) {
+  created_at: DateTime!
+  id: Int!
+  name: String
+  updated_at: DateTime!
+}
+
+type ShoppingListItem @join__type(graph: PRODUCTS) {
+  amount: Float!
+  created_at: DateTime!
+  gtin: String!
+  shopping_list_id: Int!
+  unit_id: Int
+  updated_at: DateTime!
+}
+
 input ShoppingListItemRequest_Input @join__type(graph: PRODUCTS) {
   amount: Float!
   gtin: String!
   unit_id: Int
+}
+
+type ShoppingListResponse @join__type(graph: PRODUCTS) {
+  items: [ShoppingListItem]!
+  list: ShoppingList!
+  users: [ShoppingListToUser]!
+}
+
+type ShoppingListToUser @join__type(graph: PRODUCTS) {
+  shopping_list_id: Int!
+  user_id: Int!
+}
+
+type ShoppingListsResponse @join__type(graph: PRODUCTS) {
+  lists: [ShoppingListResponse]!
 }
 
 type Unit @join__type(graph: PRODUCTS) {
@@ -434,11 +478,6 @@ enum UnitSymbol @join__type(graph: PRODUCTS) {
   g @join__enumValue(graph: PRODUCTS)
   mL @join__enumValue(graph: PRODUCTS)
   oz @join__enumValue(graph: PRODUCTS)
-}
-
-input UpdateShoppingListRequest_Input @join__type(graph: PRODUCTS) {
-  items: [ShoppingListItemRequest_Input]
-  user_ids: [Int]
 }
 
 type UserResponse @join__type(graph: AUTH) {

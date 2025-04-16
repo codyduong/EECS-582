@@ -88,8 +88,10 @@ async fn main() -> std::io::Result<()> {
       handlers::products::get_products,
       handlers::products::post_products,
       handlers::shopping_lists::create_shopping_list,
-      handlers::shopping_lists::update_shopping_list,
+      handlers::shopping_lists::patch_shopping_list,
       handlers::shopping_lists::delete_shopping_list,
+      handlers::shopping_lists::get_shopping_list,
+      handlers::shopping_lists::get_shopping_lists,
       handlers::units::get_unit,
       handlers::units::get_units,
     )

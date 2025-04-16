@@ -34,6 +34,7 @@ pub struct Marketplace {
   pub updated_at: chrono::DateTime<chrono::Utc>,
   pub deleted: bool,
   pub deleted_at: Option<chrono::DateTime<chrono::Utc>>,
+  pub name: String,
 }
 
 #[derive(Debug, ToSchema, Serialize)]
@@ -41,8 +42,8 @@ pub struct MarketplaceResponse {
   #[serde(flatten)]
   pub marketplace: Marketplace,
   pub company: super::Company,
-  pub physical_marketplace: Option<super::PhysicalMarketplaceResponse>,
-  pub online_marketplace: Option<super::OnlineMarketplaceResponse>,
+  pub physical_marketplace: Option<super::PhysicalMarketplace>,
+  pub online_marketplace: Option<super::OnlineMarketplace>,
 }
 
 #[derive(Deserialize, Insertable, ToSchema, Clone, Debug)]
@@ -50,4 +51,5 @@ pub struct MarketplaceResponse {
 pub struct NewMarketplace {
   pub id: Option<i32>,
   pub company_id: i32,
+  pub name: String,
 }

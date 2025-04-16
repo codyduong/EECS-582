@@ -47,6 +47,7 @@ import {
   IconCheck,
   IconX,
   IconArrowBack,
+  IconShoppingCart,
 } from "@tabler/icons-react";
 import { ProductCard } from "@/components/ProductCard";
 import { QRCodeGenerator } from "@/components/QRCodeGenerator";
@@ -144,6 +145,47 @@ const PRICE_REPORT = graphql(`
   }
 `);
 
+const SHOPPING_LIST = graphql(`
+  query ProductsPage_ShoppingLists {
+    get_shopping_lists {
+      lists {
+        list {
+          id
+          name
+        }
+        users {
+          shopping_list_id
+        }
+      }
+    }
+  }
+`);
+
+// const CREATE_SHOPPING_LIST = graphql(``);
+
+// const PATCH_SHOPPING_LIST = graphql(`
+//   # 5 is count
+//   mutation MyMutation(
+//     $id: Int!
+//     $amount: Float!
+//     $gtin: String!
+//     $user_ids: [Int]!
+//     $unit_id: Int = 5
+//   ) {
+//     patch_shopping_list(
+//       id: $id
+//       input: { items: { amount: $amount, gtin: $gtin, unit_id: }, user_ids: $user_ids }
+//     ) {
+//       items {
+//         gtin
+//       }
+//       list {
+//         id
+//       }
+//     }
+//   }
+// `);
+
 export default function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
@@ -160,6 +202,7 @@ export default function ProductDetailPage() {
       gtin: id,
     },
   });
+  const { data: shoppingListData } = useQuery(SHOPPING_LIST, { skip: !user });
 
   const [
     getMarketplaces,
@@ -190,6 +233,21 @@ export default function ProductDetailPage() {
     )
     .filter((i) => i.value !== null);
 
+  const shoppingLists =
+    shoppingListData?.get_shopping_lists?.lists.filter((i) => !!i) ?? [];
+  const shoppingListValues = [
+    ...shoppingLists.map(
+      (list): ComboboxItem => ({
+        label: list.list.name ?? `Shopping List ${list.list.id}`,
+        value: `${list.list.id}`,
+      }),
+    ),
+    {
+      label: "New Shopping List",
+      value: `${-1}`,
+    },
+  ];
+
   // Get related products (excluding current product)
   const relatedProducts = products.filter((p) => p.id !== id);
 
@@ -206,6 +264,9 @@ export default function ProductDetailPage() {
     `${number}` | null
   >(null);
   const [reportedMarketplaceId, setReportedMarketplaceId] = useState<
+    `${number}` | null
+  >(null);
+  const [selectedShoppingList, setSelectedShoppingList] = useState<
     `${number}` | null
   >(null);
 
@@ -545,6 +606,27 @@ export default function ProductDetailPage() {
                     </div>
                   ))}
                 </div>
+
+                {user && (
+                  <div className="space-y-4 mt-4">
+                    <Group mt={"md"} justify="center" align="end">
+                      <Select
+                        label="Shopping List"
+                        placeholder="Select a shopping list"
+                        data={shoppingListValues}
+                        // @ts-expect-error: yada
+                        onChange={setSelectedShoppingList}
+                      />
+                      <Button
+                        leftSection={<IconShoppingCart size={16} />}
+                        color="blue"
+                        disabled={!selectedShoppingList}
+                      >
+                        Add
+                      </Button>
+                    </Group>
+                  </div>
+                )}
               </motion.div>
             </div>
           </div>

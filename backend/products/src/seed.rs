@@ -210,10 +210,27 @@ chocolate, a crisp wafer shell, and a whole hazelnut</li>
       NewMarketplace {
         id: Some(1),
         company_id: 1,
+        name: "Walmart Supercenter".to_string(),
       },
       NewMarketplace {
         id: Some(2),
         company_id: 1,
+        name: "Walmart Supercenter".to_string(),
+      },
+      NewMarketplace {
+        id: Some(3),
+        company_id: 2,
+        name: "Target".to_string(),
+      },
+      NewMarketplace {
+        id: Some(4),
+        company_id: 3,
+        name: "Dillons".to_string(),
+      },
+      NewMarketplace {
+        id: Some(5),
+        company_id: 3,
+        name: "Dillons".to_string(),
       },
     ];
 
@@ -229,6 +246,24 @@ chocolate, a crisp wafer shell, and a whole hazelnut</li>
         adr_address: "3300 Iowa St, Lawrence, KS 66046".to_string(),
         place_id: Some("uQLgqWtxdSnzgP4r9".to_string()),
         open_location_code: "WPFV+84".to_string(),
+      },
+      PhysicalMarketplace {
+        id: 3,
+        adr_address: "3201 Iowa St, Lawrence, KS 66046".to_string(),
+        place_id: Some("DP1q2EDdXmgNxc4f7".to_string()),
+        open_location_code: "WPGP+7C".to_string(),
+      },
+      PhysicalMarketplace {
+        id: 4,
+        adr_address: "3000 W 6th St, Lawrence, KS 66049".to_string(),
+        place_id: Some("z1q15zdypFUYT6um8".to_string()),
+        open_location_code: "XPFH+38".to_string(),
+      },
+      PhysicalMarketplace {
+        id: 5,
+        adr_address: "4701 W 6th St, Lawrence, KS 66049".to_string(),
+        place_id: Some("c6pjRSrZTRpq4Ti57".to_string()),
+        open_location_code: "XMCW+39".to_string(),
       },
     ];
 

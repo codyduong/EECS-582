@@ -106,6 +106,7 @@ export type MarketplaceResponse = {
   deleted: Scalars['Boolean']['output'];
   deleted_at?: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
   online_marketplace?: Maybe<Query_Get_Marketplaces_Items_AllOf_1_Online_Marketplace>;
   physical_marketplace?: Maybe<Query_Get_Marketplaces_Items_AllOf_1_Physical_Marketplace>;
   updated_at: Scalars['DateTime']['output'];
@@ -113,20 +114,20 @@ export type MarketplaceResponse = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  create_shopping_list?: Maybe<Scalars['JSON']['output']>;
+  create_shopping_list?: Maybe<ShoppingListResponse>;
   create_users?: Maybe<Scalars['JSON']['output']>;
   delete_product?: Maybe<ProductResponse>;
-  delete_shopping_list?: Maybe<Scalars['Void']['output']>;
+  delete_shopping_list?: Maybe<ShoppingListResponse>;
   delete_user?: Maybe<Scalars['Void']['output']>;
   delete_users?: Maybe<Scalars['Void']['output']>;
   get_price_reports_for_gtins?: Maybe<PriceResponses>;
   login_route?: Maybe<Scalars['JSON']['output']>;
+  patch_shopping_list?: Maybe<ShoppingListResponse>;
   post_marketplace?: Maybe<MarketplaceResponse>;
   post_price_report?: Maybe<Scalars['Boolean']['output']>;
   post_products?: Maybe<Scalars['Boolean']['output']>;
   refresh_route?: Maybe<Scalars['JSON']['output']>;
   register_route?: Maybe<Scalars['JSON']['output']>;
-  update_shopping_list?: Maybe<Scalars['JSON']['output']>;
   upsert_user?: Maybe<Scalars['JSON']['output']>;
 };
 
@@ -177,6 +178,12 @@ export type MutationLogin_RouteArgs = {
 };
 
 
+export type MutationPatch_Shopping_ListArgs = {
+  id: Scalars['Int']['input'];
+  input?: InputMaybe<PatchShoppingListRequest_Input>;
+};
+
+
 export type MutationPost_MarketplaceArgs = {
   input?: InputMaybe<NewMarketplace_Input>;
 };
@@ -197,12 +204,6 @@ export type MutationRegister_RouteArgs = {
 };
 
 
-export type MutationUpdate_Shopping_ListArgs = {
-  id: Scalars['Int']['input'];
-  input?: InputMaybe<UpdateShoppingListRequest_Input>;
-};
-
-
 export type MutationUpsert_UserArgs = {
   id: Scalars['Int']['input'];
   input?: InputMaybe<NewUserDto_Input>;
@@ -212,6 +213,7 @@ export type MutationUpsert_UserArgs = {
 export type NewMarketplace_Input = {
   company_id: Scalars['Int']['input'];
   id?: InputMaybe<Scalars['Int']['input']>;
+  name: Scalars['String']['input'];
 };
 
 export type NewPriceReportDsl_Input = {
@@ -250,6 +252,7 @@ export type NewProductToMeasurePartial_Input = {
 
 export type NewShoppingListRequest_Input = {
   items: Array<InputMaybe<ShoppingListItemRequest_Input>>;
+  name?: InputMaybe<Scalars['String']['input']>;
   user_ids: Array<InputMaybe<Scalars['Int']['input']>>;
 };
 
@@ -289,6 +292,11 @@ export type PageInfo = {
   has_next_page: Scalars['Boolean']['output'];
   has_prev_page: Scalars['Boolean']['output'];
   start_cursor?: Maybe<Scalars['String']['output']>;
+};
+
+export type PatchShoppingListRequest_Input = {
+  items?: InputMaybe<Array<InputMaybe<ShoppingListItemRequest_Input>>>;
+  user_ids?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
 };
 
 export type Permission = {
@@ -388,6 +396,8 @@ export type Query = {
   get_price_reports_for_gtin?: Maybe<Connection_PriceResponse>;
   get_product?: Maybe<ProductResponse>;
   get_products?: Maybe<Connection_ProductResponse>;
+  get_shopping_list?: Maybe<ShoppingListResponse>;
+  get_shopping_lists?: Maybe<ShoppingListsResponse>;
   get_unit?: Maybe<Unit>;
   get_units?: Maybe<Array<Maybe<Unit>>>;
   get_user?: Maybe<UserResponse>;
@@ -442,6 +452,11 @@ export type QueryGet_ProductsArgs = {
 };
 
 
+export type QueryGet_Shopping_ListArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
 export type QueryGet_UnitArgs = {
   id: Scalars['Int']['input'];
 };
@@ -480,10 +495,46 @@ export type Role = {
   name: Scalars['String']['output'];
 };
 
+export type ShoppingList = {
+  __typename?: 'ShoppingList';
+  created_at: Scalars['DateTime']['output'];
+  id: Scalars['Int']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  updated_at: Scalars['DateTime']['output'];
+};
+
+export type ShoppingListItem = {
+  __typename?: 'ShoppingListItem';
+  amount: Scalars['Float']['output'];
+  created_at: Scalars['DateTime']['output'];
+  gtin: Scalars['String']['output'];
+  shopping_list_id: Scalars['Int']['output'];
+  unit_id?: Maybe<Scalars['Int']['output']>;
+  updated_at: Scalars['DateTime']['output'];
+};
+
 export type ShoppingListItemRequest_Input = {
   amount: Scalars['Float']['input'];
   gtin: Scalars['String']['input'];
   unit_id?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type ShoppingListResponse = {
+  __typename?: 'ShoppingListResponse';
+  items: Array<Maybe<ShoppingListItem>>;
+  list: ShoppingList;
+  users: Array<Maybe<ShoppingListToUser>>;
+};
+
+export type ShoppingListToUser = {
+  __typename?: 'ShoppingListToUser';
+  shopping_list_id: Scalars['Int']['output'];
+  user_id: Scalars['Int']['output'];
+};
+
+export type ShoppingListsResponse = {
+  __typename?: 'ShoppingListsResponse';
+  lists: Array<Maybe<ShoppingListResponse>>;
 };
 
 export type Unit = {
@@ -499,11 +550,6 @@ export enum UnitSymbol {
   ML = 'mL',
   Oz = 'oz'
 }
-
-export type UpdateShoppingListRequest_Input = {
-  items?: InputMaybe<Array<InputMaybe<ShoppingListItemRequest_Input>>>;
-  user_ids?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
-};
 
 export type UserResponse = {
   __typename?: 'UserResponse';
@@ -594,6 +640,11 @@ export type ProductsPage_PriceReportMutationVariables = Exact<{
 
 
 export type ProductsPage_PriceReportMutation = { __typename?: 'Mutation', post_price_report?: boolean | null };
+
+export type ProductsPage_ShoppingListsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ProductsPage_ShoppingListsQuery = { __typename?: 'Query', get_shopping_lists?: { __typename?: 'ShoppingListsResponse', lists: Array<{ __typename?: 'ShoppingListResponse', list: { __typename?: 'ShoppingList', id: number, name?: string | null }, users: Array<{ __typename?: 'ShoppingListToUser', shopping_list_id: number } | null> } | null> } | null };
 
 export type PriceComparison_GetProductQueryVariables = Exact<{
   gtin: Scalars['String']['input'];
