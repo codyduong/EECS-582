@@ -13,7 +13,7 @@
  *  - 2025-03-28 - @codyduong - add gql
  */
 
-import { useState } from "react";
+import { KeyboardEventHandler, useCallback, useEffect, useState } from "react";
 import {
   Container,
   TextInput,
@@ -24,6 +24,10 @@ import {
   Tabs,
   Paper,
   Tooltip,
+  ComboboxItem,
+  Select,
+  NumberInput,
+  Checkbox,
 } from "@mantine/core";
 import { ProductCard } from "@/components/ProductCard";
 import {
@@ -32,6 +36,8 @@ import {
   // IconUpload,
   // IconList,
   IconAdjustmentsHorizontal,
+  IconMathEqualLower,
+  IconMapPin,
 } from "@tabler/icons-react";
 import { useUser } from "@/contexts/UserContext";
 import ProductForm from "@/components/admin/ProductForm";
@@ -40,9 +46,23 @@ import ProductList from "@/components/admin/ProductList";
 import { graphql } from "@/graphql";
 import { useQuery } from "@apollo/client";
 
-const ProductsQuery = graphql(`
-  query Products {
-    get_products {
+const PRODUCTSPAGE_QUERY = graphql(`
+  query ProductsPage_Primary(
+    $search: String
+    $company_id: Int
+    $maximum_price: Float
+    $hide_unpriced: Boolean
+  ) {
+    get_companies {
+      id
+      name
+    }
+    get_products(
+      search: $search
+      company_id: $company_id
+      maximum_price: $maximum_price
+      hide_unpriced: $hide_unpriced
+    ) {
       edges {
         node {
           gtin
@@ -86,11 +106,22 @@ export default function ProductsPage() {
   const [searchValue, setSearchValue] = useState("");
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>("add");
+  const [showUnpriced, setShowUnpriced] = useState(true);
+  const [maxPrice, setMaxPrice] = useState(-1);
+  const [selectedCompany, setSelectedCompany] = useState(-1);
   const { user } = useUser();
-  const { data } = useQuery(ProductsQuery, {});
+  const { data, refetch } = useQuery(PRODUCTSPAGE_QUERY, {});
 
   const products =
     data?.get_products?.edges?.filter((p) => !!p).map(({ node }) => node) ?? [];
+
+  const companies = data?.get_companies?.filter((p) => !!p) ?? [];
+  const companiesData = companies.map(
+    (company): ComboboxItem => ({
+      value: `${company.id}`,
+      label: company.name,
+    }),
+  );
 
   // Check if user has admin permissions
   const hasAdminAccess =
@@ -105,6 +136,25 @@ export default function ProductsPage() {
   // const filteredProducts = products.filter((product) =>
   //   product.name.toLowerCase().includes(searchValue.toLowerCase()),
   // );
+
+  const refetchProducts = useCallback(() => {
+    refetch({
+      search: searchValue || null,
+      company_id: selectedCompany !== -1 ? selectedCompany : null,
+      hide_unpriced: maxPrice === -1 ? !showUnpriced : null,
+      maximum_price: maxPrice !== -1 ? maxPrice : null,
+    });
+  }, [maxPrice, refetch, searchValue, selectedCompany, showUnpriced]);
+
+  const handleEnter: KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (e.key === "Enter") {
+      refetchProducts();
+    }
+  };
+
+  useEffect(() => {
+    refetchProducts();
+  }, [refetchProducts, maxPrice, selectedCompany, showUnpriced]);
 
   return (
     // Container component to center content and add horizontal padding
@@ -126,17 +176,79 @@ export default function ProductsPage() {
         )}
       </Group>
       {/* Group component to center the search input */}
-      <Group mb="xl">
-        {/* Search input with placeholder text and icon */}
-        <TextInput
-          placeholder="Search products..."
-          leftSection={<IconSearch size={14} />}
-          className="w-full max-w-lg"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          disabled
-        />
-      </Group>
+      <Paper p={8} mt={8}>
+        <Group mb="xl" className="flex flex-row w-full items-end">
+          {/* Search input with placeholder text and icon */}
+          <TextInput
+            placeholder="Search products..."
+            leftSection={<IconSearch size={14} />}
+            className="w-full max-w-md"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onBlur={refetchProducts}
+            onKeyDown={handleEnter}
+          />
+          <Select
+            label="Filter by Company"
+            leftSection={<IconMapPin size={14} />}
+            className="w-50"
+            value={selectedCompany !== -1 ? `${selectedCompany}` : null}
+            data={companiesData}
+            clearable
+            onChange={(v) => {
+              if (v === "" || v === null) {
+                setSelectedCompany(-1);
+                return;
+              }
+              const coerced = Number(v);
+              if (!Number.isNaN(coerced)) {
+                setSelectedCompany(coerced);
+              } else {
+                setSelectedCompany(-1);
+              }
+            }}
+          />
+          {/* <NumberInput
+            label="Minimum Price"
+            leftSection={<IconMathEqualGreater size={14} />}
+            className="w-40"
+            decimalScale={2}
+            fixedDecimalScale
+            disabled
+          /> */}
+          <NumberInput
+            label="Maximum Price"
+            leftSection={<IconMathEqualLower size={14} />}
+            className="w-40"
+            decimalScale={2}
+            fixedDecimalScale
+            onChange={(e) => {
+              if (e === 0 || e === "") {
+                setMaxPrice(-1);
+                return;
+              }
+
+              const coerced = Number(e);
+              if (!Number.isNaN(coerced)) {
+                setMaxPrice(coerced);
+              } else {
+                setMaxPrice(-1);
+              }
+            }}
+            onBlur={refetchProducts}
+            onKeyDown={handleEnter}
+          />
+          <Checkbox
+            label="Show unpriced items"
+            className="mb-2"
+            checked={maxPrice !== -1 ? false : showUnpriced}
+            disabled={maxPrice !== -1}
+            onChange={(e) => {
+              setShowUnpriced(e.currentTarget.checked);
+            }}
+          />
+        </Group>
+      </Paper>
 
       {/* Grid layout instead of flex for more precise control */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">

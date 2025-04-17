@@ -1,4 +1,4 @@
-schema @link(url: "https://specs.apollo.dev/link/v1.0") @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) @link(url: "https://the-guild.dev/graphql/mesh/spec/v1.0", import: ["@enum", "@httpOperation", "@transport", "@extraSchemaDefinitionDirective", "@resolveRoot", "@length", "@dictionary", "@source"]) {
+schema @link(url: "https://specs.apollo.dev/link/v1.0") @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) @link(url: "https://the-guild.dev/graphql/mesh/spec/v1.0", import: ["@enum", "@httpOperation", "@transport", "@extraSchemaDefinitionDirective", "@resolveRoot", "@length", "@dictionary", "@typescript", "@example", "@source"]) {
   query: Query
   mutation: Mutation
 }
@@ -30,6 +30,10 @@ directive @resolveRoot(subgraph: String) repeatable on FIELD_DEFINITION
 directive @length(subgraph: String, min: Int, max: Int) repeatable on SCALAR
 
 directive @dictionary(subgraph: String) repeatable on FIELD_DEFINITION
+
+directive @typescript(subgraph: String, type: String) repeatable on SCALAR | ENUM
+
+directive @example(subgraph: String, value: ObjMap) repeatable on FIELD_DEFINITION | OBJECT | INPUT_OBJECT | ENUM | SCALAR
 
 directive @source(name: String!, type: String, subgraph: String!) repeatable on SCALAR | OBJECT | FIELD_DEFINITION | ARGUMENT_DEFINITION | INTERFACE | UNION | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
 
@@ -156,12 +160,22 @@ type Query @extraSchemaDefinitionDirective(directives: {transport: [{subgraph: "
     """Number of items after cursor"""
     first: Int
     """Cursor for forward pagination"""
-    after: Int
+    after: String
     """Number of items before cursor"""
     last: Int
     """Cursor for backward pagination"""
-    before: Int
-  ): Connection_ProductResponse @httpOperation(subgraph: "Products", path: "/api/v1/products", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"first\":\"first\",\"after\":\"after\",\"last\":\"last\",\"before\":\"before\"}") @join__field(graph: PRODUCTS)
+    before: String
+    """Full-text search in product name or description"""
+    search: String
+    """Hide products without price information"""
+    hide_unpriced: Boolean
+    """Minimum product price to include"""
+    minimum_price: Float
+    """Maximum product price to include"""
+    maximum_price: Float
+    """Filter products by company ID"""
+    company_id: Int
+  ): Connection_ProductResponse @httpOperation(subgraph: "Products", path: "/api/v1/products", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"first\":\"first\",\"after\":\"after\",\"last\":\"last\",\"before\":\"before\",\"search\":\"search\",\"hide_unpriced\":\"hide_unpriced\",\"minimum_price\":\"minimum_price\",\"maximum_price\":\"maximum_price\",\"company_id\":\"company_id\"}") @join__field(graph: PRODUCTS)
   get_product(
     """Global Trade Item Number (gtin)"""
     gtin: String!
@@ -484,6 +498,14 @@ enum UnitSymbol @join__type(graph: PRODUCTS) {
   count @join__enumValue(graph: PRODUCTS)
 }
 
+enum add_const @typescript(subgraph: "Products", type: "\"add\"") @example(subgraph: "Products", value: "add") @join__type(graph: PRODUCTS) {
+  add @enum(subgraph: "Products", value: "\"add\"") @join__enumValue(graph: PRODUCTS)
+}
+
+enum remove_const @typescript(subgraph: "Products", type: "\"remove\"") @example(subgraph: "Products", value: "remove") @join__type(graph: PRODUCTS) {
+  remove @enum(subgraph: "Products", value: "\"remove\"") @join__enumValue(graph: PRODUCTS)
+}
+
 input DeleteUsersRequest_Input @join__type(graph: AUTH) {
   ids: [Int]!
 }
@@ -559,7 +581,7 @@ input NewProductToMeasurePartial_Input @join__type(graph: PRODUCTS) {
 input NewShoppingListRequest_Input @join__type(graph: PRODUCTS) {
   items: [ShoppingListItemRequest_Input]!
   name: String
-  user_ids: [Int]!
+  user_ids: [Int]
 }
 
 input ShoppingListItemRequest_Input @join__type(graph: PRODUCTS) {
@@ -569,6 +591,22 @@ input ShoppingListItemRequest_Input @join__type(graph: PRODUCTS) {
 }
 
 input PatchShoppingListRequest_Input @join__type(graph: PRODUCTS) {
-  items: [ShoppingListItemRequest_Input]
-  user_ids: [Int]
+  items: [ItemPatchAction_Input]
+}
+
+input ItemPatchAction_Input @join__type(graph: PRODUCTS) {
+  mutationInput_patch_shopping_list_input_items_items_oneOf_0_Input: mutationInput_patch_shopping_list_input_items_items_oneOf_0_Input
+  mutationInput_patch_shopping_list_input_items_items_oneOf_1_Input: mutationInput_patch_shopping_list_input_items_items_oneOf_1_Input
+}
+
+input mutationInput_patch_shopping_list_input_items_items_oneOf_0_Input @join__type(graph: PRODUCTS) {
+  amount: Float!
+  gtin: String!
+  unit_id: Int
+  action: add_const!
+}
+
+input mutationInput_patch_shopping_list_input_items_items_oneOf_1_Input @join__type(graph: PRODUCTS) {
+  action: remove_const!
+  gtin: String!
 }

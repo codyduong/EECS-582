@@ -65,6 +65,7 @@ async fn main() -> std::io::Result<()> {
 
   let mut conn = pool.get().unwrap();
 
+  conn.revert_last_migration(MIGRATIONS).unwrap();
   conn.run_pending_migrations(MIGRATIONS).unwrap();
 
   seed::run(pool.clone());

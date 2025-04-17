@@ -10,10 +10,11 @@ derive_more = { version = "2.0.1", optional = true }
 diesel = { version = "2.2.9", optional = true }
 serde = { version = "1.0.219", optional = true }
 utoipa = { version = "5.3.1", optional = true }
+serde_with = { version = "3.12.0", features = ["chrono"], optional = true }
 
 [features]
 all = ["serde", "chrono", "actix-web", "utoipa", "diesel"]
-serde = ["dep:serde"]
+serde = ["dep:serde", "dep:serde_with"]
 chrono = ["dep:chrono"]
 actix-web = ["dep:actix-web", "derive_more"]
 derive_more = ["dep:derive_more"]

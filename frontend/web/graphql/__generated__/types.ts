@@ -91,6 +91,11 @@ export enum HttpMethod {
   Trace = 'TRACE'
 }
 
+export type ItemPatchAction_Input = {
+  mutationInput_patch_shopping_list_input_items_items_oneOf_0_Input?: InputMaybe<MutationInput_Patch_Shopping_List_Input_Items_Items_OneOf_0_Input>;
+  mutationInput_patch_shopping_list_input_items_items_oneOf_1_Input?: InputMaybe<MutationInput_Patch_Shopping_List_Input_Items_Items_OneOf_1_Input>;
+};
+
 /** Login request. Either `email` or `username` must be provided. */
 export type LoginRequest_Input = {
   email?: InputMaybe<Scalars['String']['input']>;
@@ -253,7 +258,7 @@ export type NewProductToMeasurePartial_Input = {
 export type NewShoppingListRequest_Input = {
   items: Array<InputMaybe<ShoppingListItemRequest_Input>>;
   name?: InputMaybe<Scalars['String']['input']>;
-  user_ids: Array<InputMaybe<Scalars['Int']['input']>>;
+  user_ids?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
 };
 
 export type NewUserDto_Input = {
@@ -295,8 +300,7 @@ export type PageInfo = {
 };
 
 export type PatchShoppingListRequest_Input = {
-  items?: InputMaybe<Array<InputMaybe<ShoppingListItemRequest_Input>>>;
-  user_ids?: InputMaybe<Array<InputMaybe<Scalars['Int']['input']>>>;
+  items?: InputMaybe<Array<InputMaybe<ItemPatchAction_Input>>>;
 };
 
 export type Permission = {
@@ -445,10 +449,15 @@ export type QueryGet_ProductArgs = {
 
 
 export type QueryGet_ProductsArgs = {
-  after?: InputMaybe<Scalars['Int']['input']>;
-  before?: InputMaybe<Scalars['Int']['input']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  company_id?: InputMaybe<Scalars['Int']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  hide_unpriced?: InputMaybe<Scalars['Boolean']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  maximum_price?: InputMaybe<Scalars['Float']['input']>;
+  minimum_price?: InputMaybe<Scalars['Float']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -568,6 +577,10 @@ export type Void_Container = {
   Void?: Maybe<Scalars['Void']['output']>;
 };
 
+export enum Add_Const {
+  Add = 'add'
+}
+
 export type Get_Image_200_Response = ProductToImage | Void_Container;
 
 export enum Join__Graph {
@@ -581,6 +594,18 @@ export enum Link__Purpose {
   /** `SECURITY` features provide metadata necessary to securely resolve fields. */
   Security = 'SECURITY'
 }
+
+export type MutationInput_Patch_Shopping_List_Input_Items_Items_OneOf_0_Input = {
+  action: Add_Const;
+  amount: Scalars['Float']['input'];
+  gtin: Scalars['String']['input'];
+  unit_id?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type MutationInput_Patch_Shopping_List_Input_Items_Items_OneOf_1_Input = {
+  action: Remove_Const;
+  gtin: Scalars['String']['input'];
+};
 
 export type MutationInput_Post_Products_Input_Items_AllOf_1_Images_Input = {
   NewProductToImagePartial_Input?: InputMaybe<NewProductToImagePartial_Input>;
@@ -616,6 +641,10 @@ export type Query_Get_Users_Edges_Items_Node = {
   roles?: Maybe<Array<Maybe<Role>>>;
   username?: Maybe<Scalars['String']['output']>;
 };
+
+export enum Remove_Const {
+  Remove = 'remove'
+}
 
 export type ProductsPage_QueriesQueryVariables = Exact<{
   gtin: Scalars['String']['input'];
@@ -653,10 +682,15 @@ export type PriceComparison_GetProductQueryVariables = Exact<{
 
 export type PriceComparison_GetProductQuery = { __typename?: 'Query', get_product?: { __typename?: 'ProductResponse', gtin: any, productname: string, description?: string | null, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null>, price_reports: { __typename?: 'Connection_PriceResponse', edges: Array<{ __typename?: 'Node_PriceResponse', node: { __typename?: 'query_get_price_reports_for_gtin_edges_items_node', id: any, reported_at: any, price: number, company: { __typename?: 'Company', name: string } } } | null> } } | null };
 
-export type ProductsQueryVariables = Exact<{ [key: string]: never; }>;
+export type ProductsPage_PrimaryQueryVariables = Exact<{
+  search?: InputMaybe<Scalars['String']['input']>;
+  company_id?: InputMaybe<Scalars['Int']['input']>;
+  maximum_price?: InputMaybe<Scalars['Float']['input']>;
+  hide_unpriced?: InputMaybe<Scalars['Boolean']['input']>;
+}>;
 
 
-export type ProductsQuery = { __typename?: 'Query', get_products?: { __typename?: 'Connection_ProductResponse', edges: Array<{ __typename?: 'Node_ProductResponse', node: { __typename?: 'ProductResponse', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null>, price_reports: { __typename?: 'Connection_PriceResponse', edges: Array<{ __typename?: 'Node_PriceResponse', node: { __typename?: 'query_get_price_reports_for_gtin_edges_items_node', id: any, reported_at: any, price: number, company: { __typename?: 'Company', name: string } } } | null> } } } | null> } | null };
+export type ProductsPage_PrimaryQuery = { __typename?: 'Query', get_companies?: Array<{ __typename?: 'Company', id: number, name: string } | null> | null, get_products?: { __typename?: 'Connection_ProductResponse', edges: Array<{ __typename?: 'Node_ProductResponse', node: { __typename?: 'ProductResponse', gtin: any, productname: string, images: Array<{ __typename?: 'ProductToImage', image_url: string } | null>, price_reports: { __typename?: 'Connection_PriceResponse', edges: Array<{ __typename?: 'Node_PriceResponse', node: { __typename?: 'query_get_price_reports_for_gtin_edges_items_node', id: any, reported_at: any, price: number, company: { __typename?: 'Company', name: string } } } | null> } } } | null> } | null };
 
 export type ProductForm_ProductQueryVariables = Exact<{
   gtin: Scalars['String']['input'];

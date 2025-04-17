@@ -34,6 +34,7 @@ use common_rs::graphql::PageInfo;
 use common_rs::graphql::PaginationParams;
 use diesel::dsl::insert_into;
 use diesel::upsert::excluded;
+use diesel::BoolExpressionMethods;
 use diesel::Connection;
 use diesel::ExpressionMethods;
 use diesel::JoinOnDsl;
@@ -136,7 +137,12 @@ pub(crate) async fn get_product(
 #[derive(Debug, Deserialize)]
 struct GetProductsParams {
   #[serde(flatten)]
-  pagination_params: PaginationParams<chrono::NaiveDateTime>,
+  pagination_params: PaginationParams<String>,
+  search: Option<String>,
+  hide_unpriced: Option<bool>,
+  minimum_price: Option<bigdecimal::BigDecimal>,
+  maximum_price: Option<bigdecimal::BigDecimal>,
+  company_id: Option<i32>,
 }
 
 fn db_get_all_products(
@@ -146,8 +152,8 @@ fn db_get_all_products(
   let mut conn = pool.get()?;
 
   let mut query = products::table.into_boxed();
-  let params = options.pagination_params;
-  let id_column = products::updated_at;
+  let params = &options.pagination_params;
+  let id_column = products::gtin;
   let cursor_fn = |x: &ProductResponse| x.product.gtin.to_string();
 
   // Validate pagination parameters
@@ -162,7 +168,7 @@ fn db_get_all_products(
   let limit = params.first.or(params.last).unwrap_or(20).clamp(1, 100);
   let is_forward = params.first.is_some();
 
-  match (is_forward, params.after, params.before) {
+  match (is_forward, params.after.clone(), params.before.clone()) {
     // Forward pagination
     (true, after, None) => {
       if let Some(after_id) = after {
@@ -178,6 +184,59 @@ fn db_get_all_products(
       query = query.order(id_column.desc()).limit(limit as i64 + 1);
     }
     _ => return Err(anyhow!("Failed to resolve pagination")),
+  }
+
+  // Apply full-text search
+  if let Some(search) = options.search {
+    query = query.filter(
+      diesel::dsl::sql::<diesel::sql_types::Bool>("search_vector @@ plainto_tsquery('english', ")
+        .bind::<diesel::sql_types::Text, _>(search)
+        .sql(")"),
+    )
+  }
+
+  // Apply price-related filters
+  if options.hide_unpriced.unwrap_or(false) {
+    query = query.filter(products::gtin.eq_any(price_reports::table.select(price_reports::gtin)));
+  }
+
+  if let Some(min_price) = options.minimum_price {
+    query = query.filter(
+      products::gtin.eq_any(
+        price_reports::table
+          .select(price_reports::gtin)
+          .filter(price_reports::price.ge(min_price)),
+      ),
+    );
+  }
+
+  if let Some(max_price) = options.maximum_price {
+    query = query.filter(
+      products::gtin.eq_any(
+        price_reports::table
+          .select(price_reports::gtin)
+          .filter(price_reports::price.le(max_price)),
+      ),
+    );
+  }
+
+  if let Some(company_id) = options.company_id {
+    query = query.filter(
+      products::gtin.eq_any(
+        price_reports::table
+          .inner_join(
+            price_report_to_marketplaces::table.on(
+              price_report_to_marketplaces::price_report_id
+                .eq(price_reports::id)
+                .and(price_report_to_marketplaces::reported_at.eq(price_reports::reported_at)),
+            ),
+          )
+          .inner_join(marketplaces::table.on(marketplaces::id.eq(price_report_to_marketplaces::marketplace_id)))
+          .filter(marketplaces::company_id.eq(company_id))
+          .select(price_reports::gtin)
+          .distinct(), // Added distinct to avoid potential duplicates
+      ),
+    );
   }
 
   let result = query
@@ -244,9 +303,14 @@ fn db_get_all_products(
   ),
   params(
     ("first" = Option<i32>, Query, description = "Number of items after cursor"),
-    ("after" = Option<i32>, Query, description = "Cursor for forward pagination"),
+    ("after" = Option<String>, Query, description = "Cursor for forward pagination"),
     ("last" = Option<i32>, Query, description = "Number of items before cursor"),
-    ("before" = Option<i32>, Query, description = "Cursor for backward pagination"),
+    ("before" = Option<String>, Query, description = "Cursor for backward pagination"),
+    ("search" = Option<String>, Query, description = "Full-text search in product name or description"),
+    ("hide_unpriced" = Option<bool>, Query, description = "Hide products without price information"),
+    ("minimum_price" = Option<f32>, Query, description = "Minimum product price to include"),
+    ("maximum_price" = Option<f32>, Query, description = "Maximum product price to include"),
+    ("company_id" = Option<i32>, Query, description = "Filter products by company ID"),
   ),
   // security(
   //   ("http" = [])

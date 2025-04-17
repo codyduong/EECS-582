@@ -172,7 +172,7 @@ export default function UserProvider({
     // todo, do we need to log error? maybe write unit tests to prove soundness
     Effect.runPromise(sideEffect).catch((e) => {
       // todo REMOVE logging in prod
-      console.warn(`err: ${e}`);
+      console.error(`LOGOUT, could not refresh!! todo -@codyduong: ${e}`);
     });
   }, []);
 

@@ -21,6 +21,7 @@
 use crate::handlers::products::db_insert_products;
 use crate::models::*;
 use crate::schema::*;
+use diesel::upsert::excluded;
 use ::products::schema::price_report_to_marketplaces::price_report_id;
 use diesel::dsl::*;
 use diesel::prelude::*;
@@ -267,22 +268,28 @@ chocolate, a crisp wafer shell, and a whole hazelnut</li>
       },
     ];
 
-    let ids: Vec<i32> = marketplaces.clone().into_iter().filter_map(|v| v.id).collect();
-
-    diesel::delete(marketplaces::table)
-      .filter(marketplaces::id.eq_any(ids))
-      .execute(&mut conn)
-      .unwrap();
-
     diesel::insert_into(marketplaces::table)
-      .values(marketplaces)
+      .values(&marketplaces)
+      .on_conflict(marketplaces::id)
+      .do_update()
+      .set((
+          marketplaces::company_id.eq(excluded(marketplaces::company_id)),
+          marketplaces::name.eq(excluded(marketplaces::name)),
+      ))
       .execute(&mut conn)
       .unwrap();
 
     diesel::insert_into(physical_marketplaces::table)
-      .values(physical_marketplaces)
-      .execute(&mut conn)
-      .unwrap();
+        .values(&physical_marketplaces)
+        .on_conflict(physical_marketplaces::id)
+        .do_update()
+        .set((
+            physical_marketplaces::adr_address.eq(excluded(physical_marketplaces::adr_address)),
+            physical_marketplaces::place_id.eq(excluded(physical_marketplaces::place_id)),
+            physical_marketplaces::open_location_code.eq(excluded(physical_marketplaces::open_location_code)),
+        ))
+        .execute(&mut conn)
+        .unwrap();
 
     let reported_at = chrono::NaiveDateTime::from_str("2025-04-14T13:48:59.791").unwrap();
 

@@ -1,5 +1,11 @@
 // @generated automatically by Diesel CLI.
 
+pub mod sql_types {
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "tsvector", schema = "pg_catalog"))]
+    pub struct Tsvector;
+}
+
 diesel::table! {
     companies (id) {
         id -> Int4,
@@ -69,6 +75,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::Tsvector;
+
     products (gtin) {
         gtin -> Text,
         created_at -> Timestamp,
@@ -78,6 +87,7 @@ diesel::table! {
         productname -> Text,
         sellsinraw -> Bool,
         description -> Nullable<Text>,
+        search_vector -> Nullable<Tsvector>,
     }
 }
 
@@ -155,18 +165,18 @@ diesel::joinable!(shopping_list_items -> units (unit_id));
 diesel::joinable!(shopping_list_to_user -> shopping_list (shopping_list_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-  companies,
-  iso_4217,
-  marketplaces,
-  online_marketplaces,
-  physical_marketplaces,
-  price_report_to_marketplaces,
-  price_reports,
-  products,
-  products_to_images,
-  products_to_measures,
-  shopping_list,
-  shopping_list_items,
-  shopping_list_to_user,
-  units,
+    companies,
+    iso_4217,
+    marketplaces,
+    online_marketplaces,
+    physical_marketplaces,
+    price_report_to_marketplaces,
+    price_reports,
+    products,
+    products_to_images,
+    products_to_measures,
+    shopping_list,
+    shopping_list_items,
+    shopping_list_to_user,
+    units,
 );

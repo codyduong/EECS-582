@@ -536,6 +536,7 @@ dependencies = [
  "derive_more 2.0.1",
  "diesel",
  "serde",
+ "serde_with",
  "utoipa",
 ]
 

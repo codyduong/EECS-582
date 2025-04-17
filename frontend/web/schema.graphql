@@ -1,4 +1,4 @@
-schema @link(url: "https://specs.apollo.dev/link/v1.0") @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) @link(url: "https://the-guild.dev/graphql/mesh/spec/v1.0", import: ["@enum", "@httpOperation", "@transport", "@extraSchemaDefinitionDirective", "@resolveRoot", "@length", "@dictionary", "@source"]) {
+schema @link(url: "https://specs.apollo.dev/link/v1.0") @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION) @link(url: "https://the-guild.dev/graphql/mesh/spec/v1.0", import: ["@enum", "@httpOperation", "@transport", "@extraSchemaDefinitionDirective", "@resolveRoot", "@length", "@dictionary", "@typescript", "@example", "@source"]) {
   query: Query
   mutation: Mutation
 }
@@ -8,6 +8,8 @@ directive @additionalField on FIELD_DEFINITION
 directive @dictionary(subgraph: String) repeatable on FIELD_DEFINITION
 
 directive @enum(subgraph: String, value: String) repeatable on ENUM_VALUE
+
+directive @example(subgraph: String, value: ObjMap) repeatable on ENUM | FIELD_DEFINITION | INPUT_OBJECT | OBJECT | SCALAR
 
 directive @extraSchemaDefinitionDirective(directives: _DirectiveExtensions) repeatable on OBJECT
 
@@ -34,6 +36,8 @@ directive @resolveRoot(subgraph: String) repeatable on FIELD_DEFINITION
 directive @source(name: String!, subgraph: String!, type: String) repeatable on ARGUMENT_DEFINITION | ENUM | ENUM_VALUE | FIELD_DEFINITION | INPUT_FIELD_DEFINITION | INPUT_OBJECT | INTERFACE | OBJECT | SCALAR | UNION
 
 directive @transport(headers: [[String]], kind: String, location: String, queryParams: [[String]], queryStringOptions: ObjMap, subgraph: String) repeatable on SCHEMA
+
+directive @typescript(subgraph: String, type: String) repeatable on ENUM | SCALAR
 
 """
 The `BigInt` scalar type represents non-fractional signed whole numeric values.
@@ -93,6 +97,11 @@ enum HTTPMethod @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
   POST @join__enumValue(graph: AUTH) @join__enumValue(graph: PRODUCTS)
   PUT @join__enumValue(graph: AUTH) @join__enumValue(graph: PRODUCTS)
   TRACE @join__enumValue(graph: AUTH) @join__enumValue(graph: PRODUCTS)
+}
+
+input ItemPatchAction_Input @join__type(graph: PRODUCTS) {
+  mutationInput_patch_shopping_list_input_items_items_oneOf_0_Input: mutationInput_patch_shopping_list_input_items_items_oneOf_0_Input
+  mutationInput_patch_shopping_list_input_items_items_oneOf_1_Input: mutationInput_patch_shopping_list_input_items_items_oneOf_1_Input
 }
 
 """
@@ -211,7 +220,7 @@ input NewProductToMeasurePartial_Input @join__type(graph: PRODUCTS) {
 input NewShoppingListRequest_Input @join__type(graph: PRODUCTS) {
   items: [ShoppingListItemRequest_Input]!
   name: String
-  user_ids: [Int]!
+  user_ids: [Int]
 }
 
 input NewUserDTO_Input @join__type(graph: AUTH) {
@@ -250,8 +259,7 @@ type PageInfo @join__type(graph: AUTH) @join__type(graph: PRODUCTS) {
 }
 
 input PatchShoppingListRequest_Input @join__type(graph: PRODUCTS) {
-  items: [ShoppingListItemRequest_Input]
-  user_ids: [Int]
+  items: [ItemPatchAction_Input]
 }
 
 type Permission @join__type(graph: AUTH) {
@@ -376,14 +384,24 @@ type Query @extraSchemaDefinitionDirective(directives: {transport: [{subgraph: "
   ): ProductResponse @httpOperation(subgraph: "Products", path: "/api/v1/products/{args.gtin}", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET) @join__field(graph: PRODUCTS)
   get_products(
     """Cursor for forward pagination"""
-    after: Int
+    after: String
     """Cursor for backward pagination"""
-    before: Int
+    before: String
+    """Filter products by company ID"""
+    company_id: Int
     """Number of items after cursor"""
     first: Int
+    """Hide products without price information"""
+    hide_unpriced: Boolean
     """Number of items before cursor"""
     last: Int
-  ): Connection_ProductResponse @httpOperation(subgraph: "Products", path: "/api/v1/products", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"first\":\"first\",\"after\":\"after\",\"last\":\"last\",\"before\":\"before\"}") @join__field(graph: PRODUCTS)
+    """Maximum product price to include"""
+    maximum_price: Float
+    """Minimum product price to include"""
+    minimum_price: Float
+    """Full-text search in product name or description"""
+    search: String
+  ): Connection_ProductResponse @httpOperation(subgraph: "Products", path: "/api/v1/products", operationSpecificHeaders: [["accept", "application/json"]], httpMethod: GET, queryParamArgMap: "{\"first\":\"first\",\"after\":\"after\",\"last\":\"last\",\"before\":\"before\",\"search\":\"search\",\"hide_unpriced\":\"hide_unpriced\",\"minimum_price\":\"minimum_price\",\"maximum_price\":\"maximum_price\",\"company_id\":\"company_id\"}") @join__field(graph: PRODUCTS)
   get_shopping_list(
     """Shopping list ID"""
     id: Int!
@@ -500,6 +518,10 @@ type Void_container @join__type(graph: PRODUCTS) {
 
 scalar _DirectiveExtensions @join__type(graph: AUTH) @join__type(graph: PRODUCTS)
 
+enum add_const @typescript(subgraph: "Products", type: "\"add\"") @example(subgraph: "Products", value: "add") @join__type(graph: PRODUCTS) {
+  add @enum(subgraph: "Products", value: "\"add\"") @join__enumValue(graph: PRODUCTS)
+}
+
 union get_image_200_response @join__type(graph: PRODUCTS) @join__unionMember(graph: PRODUCTS, member: "Void_container") @join__unionMember(graph: PRODUCTS, member: "ProductToImage") = ProductToImage | Void_container
 
 scalar join__FieldSet
@@ -520,6 +542,18 @@ enum link__Purpose {
   `SECURITY` features provide metadata necessary to securely resolve fields.
   """
   SECURITY
+}
+
+input mutationInput_patch_shopping_list_input_items_items_oneOf_0_Input @join__type(graph: PRODUCTS) {
+  action: add_const!
+  amount: Float!
+  gtin: String!
+  unit_id: Int
+}
+
+input mutationInput_patch_shopping_list_input_items_items_oneOf_1_Input @join__type(graph: PRODUCTS) {
+  action: remove_const!
+  gtin: String!
 }
 
 scalar mutationInput_post_price_report_input_items_allOf_0_currency @length(subgraph: "Products", min: 3, max: 3) @join__type(graph: PRODUCTS)
@@ -571,4 +605,8 @@ type query_get_users_edges_items_node @join__type(graph: AUTH) {
   permissions: [Permission]
   roles: [Role]
   username: String
+}
+
+enum remove_const @typescript(subgraph: "Products", type: "\"remove\"") @example(subgraph: "Products", value: "remove") @join__type(graph: PRODUCTS) {
+  remove @enum(subgraph: "Products", value: "\"remove\"") @join__enumValue(graph: PRODUCTS)
 }

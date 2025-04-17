@@ -1,0 +1,6 @@
+ALTER TABLE price_report_to_marketplaces 
+DROP CONSTRAINT IF EXISTS price_report_to_marketplaces_marketplace_id_fkey;
+
+ALTER TABLE price_report_to_marketplaces 
+ADD CONSTRAINT price_report_to_marketplaces_marketplace_id_fkey 
+FOREIGN KEY (marketplace_id) REFERENCES marketplaces(id);
