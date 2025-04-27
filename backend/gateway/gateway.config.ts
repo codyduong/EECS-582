@@ -8,6 +8,8 @@ if (process.env.SECRET_KEY === undefined) {
   throw Error("Failed to find SECRET_KEY, was it set?");
 }
 
+const AUTH_URI = process.env.AUTH_URI;
+const PRODUCTS_URI = process.env.PRODUCTS_URI;
 const DEBUG = process.env.NODE_ENV !== "production";
 const DOCKER = process.env.DOCKER !== undefined;
 
@@ -22,14 +24,18 @@ export const gatewayConfig = defineConfig({
   readinessCheckEndpoint: "/readiness",
   transportEntries: {
     Auth: {
-      location: DOCKER
-        ? "http://host.docker.internal:8081/"
-        : "http://localhost:8081/",
+      location:
+        AUTH_URI ??
+        (DOCKER
+          ? "http://host.docker.internal:8081/"
+          : "http://localhost:8081/"),
     },
     Products: {
-      location: DOCKER
-        ? "http://host.docker.internal:8082/"
-        : "http://localhost:8082/",
+      location:
+        PRODUCTS_URI ??
+        (DOCKER
+          ? "http://host.docker.internal:8082/"
+          : "http://localhost:8082/"),
     },
   },
   // https://the-guild.dev/graphql/hive/docs/gateway/authorization-authentication#granular-protection-using-auth-directives-authenticated-requiresscopes-and-policy

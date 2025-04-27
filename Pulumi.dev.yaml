@@ -1,0 +1,12 @@
+config:
+  gcp:project: grocerywise-458406
+  gcp:region: us-central1
+  gcp:zone: us-central1-a
+  grocerywise:postgresUser: admin
+  grocerywise:rebuildImages: "false"
+  grocerywise:postgresPassword:
+    secure: AAABADglYdSVK3P3orbnXE9U+Ag6fxETQC7BBMwSKxUPozB4/HIuWu9w
+  grocerywise:testPassword:
+    secure: AAABAAdCPWtaqIeDcM0MGDhQMAcQf/OkGzdRHKQE9GdGXfMg9gA=
+  grocerywise:jwtSecret:
+    secure: AAABABpgpThEAW5o9akTgpok3CSkEf63zb88z5DNbtMOIKrmIBRVcm83DjlbVY1gjXi3dtGFUO7i7Y+g2g==

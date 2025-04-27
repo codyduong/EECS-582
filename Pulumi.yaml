@@ -1,0 +1,6 @@
+name: grocerywise
+description: TODO
+runtime:
+  name: nodejs
+  options:
+    packagemanager: yarn

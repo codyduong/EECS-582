@@ -137,3 +137,27 @@ Alternatively, a docker-compose has been made for previewing production builds.
 ```sh
 docker-compose -f docker-compose.frontend.yml up
 ```
+
+## Deployment
+
+Uses pulumi, extra notes hidden in source.
+
+Requires GCP + pulumi + kubectl
+
+```sh
+winget install -e --id Kubernetes.kubectl
+# assuming you follow gcloud instructions install
+gcloud components install gke-gcloud-auth-plugin
+
+gcloud config set project grocerywise-458406
+gcloud auth application-default set-quota-project grocerywise-458406
+gcloud auth application-default login
+```
+
+```sh
+pulumi up --logtostderr -v=6 # 3, 6, 9 are common errors
+```
+
+<!-- 
+
+-->
