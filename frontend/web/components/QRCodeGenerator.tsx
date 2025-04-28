@@ -178,7 +178,7 @@ export function QRCodeGenerator({
         {qrUrl}
       </Text>
 
-      <Group position="center" spacing="md">
+      <Group>
         <Tooltip label="Download QR Code">
           <ActionIcon variant="light" color="blue" onClick={downloadQrCode}>
             <IconDownload size={18} />

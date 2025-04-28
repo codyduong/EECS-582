@@ -1,0 +1,22 @@
+# Author: @codyduong
+# Purpose: platform agnostic startup for the frontend
+# Creation Date: 2025-04-12
+# Revisions: N/A
+
+services:
+  web:
+    build:
+      context: ./frontend/web/
+      dockerfile: Dockerfile.local
+      target: production
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+    working_dir: /app
+    # network_mode: host
+    networks:
+      - frontend-network
+
+networks:
+  frontend-network:
+    driver: bridge

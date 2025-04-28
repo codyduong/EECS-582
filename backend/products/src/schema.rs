@@ -1,23 +1,83 @@
 // @generated automatically by Diesel CLI.
 
+pub mod sql_types {
+    #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "tsvector", schema = "pg_catalog"))]
+    pub struct Tsvector;
+}
+
 diesel::table! {
-    marketplaces (id) {
+    companies (id) {
         id -> Int4,
         name -> Text,
     }
 }
 
 diesel::table! {
-    physical_marketplaces (open_location_code) {
-        #[max_length = 15]
-        open_location_code -> Bpchar,
-        marketplace_id -> Int4,
-        deleted -> Bool,
-        created_at -> Timestamp,
+    iso_4217 (code) {
+        #[max_length = 3]
+        code -> Bpchar,
+        #[max_length = 100]
+        name -> Nullable<Varchar>,
+        numeric_code -> Nullable<Int2>,
+        minor_unit -> Nullable<Int2>,
     }
 }
 
 diesel::table! {
+    marketplaces (id) {
+        id -> Int4,
+        company_id -> Int4,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        deleted -> Bool,
+        deleted_at -> Nullable<Timestamptz>,
+        name -> Text,
+    }
+}
+
+diesel::table! {
+    online_marketplaces (id) {
+        id -> Int4,
+        uri -> Text,
+    }
+}
+
+diesel::table! {
+    physical_marketplaces (id) {
+        id -> Int4,
+        adr_address -> Text,
+        place_id -> Nullable<Text>,
+        open_location_code -> Text,
+    }
+}
+
+diesel::table! {
+    price_report_to_marketplaces (price_report_id, reported_at, marketplace_id) {
+        price_report_id -> Int8,
+        reported_at -> Timestamptz,
+        marketplace_id -> Int4,
+    }
+}
+
+diesel::table! {
+    price_reports (id, reported_at) {
+        id -> Int8,
+        reported_at -> Timestamptz,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        created_by -> Int4,
+        gtin -> Text,
+        price -> Numeric,
+        #[max_length = 3]
+        currency -> Bpchar,
+    }
+}
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::Tsvector;
+
     products (gtin) {
         gtin -> Text,
         created_at -> Timestamp,
@@ -27,6 +87,7 @@ diesel::table! {
         productname -> Text,
         sellsinraw -> Bool,
         description -> Nullable<Text>,
+        search_vector -> Nullable<Tsvector>,
     }
 }
 
@@ -59,6 +120,7 @@ diesel::table! {
         id -> Int4,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+        name -> Nullable<Text>,
     }
 }
 
@@ -88,7 +150,12 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(physical_marketplaces -> marketplaces (marketplace_id));
+diesel::joinable!(marketplaces -> companies (company_id));
+diesel::joinable!(online_marketplaces -> marketplaces (id));
+diesel::joinable!(physical_marketplaces -> marketplaces (id));
+diesel::joinable!(price_report_to_marketplaces -> marketplaces (marketplace_id));
+diesel::joinable!(price_reports -> iso_4217 (currency));
+diesel::joinable!(price_reports -> products (gtin));
 diesel::joinable!(products_to_images -> products (gtin));
 diesel::joinable!(products_to_measures -> products (gtin));
 diesel::joinable!(products_to_measures -> units (unit_id));
@@ -98,13 +165,18 @@ diesel::joinable!(shopping_list_items -> units (unit_id));
 diesel::joinable!(shopping_list_to_user -> shopping_list (shopping_list_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-  marketplaces,
-  physical_marketplaces,
-  products,
-  products_to_images,
-  products_to_measures,
-  shopping_list,
-  shopping_list_items,
-  shopping_list_to_user,
-  units,
+    companies,
+    iso_4217,
+    marketplaces,
+    online_marketplaces,
+    physical_marketplaces,
+    price_report_to_marketplaces,
+    price_reports,
+    products,
+    products_to_images,
+    products_to_measures,
+    shopping_list,
+    shopping_list_items,
+    shopping_list_to_user,
+    units,
 );

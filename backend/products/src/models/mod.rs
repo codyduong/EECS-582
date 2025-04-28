@@ -19,10 +19,18 @@
     glob style here
 */
 
+mod company;
+pub use company::*;
 mod marketplace;
 pub use marketplace::*;
+mod online_marketplace;
+pub use online_marketplace::*;
 mod physical_marketplace;
 pub use physical_marketplace::*;
+mod price_report_to_marketplaces;
+pub use price_report_to_marketplaces::*;
+mod price_report;
+pub use price_report::*;
 mod product_to_image;
 pub use product_to_image::*;
 mod product_to_measure;

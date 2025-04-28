@@ -108,7 +108,12 @@ const getNewTokens = (refreshToken: Option.Option<string>) => {
           HttpClientRequest.bodyJson({}),
           Effect.map((r) => HttpClientRequest.bearerToken(r, refreshToken)),
           Effect.flatMap(client.execute),
-          Effect.flatMap(decodeAccessClaimFromRequest),
+          Effect.flatMap((res) => {
+            return Effect.zip(
+              decodeRefreshClaimFromRequest(res),
+              decodeAccessClaimFromRequest(res),
+            );
+          }),
           Effect.scoped,
         );
       }).pipe(Effect.provide(FetchHttpClient.layer));
@@ -143,11 +148,18 @@ export default function UserProvider({
 
         // if expired, try using refreshToken and getting a new token
         if (expired) {
+          console.log("Needed to get new tokens, expired!");
           const refreshToken = Option.fromNullable(
             getCookie("x-refresh-token"),
           );
 
-          return getNewTokens(refreshToken);
+          return getNewTokens(refreshToken).pipe(
+            Effect.tap(([refresh, access]) => {
+              setRefreshCookie(refresh);
+              setAuthCookie(access);
+            }),
+            Effect.map(([_, ta]) => ta),
+          );
         }
 
         // otherwise return the token
@@ -160,7 +172,7 @@ export default function UserProvider({
     // todo, do we need to log error? maybe write unit tests to prove soundness
     Effect.runPromise(sideEffect).catch((e) => {
       // todo REMOVE logging in prod
-      console.warn(`err: ${e}`);
+      console.error(`LOGOUT, could not refresh!! todo -@codyduong: ${e}`);
     });
   }, []);
 
@@ -235,15 +247,48 @@ export default function UserProvider({
     [],
   );
 
-  // every 5 minutes check if our expiry is going to be invalid in the next 5 minutes
+  // every minute check if our expiry is going to be invalid in the next 5 minutes
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      // todo implement the refresh check. if we are about to expire grant us a new token.
-    }, 60000 * 5);
+    const timeout = claim
+      ? setInterval(async () => {
+          // console.log("Checking token claim");
+          await Effect.runPromise(
+            Effect.gen(function* () {
+              const now = Math.floor(Date.now() / 1000);
+              // Refresh if the token expires within the next 5 minutes
+              if (claim.exp - now < 300) {
+                const refreshToken = Option.fromNullable(
+                  getCookie("x-refresh-token"),
+                );
+                getNewTokens(refreshToken).pipe(
+                  Effect.tap(([refresh, access]) => {
+                    setRefreshCookie(refresh);
+                    setAuthCookie(access);
+                  }),
+                  Effect.map(([_, access]) => access),
+                  Effect.map(([_newToken, newClaim]) => setClaim(newClaim)),
+                  Effect.tap(() =>
+                    Effect.sync(() =>
+                      console.log("Token refreshed successfully"),
+                    ),
+                  ),
+                  Effect.catchAll((error) =>
+                    Effect.sync(() =>
+                      console.error("Token refresh failed:", error),
+                    ),
+                  ),
+                );
+              } else {
+                // console.log("No need to get new claim");
+              }
+            }).pipe(Effect.provide(FetchHttpClient.layer)),
+          );
+        }, 30000)
+      : null;
     return () => {
-      clearTimeout(timeout);
+      if (timeout) clearTimeout(timeout);
     };
-  }, []);
+  }, [claim]);
 
   const userContextValue = {
     user: claim && mapClaimToUser(claim),

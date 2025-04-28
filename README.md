@@ -108,6 +108,7 @@ Whenever you edit a microservice you may have to restart the docker container ma
 docker-compose -f docker-compose.backend.yml stop    # stop existing container
 docker build -t auth -f Dockerfile.auth .            # if you changed auth
 docker build -t products -f Dockerfile.products .    # if you changed products
+docker build -t gateway -f ./backend/gateway/Dockerfile.local ./backend/gateway\
 docker-compose -f docker-compose.backend.yml up
 
 # alternatively you can use --build flag, but this will rebuild every microservice

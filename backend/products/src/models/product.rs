@@ -20,7 +20,7 @@
   - The `products` table must exist in the database.
 */
 
-use diesel::prelude::*;
+use diesel::{Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 

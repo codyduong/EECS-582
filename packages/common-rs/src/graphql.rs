@@ -1,11 +1,16 @@
 use serde::Deserialize;
 use serde::Serialize;
 use utoipa::ToSchema;
+use serde_with::serde_as;
+use serde_with::DisplayFromStr;
 
-#[derive(Debug, Deserialize)]
+#[serde_as]
+#[derive(Debug, Deserialize, ToSchema, Clone)]
 pub struct PaginationParams<T> {
+  #[serde_as(as = "Option<DisplayFromStr>")]
   #[serde(default)]
   pub first: Option<i32>,
+  #[serde_as(as = "Option<DisplayFromStr>")]
   #[serde(default)]
   pub last: Option<i32>,
   #[serde(default)]

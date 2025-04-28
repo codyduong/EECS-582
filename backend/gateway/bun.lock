@@ -7,6 +7,7 @@
         "@graphql-mesh/compose-cli": "^1.4.3",
         "@graphql-mesh/transport-rest": "^0.9.3",
         "@omnigraph/openapi": "^0.109.3",
+        "dataloader": "^2.2.3",
       },
       "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",
