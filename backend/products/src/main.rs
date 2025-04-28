@@ -37,7 +37,7 @@ const ALLOWED_ORIGINS: [&str; 1] = ["http://localhost:3000"];
 #[cfg(not(debug_assertions))]
 const API_URL: &str = "0.0.0.0";
 #[cfg(not(debug_assertions))]
-const ALLOWED_ORIGINS: [&str; 1] = ["http://localhost:3000"];
+const ALLOWED_ORIGINS: [&str; 3] = ["http://localhost:3000", "https://grocerywise-web-999614162763.us-central1.run.app", "https://gateway-999614162763.us-central1.run.app/"];
 const MIGRATIONS: diesel_migrations::EmbeddedMigrations = diesel_migrations::embed_migrations!("./migrations/");
 
 #[actix_rt::main]

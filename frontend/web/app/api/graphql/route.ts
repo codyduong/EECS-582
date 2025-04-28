@@ -9,14 +9,17 @@ export async function POST(request: NextRequest) {
       ?.replace(/Bearer\w*/i, "")
       .trim() || "";
 
-  const response = await fetch("http://127.0.0.1:4000/graphql", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization,
+  const response = await fetch(
+    process.env.GRAPHQL_URI ?? "http://127.0.0.1:4000/graphql",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization,
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  });
+  );
 
   const data = await response.json();
 

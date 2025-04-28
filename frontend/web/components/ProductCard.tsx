@@ -15,7 +15,7 @@ import { Card, Image, Text, Button, Group } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useCallback } from "react";
-import { ProductsQuery } from "@/graphql/graphql";
+import { ProductsPage_PrimaryQuery } from "@/graphql/graphql";
 
 // interface ProductProps {
 //   id: string;
@@ -38,7 +38,9 @@ import { ProductsQuery } from "@/graphql/graphql";
 type NN<T> = NonNullable<T>;
 
 interface ProductCardProps {
-  product: NN<NN<NN<ProductsQuery["get_products"]>["edges"]>[number]>["node"];
+  product: NN<
+    NN<NN<ProductsPage_PrimaryQuery["get_products"]>["edges"]>[number]
+  >["node"];
   isInCarousel?: boolean;
   inMain?: boolean;
 }
